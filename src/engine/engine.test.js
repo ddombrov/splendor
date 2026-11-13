@@ -1,5 +1,5 @@
 import { describe, expect, it, vi } from 'vitest';
-import { createGame, cur, opp, reduce, limitCount as limit } from './engine.js';
+import { createGame, cur, opp, reduce, limitCount as limit, SPIRAL } from './engine.js';
 
 const play = (state, ...actions) => actions.reduce((s, a) => reduce(s, a), state);
 const click = (...cells) => cells.map((i) => ({ type: 'tok', i }));
@@ -389,5 +389,39 @@ describe('resigning', () => {
   it('does nothing once the game is over', () => {
     const over = reduce(createGame(false, 4, 0), { type: 'resign', player: 0 });
     expect(reduce(over, { type: 'resign', player: 1 })).toEqual(over);
+  });
+});
+
+describe('replenishing follows the arrows printed on the board', () => {
+  // Read from the supplied wooden board picture: the centre, then up, right, down, left, and outward.
+  const ARROWS = [12, 7, 8, 13, 18, 17, 16, 11, 6, 1, 2, 3, 4, 9, 14, 19, 24, 23, 22, 21, 20, 15, 10, 5, 0];
+
+  it('uses the same order as the picture', () => {
+    expect(SPIRAL).toEqual(ARROWS);
+  });
+
+  it('puts a single token in the first empty space along the arrows, not the first by position', () => {
+    const state = createGame(false, 6, 0);
+    state.board = Array(25).fill('red');
+    state.board[8] = null;
+    state.board[13] = null;
+    state.bag = ['blue'];
+    const after = reduce(state, { type: 'repl' });
+    expect(after.board[8]).toBe('blue');
+    expect(after.board[13]).toBeNull();
+  });
+
+  it('fills the spaces one after another in arrow order', () => {
+    const state = createGame(false, 6, 0);
+    state.board = Array(25).fill(null);
+    state.bag = ['blue', 'blue', 'blue', 'blue'];
+    const after = reduce(state, { type: 'repl' });
+    expect([12, 7, 8, 13].every((i) => after.board[i] === 'blue')).toBe(true);
+    expect(after.board.filter(Boolean)).toHaveLength(4);
+  });
+
+  it('lays out a new game in the same order', () => {
+    const state = createGame(false, 6, 0);
+    expect(state.board.every(Boolean)).toBe(true);
   });
 });

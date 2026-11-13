@@ -304,13 +304,13 @@ function Board({ session, onExit, init }) {
                       {action ? (
                         <>
                           {action !== 'priv' && (
-                            <Button size="sm" disabled={!canComplete} onClick={complete}>{canComplete && <CompleteIcon size={16} />}{{ take: 'Take tokens', buy: 'Buy card', reserve: 'Reserve card', refill: 'Refill board' }[action]}</Button>
+                            <Button size="sm" disabled={!canComplete} onClick={complete}>{canComplete && <CompleteIcon size={16} />}{{ take: 'Take tokens', buy: 'Buy card', reserve: 'Reserve card', refill: 'Replenish' }[action]}</Button>
                           )}
                           <Button size="sm" variant="outline" disabled={!idle} onClick={cancel}>Cancel</Button>
                         </>
                       ) : (
                         <>
-                          <Button size="sm" variant="outline" disabled={!(idle && S.bag.length)} onClick={() => choose('refill')}>Refill board</Button>
+                          <Button size="sm" variant="outline" disabled={!(idle && S.bag.length)} onClick={() => choose('refill')}>Replenish</Button>
                           <Button size="sm" variant="outline" disabled={!idle} onClick={() => choose('buy')}>Buy</Button>
                           <Button size="sm" variant="outline" disabled={!(idle && S.board.includes('gold') && p.res.length < resCap(p))} onClick={() => choose('reserve')}>Reserve</Button>
                           <Button size="sm" variant="outline" disabled={!(idle && (p.priv > 0 || S.mode === 'priv2'))} onClick={() => choose('priv')}>Use privilege</Button>

@@ -40,7 +40,7 @@ function Summary({ exp }) {
       <Sub>Optional, before your action</Sub>
       <Steps items={[
         [ScrollText, 'Use a privilege: return a scroll to take 1 gem or pearl token of your choice from the board. Never gold.'],
-        [RefreshCw, 'Refill the board, only if the bag is not empty. Your opponent takes a privilege.'],
+        [RefreshCw, 'Replenish the board, only if the bag is not empty. Tokens fill the empty spaces in the order of the arrows. Your opponent takes a privilege.'],
       ]} />
       <Sub>Then choose one</Sub>
       <Steps items={[

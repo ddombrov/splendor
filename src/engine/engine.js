@@ -1,24 +1,12 @@
 import { COLORS, genJewels, genCounterfeiters, baseRoyals, expRoyals } from './data.js';
 import { nextRandom, shuffle } from './rng.js';
 
-function spiral() {
-  const out = [[2, 2]];
-  let r = 2, c = 2, len = 1, di = 0;
-  const d = [[0, 1], [1, 0], [0, -1], [-1, 0]];
-  while (out.length < 25) {
-    for (let t = 0; t < 2; t++) {
-      for (let k = 0; k < len; k++) {
-        r += d[di][0];
-        c += d[di][1];
-        if (r >= 0 && r < 5 && c >= 0 && c < 5) out.push([r, c]);
-      }
-      di = (di + 1) % 4;
-    }
-    len++;
-  }
-  return out.slice(0, 25).map(([r, c]) => r * 5 + c);
-}
-const SPIRAL = spiral();
+/*
+ * The order tokens are laid out and replenished in: the centre, then up, right, down, left and
+ * outward, exactly as the arrows on the wooden board picture show. Numbers are board spaces, 0 to
+ * 24 reading left to right, top to bottom.
+ */
+export const SPIRAL = [12, 7, 8, 13, 18, 17, 16, 11, 6, 1, 2, 3, 4, 9, 14, 19, 24, 23, 22, 21, 20, 15, 10, 5, 0];
 
 /* ---------- selectors ---------- */
 export const cur = (S) => S.players[S.cur];
@@ -433,7 +421,7 @@ const handlers = {
     if (S.main || S.pending || !S.bag.length) return;
     shuffle(S.bag, () => nextRandom(S)); fillBoard(S);
     givePriv(S, 1 - S.cur);
-    log(S, `${cur(S).name} refills the board; ${opp(S).name} gains a privilege.`);
+    log(S, `${cur(S).name} replenishes the board; ${opp(S).name} gains a privilege.`);
   },
   card(S, { src, l, i }) {
     const pd = S.pending, p = cur(S);
