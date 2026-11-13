@@ -244,7 +244,7 @@ export default function App() {
                       {action ? (
                         <>
                           {action !== 'priv' && (
-                            <Button size="sm" disabled={!canComplete} onClick={complete}>{canComplete && <CompleteIcon size={16} />}Complete move</Button>
+                            <Button size="sm" disabled={!canComplete} onClick={complete}>{canComplete && <CompleteIcon size={16} />}{{ take: 'Take tokens', buy: 'Buy card', reserve: 'Reserve card', refill: 'Refill board' }[action]}</Button>
                           )}
                           <Button size="sm" variant="outline" disabled={!idle} onClick={cancel}>Cancel</Button>
                         </>
