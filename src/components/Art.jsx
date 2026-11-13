@@ -39,61 +39,20 @@ export function GemShape({ kind }) {
   );
 }
 
+/** One of the supplied gem pictures. A wild gem has no picture, so it stays a drawn rainbow gem. */
 export function Gem({ kind, size = 28, className = '' }) {
-  return (
-    <svg className={`gem-svg ${className}`} width={size} height={size} viewBox="0 0 64 64">
-      <GemShape kind={kind} />
-    </svg>
-  );
-}
-
-function Flask() {
-  return (
-    <g>
-      <path d="M42 22h16v14l14 26a8 8 0 0 1-7 12H35a8 8 0 0 1-7-12l14-26z" transform="translate(-6 -10) scale(.9)" fill="rgba(180,140,230,.25)" stroke="#6b3aa8" strokeWidth="2.5" strokeLinejoin="round" />
-      <path d="M36 54h28l8 14a6 6 0 0 1-5 9H33a6 6 0 0 1-5-9z" transform="translate(-6 -10) scale(.9)" fill="url(#liquid)" />
-      <circle cx="46" cy="64" r="3" fill="#fff" opacity=".6" />
-      <circle cx="56" cy="58" r="2" fill="#fff" opacity=".5" />
-      <path d="M36 30l-8 18" stroke="#fff" strokeWidth="3" strokeLinecap="round" opacity=".7" transform="translate(-2 -4)" />
-    </g>
-  );
+  if (kind === 'wild') {
+    return (
+      <svg className={`gem-svg ${className}`} width={size} height={size} viewBox="0 0 64 64">
+        <GemShape kind="wild" />
+      </svg>
+    );
+  }
+  return <img src={`/gems/${kind}.png`} width={size} height={size} alt="" draggable={false} className={`gem-img ${className}`} />;
 }
 
 export function TokenArt({ kind, size = 52 }) {
   const p = PAL[kind];
-  let inner;
-  if (kind === 'pearl') {
-    inner = (
-      <g>
-        <ellipse cx="50" cy="73" rx="17" ry="3" fill="rgba(0,0,0,.22)" />
-        <circle cx="50" cy="50" r="21" fill="url(#pearlg)" stroke="rgba(150,100,180,.5)" strokeWidth="1" />
-        <ellipse cx="42" cy="41" rx="7" ry="4.5" fill="#fff" opacity=".85" transform="rotate(-30 42 41)" />
-      </g>
-    );
-  } else if (kind === 'gold') {
-    inner = (
-      <g>
-        <ellipse cx="50" cy="73" rx="18" ry="3" fill="rgba(0,0,0,.25)" />
-        <path d="M27 60L25 47l9-13 14-6 15 4 10 12-2 15-12 10H40z" fill="url(#goldg)" stroke="#8a5a00" strokeWidth="1.5" strokeLinejoin="round" />
-        <path d="M34 34l14 10 15-12M48 44l-4 24M48 44l20 8M25 47l19-3" stroke="#fff6b8" strokeOpacity=".7" strokeWidth="1.4" fill="none" />
-      </g>
-    );
-  } else if (kind === 'glass') {
-    inner = (
-      <svg x="24" y="22" width="52" height="56" viewBox="0 0 80 90" overflow="visible">
-        <Flask />
-      </svg>
-    );
-  } else {
-    inner = (
-      <g>
-        <ellipse cx="50" cy="75" rx="15" ry="3" fill="rgba(0,0,0,.25)" />
-        <svg x="22" y="20" width="56" height="56" viewBox="0 0 64 64" overflow="visible">
-          <GemShape kind={kind} />
-        </svg>
-      </g>
-    );
-  }
   return (
     <svg className="tokart" width={size} height={size} viewBox="0 0 100 100">
       <defs>
@@ -102,32 +61,14 @@ export function TokenArt({ kind, size = 52 }) {
           <stop offset=".55" stopColor={p.b} />
           <stop offset="1" stopColor={p.d} />
         </radialGradient>
-        <radialGradient id="cream" cx=".4" cy=".3" r=".9">
-          <stop offset="0" stopColor="#fffaf0" />
-          <stop offset="1" stopColor="#d6c7a8" />
-        </radialGradient>
-        <radialGradient id="pearlg" cx=".35" cy=".3" r=".8">
-          <stop offset="0" stopColor="#fff" />
-          <stop offset=".5" stopColor="#f6e3f8" />
-          <stop offset="1" stopColor="#c59ad8" />
-        </radialGradient>
-        <linearGradient id="goldg" x1="0" y1="0" x2="1" y2="1">
-          <stop offset="0" stopColor="#fff0a0" />
-          <stop offset=".5" stopColor="#f2b705" />
-          <stop offset="1" stopColor="#a56d00" />
-        </linearGradient>
-        <linearGradient id="liquid" x1="0" y1="0" x2="0" y2="1">
-          <stop offset="0" stopColor="#d9a8ff" />
-          <stop offset="1" stopColor="#7a2fd0" />
-        </linearGradient>
+        <clipPath id="tokclip"><circle cx="50" cy="50" r="37" /></clipPath>
       </defs>
       <circle cx="50" cy="50" r="48" fill={`url(#ring-${kind})`} stroke="rgba(0,0,0,.6)" strokeWidth="2" />
       <circle cx="50" cy="50" r="41" fill="none" stroke="rgba(255,255,255,.28)" strokeWidth="1.5" strokeDasharray="2 4" />
-      <circle cx="50" cy="50" r="38.5" fill="rgba(0,0,0,.3)" />
-      <circle cx="50" cy="50" r="36" fill="url(#cream)" />
-      <circle cx="50" cy="50" r="36" fill="none" stroke="rgba(0,0,0,.3)" strokeWidth="1.5" />
-      {inner}
-      <path d="M17 32a37 37 0 0 1 28-19" stroke="rgba(255,255,255,.7)" strokeWidth="4.5" strokeLinecap="round" fill="none" />
+      <circle cx="50" cy="50" r="38.5" fill="rgba(0,0,0,.35)" />
+      <circle cx="50" cy="50" r="37" fill="#10131a" />
+      <image href={`/gems/${kind}.png`} x="11" y="11" width="78" height="78" clipPath="url(#tokclip)" preserveAspectRatio="xMidYMid slice" />
+      <path d="M17 32a37 37 0 0 1 28-19" stroke="rgba(255,255,255,.55)" strokeWidth="4" strokeLinecap="round" fill="none" />
     </svg>
   );
 }
@@ -136,40 +77,14 @@ export function Scroll({ size = 20 }) {
   return <ScrollText size={size} strokeWidth={1.75} className="shrink-0 text-primary" />;
 }
 
+/** The picture is only legible when it is big; tiny crowns keep a clean outline. */
 export function Crown({ size = 16 }) {
+  if (size >= 28) return <img src="/gems/crown.png" width={size} height={size} alt="" draggable={false} className="gem-img shrink-0" />;
   return <CrownIcon size={size} strokeWidth={1.5} fill="currentColor" className="shrink-0 text-amber-400" />;
 }
 
-/* Small flat icon used in cost pills and chips. */
+/** The small icon used in cost pills and chips: the same pictures as the gems. */
 export function Mini({ kind, size = 16 }) {
-  if (kind === 'pearl') {
-    return (
-      <svg width={size} height={size} viewBox="0 0 16 16">
-        <defs>
-          <radialGradient id="miniPearl" cx=".35" cy=".3" r=".8">
-            <stop offset="0" stopColor="#fff" />
-            <stop offset="1" stopColor="#c59ad8" />
-          </radialGradient>
-        </defs>
-        <circle cx="8" cy="8" r="6.5" fill="url(#miniPearl)" />
-      </svg>
-    );
-  }
-  if (kind === 'glass') {
-    return (
-      <svg width={size} height={size} viewBox="0 0 16 16">
-        <path d="M6 1.5h4V6l3.3 7a1.3 1.3 0 0 1-1.2 1.8H3.9A1.3 1.3 0 0 1 2.7 13L6 6z" fill="#a855f7" />
-        <path d="M4.6 10h6.8l1.9 3.8H2.7z" fill="#d9a8ff" />
-      </svg>
-    );
-  }
-  if (kind === 'gold') {
-    return (
-      <svg width={size} height={size} viewBox="0 0 16 16">
-        <path d="M2.5 10 2 6.5 5 3.5l4-1 4 2 1.5 3.5-1 3.5-3.5 2h-5z" fill="#f2b705" stroke="#a56d00" strokeWidth=".8" strokeLinejoin="round" />
-      </svg>
-    );
-  }
   return <Gem kind={kind} size={size} />;
 }
 
