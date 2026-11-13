@@ -192,7 +192,7 @@ function Board({ session, onExit, init }) {
   const cardsW = Math.round(Math.min(764 + extra * 0.5, 744 * Math.min(zByHeight, 1.2) + 70));
   const cardZoom = Math.max(0.5, Math.min(zByHeight, (cardsW - 64) / 744, 1.2));
   const boardColW = w - 20 - playersW - cardsW - 24;
-  const cell = Math.max(64, Math.min(Math.floor((boardColW - 72) / 5), Math.floor((h - 373) / 5)));
+  const cell = Math.max(56, Math.min(Math.floor(boardColW / 5.96), Math.floor((h - 290) / 5.96)));
   const card = selectedCard(S);
   const act = (a) => () => dispatch(a);
 
@@ -280,7 +280,7 @@ function Board({ session, onExit, init }) {
 
               {/* Middle: the board, with the selected card underneath */}
               <div className="flex min-h-0 flex-col gap-3">
-                <Card className="shrink-0 gap-3 p-3">
+                <div className="flex shrink-0 flex-col gap-3">
                   <div className="board-wrap mx-auto">
                     <div className="board">
                       {S.board.map((c, i) => {
@@ -320,7 +320,7 @@ function Board({ session, onExit, init }) {
                       {(['freeReserve', 'freeCf'].includes(pd?.type) || (pd?.type === 'pick' && pd.plus)) && <Button size="sm" variant="outline" onClick={act({ type: 'skip' })}>Skip</Button>}
                     </div>
                   </div>
-                </Card>
+                </div>
 
                 {card && (
                   <Card className="min-h-0 flex-1 overflow-hidden p-3 border-0 bg-transparent shadow-none">

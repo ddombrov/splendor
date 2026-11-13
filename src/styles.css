@@ -132,3 +132,8 @@
 .iconsub.xmark { left: auto; right: -12px; bottom: -8px; }
 .iconsub.eye { left: 44%; top: 34%; bottom: auto; transform: translate(-50%, -50%); }
 .card.royal { background: url(/cards/front-yellow.svg) center / 100% 100% no-repeat; }
+
+/* the board is the supplied wooden picture: its 5 by 5 sockets line up with the token cells */
+.stage .board-wrap { padding: calc(var(--cell) * 0.327); border: 0; border-radius: 0; background: url(/boards/wooden-board.svg) center / 100% 100% no-repeat; }
+.stage .board { gap: calc(var(--cell) * 0.0769); }
+.stage .cell { background: transparent; box-shadow: none; }
