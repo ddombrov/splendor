@@ -1,0 +1,13 @@
+name = "splendor-duel"
+main = "src/index.js"
+compatibility_date = "2025-09-01"
+
+# The weekly cleanup of games nobody has touched for seven days: Mondays at 04:00 UTC.
+[triggers]
+crons = ["0 4 * * 1"]
+
+# For local development any id works. Deploying replaces it with the real database's id.
+[[d1_databases]]
+binding = "DB"
+database_name = "splendor-duel"
+database_id = "00000000-0000-0000-0000-000000000000"

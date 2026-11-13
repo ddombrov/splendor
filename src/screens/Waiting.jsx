@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { Bot, Check, Copy, Loader2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { api, onRemoteChange } from '../net/api.js';
+import { api } from '../net/api.js';
 import { CodeBoxes, GemRow } from './parts.jsx';
 
 const Shell = ({ children }) => (
@@ -16,13 +16,12 @@ export function Lobby({ code, onCancel, onOpponentJoined }) {
   useEffect(() => {
     let live = true;
     const check = async () => {
-      const room = await api.getRoom(code, 0);
-      if (live && room?.seats[1]) onOpponentJoined();
+      const room = await api.getRoom(code);
+      if (live && room?.seated) onOpponentJoined();
     };
     check();
     const id = setInterval(check, 1500);
-    const off = onRemoteChange(check);
-    return () => { live = false; clearInterval(id); off(); };
+    return () => { live = false; clearInterval(id); };
   }, [code, onOpponentJoined]);
   const copy = () => {
     try { navigator.clipboard.writeText(code); } catch { /* ignore */ }
@@ -62,8 +61,7 @@ export function QuickMatch({ onMatched, onCancel, onPlayComputer }) {
       poll();
     });
     const id = setInterval(() => { setSeconds((s) => s + 1); poll(); }, 1000);
-    const off = onRemoteChange(poll);
-    return () => { live = false; clearInterval(id); off(); if (ticket.current && !done.current) api.quickLeave(ticket.current); };
+    return () => { live = false; clearInterval(id); if (ticket.current && !done.current) api.quickLeave(ticket.current); };
   }, [onMatched]);
   const slow = seconds >= 60;
   return (

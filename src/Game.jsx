@@ -9,7 +9,7 @@ import { ScrollArea } from '@/components/ui/scroll-area';
 import { Separator } from '@/components/ui/separator';
 import { Switch } from '@/components/ui/switch';
 import { cn } from '@/lib/utils';
-import { api, onRemoteChange } from './net/api.js';
+import { api } from './net/api.js';
 import { botActions } from './engine/bot.js';
 import { createGame, reduce, cur, opp, plan, endOptions, validLine, selectedCard, resCap } from './engine/engine.js';
 import { JewelCard, CfCard, RoyalCard, CardBack } from './components/Cards.jsx';
@@ -90,7 +90,7 @@ export default function Game({ session, onExit }) {
   const [gone, setGone] = useState(false);
   useEffect(() => {
     if (!online) return;
-    api.getRoom(session.code, session.seat).then((room) => (room ? setInit({ S: room.S, rev: room.rev }) : setGone(true)));
+    api.getRoom(session.code).then((room) => (room ? setInit({ S: room.S, rev: room.rev }) : setGone(true)));
   }, [online, session.code, session.seat]);
   if (gone) {
     return (
@@ -129,39 +129,45 @@ function Board({ session, onExit, init }) {
   const [copied, setCopied] = useState(false);
 
   const adopt = useCallback((next, rev) => { Sref.current = next; revRef.current = rev; setS(next); }, []);
-  const push = useCallback(async (next) => {
-    const res = await api.pushState(session.code, seat, revRef.current, next);
-    if (res.ok) revRef.current = res.room.rev; else adopt(res.room.S, res.room.rev);
-  }, [session.code, seat, adopt]);
+  // Online, every action goes to the server, which runs the rules and answers with the latest game.
+  // Actions are sent one after another so the server always sees them in order.
+  const queue = useRef(Promise.resolve());
+  const send = useCallback((action) => {
+    queue.current = queue.current.then(async () => {
+      try {
+        const res = await api.sendAction(session.code, revRef.current, action);
+        if (res.S) adopt(res.message ? { ...res.S, toast: res.message } : res.S, res.rev);
+      } catch { /* the connection dropped; the next poll catches up */ }
+    });
+  }, [session.code, adopt]);
 
-  /** Every change to the game goes through here, so online rules about whose turn it is live in one place. */
+  /** Every change to the game goes through here, so the rules about whose turn it is live in one place. */
   const dispatch = useCallback((a) => {
     const before = Sref.current;
     if (seat != null && a.type !== 'resign') {
       const mine = before.awaitingFirst ? (a.type === 'chooseFirst' && (!online || seat === 0)) : before.cur === seat;
       if (!mine) return;
     }
+    if (online) { send(a); return; }
     const next = reduce(before, a);
     if (next === before) return;
     Sref.current = next;
     setS(next);
-    if (online) push(next);
-  }, [seat, online, push]);
+  }, [seat, online, send]);
 
-  // Online: poll for the other player's moves, and when another tab changes the room.
+  // Online: ask the server for the other player's moves every two seconds.
   useEffect(() => {
     if (!online) return undefined;
     const pull = async () => {
-      const room = await api.getRoom(session.code, seat);
+      const room = await api.getRoom(session.code);
       if (!room) return;
-      setRemote({ active: room.active, seated: !!room.seats[1] });
+      setRemote({ active: room.active, seated: room.seated });
       if (room.rev > revRef.current) adopt(room.S, room.rev);
     };
     pull();
     const id = setInterval(() => { pull(); setTick((t) => t + 1); }, 2000);
-    const off = onRemoteChange(pull);
-    return () => { clearInterval(id); off(); };
-  }, [online, session.code, seat, adopt]);
+    return () => clearInterval(id);
+  }, [online, session.code, adopt]);
 
   // Against the computer: it plays seat 1 after a short pause.
   useEffect(() => {

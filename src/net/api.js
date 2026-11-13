@@ -1,135 +1,76 @@
 /*
- * The game's "server" interface. Right now it is a LOCAL STAND-IN: rooms live in this browser's
- * localStorage, so two tabs of the same browser can create, join and play each other. Every
- * function is async and returns plain data, so the Cloudflare Worker can replace this file later
- * without the screens changing.
- *
- * Differences from the real server, on purpose: no rule checking on the "server" side, nothing is
- * hidden from the other player's tab, and rooms are not deleted after seven idle days.
+ * The browser's connection to the game server (the Worker in /worker). Every function returns plain
+ * data and throws an Error with a `reason` when the server refuses. A tab remembers its seat in each
+ * game in sessionStorage, so two tabs of one browser can be two different players.
  */
-import { createGame } from '../engine/engine.js';
+const SEAT = (code) => `sd:seat:${code}`;
 
-const ROOM = (code) => `sd:room:${code}`;
-const QUEUE = 'sd:queue';
-const RESULT = (id) => `sd:qres:${id}`;
-const SEAT = (code) => `sd:seat:${code}`; // sessionStorage: one seat per browser tab
-
-const read = (k, store = localStorage) => {
-  try { return JSON.parse(store.getItem(k)); } catch { return null; }
+const readSeat = (code) => {
+  try { return JSON.parse(sessionStorage.getItem(SEAT(code))); } catch { return null; }
 };
-const write = (k, v, store = localStorage) => store.setItem(k, JSON.stringify(v));
-const token = () => Math.random().toString(36).slice(2) + Date.now().toString(36);
-const seed = () => crypto.getRandomValues(new Uint32Array(1))[0];
+const saveSeat = (code, seat, token) => {
+  try { sessionStorage.setItem(SEAT(code), JSON.stringify({ seat, token })); } catch { /* ignore */ }
+};
 
-function freeCode() {
-  for (let i = 0; i < 200; i++) {
-    const code = String(Math.floor(Math.random() * 100000)).padStart(5, '0');
-    if (!read(ROOM(code))) return code;
-  }
-  throw new Error('no free game code');
-}
-
-/** What a browser tab needs to remember to come back to a game. */
-export const mySeat = (code) => read(SEAT(code), sessionStorage);
-
-function newRoom({ exp, source }) {
-  const code = freeCode();
-  const room = {
-    code, exp, source, rev: 0, status: 'waiting', created: Date.now(),
-    seats: [token(), null], active: [Date.now(), 0],
-    S: createGame(exp, seed(), null),
-  };
-  write(ROOM(code), room);
-  return room;
+async function request(method, path, body) {
+  const res = await fetch(`/api${path}`, { method, headers: { 'content-type': 'application/json' }, body: body ? JSON.stringify(body) : undefined });
+  const data = await res.json().catch(() => ({}));
+  if (!res.ok && !data.ok === false) throw Object.assign(new Error(data.error?.message || 'The server could not be reached.'), { reason: data.error?.reason || 'network' });
+  if (data.error) throw Object.assign(new Error(data.error.message), { reason: data.error.reason });
+  return data;
 }
 
 export const api = {
   /** Start an online game and take the first seat. */
   async createRoom({ exp, source }) {
-    const room = newRoom({ exp, source });
-    write(SEAT(room.code), { seat: 0, token: room.seats[0] }, sessionStorage);
-    return { code: room.code, seat: 0 };
+    const { code, seat, token } = await request('POST', '/rooms', { exp, source });
+    saveSeat(code, seat, token);
+    return { code, seat };
   },
 
   /** Join with a code. Fails with notfound or full. */
   async joinRoom(code) {
-    const room = read(ROOM(code));
-    if (!room) throw Object.assign(new Error('No game has that code.'), { reason: 'notfound' });
-    if (room.seats[1]) throw Object.assign(new Error('That game is already full.'), { reason: 'full' });
-    room.seats[1] = token();
-    room.status = 'playing';
-    room.active[1] = Date.now();
-    write(ROOM(code), room);
-    write(SEAT(code), { seat: 1, token: room.seats[1] }, sessionStorage);
-    return { code, seat: 1 };
+    const { seat, token } = await request('POST', `/rooms/${code}/join`);
+    saveSeat(code, seat, token);
+    return { code, seat };
   },
 
-  /** The current room. Also records that this seat is still here. */
-  async getRoom(code, seat) {
-    const room = read(ROOM(code));
-    if (!room) return null;
-    if (seat != null) {
-      room.active[seat] = Date.now();
-      write(ROOM(code), room);
+  /** The game as this tab's player may see it, or null when it no longer exists. */
+  async getRoom(code) {
+    const mine = readSeat(code);
+    if (!mine) return null;
+    try { return await request('GET', `/rooms/${code}?token=${mine.token}`); } catch (e) {
+      if (e.reason === 'notfound' || e.reason === 'forbidden') return null;
+      throw e;
     }
-    return room;
   },
 
-  /** Store a new game state. Fails when the other player moved first. */
-  async pushState(code, seat, baseRev, S) {
-    const room = read(ROOM(code));
-    if (!room) throw Object.assign(new Error('That game no longer exists.'), { reason: 'notfound' });
-    if (room.rev !== baseRev) return { ok: false, room };
-    room.rev += 1;
-    room.S = S;
-    room.active[seat] = Date.now();
-    write(ROOM(code), room);
-    return { ok: true, room };
+  /** Send an action. Returns the server's answer, which always carries the latest game. */
+  async sendAction(code, baseRev, action) {
+    const mine = readSeat(code);
+    return request('POST', `/rooms/${code}/action`, { token: mine?.token, baseRev, action });
   },
 
   async deleteRoom(code) {
-    localStorage.removeItem(ROOM(code));
-    sessionStorage.removeItem(SEAT(code));
+    const mine = readSeat(code);
+    try { await request('DELETE', `/rooms/${code}`, { token: mine?.token }); } catch { /* it may already be gone */ }
+    try { sessionStorage.removeItem(SEAT(code)); } catch { /* ignore */ }
   },
 
   /** Quick match: join the waiting line. Returns a ticket to poll. */
   async quickJoin() {
-    const now = Date.now();
-    const queue = (read(QUEUE) || []).filter((t) => now - t.t < 70000);
-    const id = token();
-    const other = queue.shift();
-    if (other) {
-      const room = newRoom({ exp: false, source: 'random' });
-      room.seats[1] = token();
-      room.status = 'playing';
-      room.active[1] = now;
-      write(ROOM(room.code), room);
-      write(RESULT(other.id), { code: room.code, seat: 0, token: room.seats[0] });
-      write(RESULT(id), { code: room.code, seat: 1, token: room.seats[1] });
-      write(QUEUE, queue);
-    } else {
-      write(QUEUE, [...queue, { id, t: now }]);
-    }
-    return id;
+    return (await request('POST', '/quick')).ticket;
   },
 
   /** Has this ticket been paired yet? */
-  async quickStatus(id) {
-    const res = read(RESULT(id));
-    if (!res) return null;
-    localStorage.removeItem(RESULT(id));
-    write(SEAT(res.code), { seat: res.seat, token: res.token }, sessionStorage);
+  async quickStatus(ticket) {
+    const res = await request('GET', `/quick/${ticket}`);
+    if (!res.code) return null;
+    saveSeat(res.code, res.seat, res.token);
     return { code: res.code, seat: res.seat };
   },
 
-  async quickLeave(id) {
-    write(QUEUE, (read(QUEUE) || []).filter((t) => t.id !== id));
+  async quickLeave(ticket) {
+    try { await request('DELETE', `/quick/${ticket}`); } catch { /* ignore */ }
   },
 };
-
-/** Called by other tabs: run fn when any room or queue changes. */
-export function onRemoteChange(fn) {
-  const handler = (e) => { if (e.key && e.key.startsWith('sd:')) fn(); };
-  window.addEventListener('storage', handler);
-  return () => window.removeEventListener('storage', handler);
-}
