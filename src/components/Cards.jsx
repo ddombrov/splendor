@@ -2,10 +2,12 @@ import { CF_TEXT, ROYAL_TEXT } from '../engine/data.js';
 import { PAL, Gem, Crown, AbilityIcon, Mini } from './Art.jsx';
 
 // Royal abilities that have a picture; the first three need no words, the rest keep their text.
-const ICON_ONLY = ['privilege', 'extra', 'steal', 'take1', 'rtake3', 'rtake4', 'rbag2', 'rcounter', 'rreserve', 'w9c', 'w9k'];
+const ICON_ONLY = ['privilege', 'extra', 'steal', 'take1', 'rtake3', 'rtake4', 'rbag2', 'rgold', 'rcounter', 'rreserve', 'w9c', 'w9k'];
+// Counterfeiter powers that are just a picture and a number.
+const CF_ICON = { any1: ['wild', '−1'] };
 // A number drawn on the picture, for powers that take several tokens.
 const ICON_COUNT = { rtake3: 3, rtake4: 4, rbag2: 2, w9c: '−1', w9k: '−1' };
-const ROYAL_ICON = { privilege: 'privilege', extra: 'extra', steal: 'steal', take1: 'match', rtake3: 'match', rtake4: 'match', rbag2: 'bag', rcounter: 'takecard', rreserve: 'takecard', w9c: 'wild', w9k: 'crown' };
+const ROYAL_ICON = { privilege: 'privilege', extra: 'extra', steal: 'steal', take1: 'match', rtake3: 'match', rtake4: 'match', rbag2: 'bag', rcounter: 'takecard', rreserve: 'takecard', rgold: 'gold', w9c: 'wild', w9k: 'crown' };
 
 const COST_ORDER = ['blue', 'white', 'green', 'black', 'red', 'pearl', 'glass'];
 const AB_LABEL = { extra: 'Extra turn', privilege: 'Privilege', match: 'Match', steal: 'Steal', wild: 'Wild' };
@@ -61,7 +63,16 @@ export function CfCard({ card, onClick, selected, afford }) {
         <span>Counterfeiter</span>
       </div>
       {card.crowns > 0 && <div className="crownrow cfcrowns"><Crown size={20} /><Crown size={20} /></div>}
-      <div className="note">{CF_TEXT[card.ab](card)}</div>
+      {CF_ICON[card.ab] ? (
+        <div className="note iconly">
+          <span className="relative inline-flex">
+            <AbilityIcon ab={CF_ICON[card.ab][0]} size={44} />
+            <b className="iconcount">{CF_ICON[card.ab][1]}</b>
+          </span>
+        </div>
+      ) : (
+        <div className="note">{CF_TEXT[card.ab](card)}</div>
+      )}
       <Costs cost={card.cost} />
     </div>
   );

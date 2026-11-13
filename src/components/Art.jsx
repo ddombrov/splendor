@@ -48,6 +48,7 @@ const ABILITY_ICON = { extra: 'go-again', privilege: 'scroll', match: 'take-from
 /** The picture for a card ability: go again, privilege scroll, take from the board, steal, any colour. */
 export function AbilityIcon({ ab, size = 24 }) {
   if (ab === 'crown') return <Crown size={size} />;
+  if (ab === 'gold') return <Gem kind="gold" size={size} />;
   const name = ABILITY_ICON[ab];
   if (!name) return null;
   return <img src={`/icons/${name}.png`} alt="" draggable={false} className="shrink-0 object-contain" style={{ width: size, height: size }} />;
