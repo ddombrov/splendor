@@ -123,7 +123,7 @@ export function endOptions(S) {
   if (!S.exp) return out;
   const un = (ab) => p.cf.find((c) => c.ab === ab && !S.used[c.id]);
   if (un('xturn') && p.tok.glass >= 1 && p.priv >= 1 && !S.extra) out.push({ k: 'xturn', t: 'Extra turn (1 glassware + 1 privilege)' });
-  if (un('xsteal') && p.tok.glass >= 1 && p.priv >= 1 && kinds(S).some((k) => o.tok[k] > 0)) out.push({ k: 'xsteal', t: 'Steal a token (1 glassware + 1 privilege)' });
+  if (un('xsteal') && p.tok.glass >= 1 && p.priv >= 1 && roomLeft(p) > 0 && kinds(S).some((k) => o.tok[k] > 0)) out.push({ k: 'xsteal', t: 'Steal a token (1 glassware + 1 privilege)' });
   const rc = 1 + p.royals.length;
   if (un('royalbuy') && p.tok.glass >= rc && S.royals.length) out.push({ k: 'royalbuy', t: `Take a royal card (${rc} glassware)` });
   if (un('peek') && p.tok.glass >= 2 && p.res.length < resCap(p)) {
@@ -220,6 +220,7 @@ function doStep(S, step) {
       log(S, `No ${arg} token left to match.`);
       return true;
     case 'steal':
+      if (roomLeft(p) < 1) { log(S, `${p.name} holds 10 tokens, so the steal is skipped.`); return true; }
       if (kinds(S).some((k) => opp(S).tok[k] > 0)) return wait({ type: 'steal' });
       log(S, 'Opponent has nothing to steal.');
       return true;

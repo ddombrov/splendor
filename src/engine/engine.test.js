@@ -330,3 +330,27 @@ describe('returning a token to get under the limit', () => {
     expect(after.players[0].tok.blue).toBe(9);
   });
 });
+
+describe('stealing at the ten token limit', () => {
+  const buyStealCard = (tokens) => {
+    const state = createGame(false, 8, 0);
+    const card = { id: 'steal-test', kind: 'jewel', level: 1, cost: {}, pts: 0, crowns: 0, ability: 'steal', n: 1, bonus: 'blue', color: null };
+    state.pyr[0][0] = card;
+    state.players[0].tok.blue = tokens;
+    state.players[1].tok.red = 2;
+    return play(state, { type: 'card', src: 'pyr', l: 0, i: 0 }, { type: 'buy' });
+  };
+
+  it('offers a steal when the buyer has room', () => {
+    const after = buyStealCard(5);
+    expect(after.pending?.type).toBe('steal');
+  });
+
+  it('skips the steal, but still gives the card, when the buyer holds ten tokens', () => {
+    const after = buyStealCard(10);
+    expect(after.pending).toBeNull();
+    expect(after.players[0].cards.map((c) => c.id)).toContain('steal-test');
+    expect(after.players[1].tok.red).toBe(2);
+    expect(after.cur).toBe(1);
+  });
+});
