@@ -21,7 +21,7 @@
 .tok.hl { outline: 2px solid var(--good); outline-offset: 2px; border-radius: 50%; }
 .tok.dim { opacity: 0.3; }
 .pile { transition: transform 0.12s; }
-.pile.click { cursor: pointer; outline: 2px solid var(--good); outline-offset: 2px; border-radius: 50%; }
+.pile.click { cursor: pointer; }
 
 /* card rows */
 .rowline { display: flex; gap: 12px; flex-wrap: nowrap; overflow-x: auto; padding: 8px 4px 10px; }
