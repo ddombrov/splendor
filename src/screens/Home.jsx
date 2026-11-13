@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { Bot, BookOpen, Globe, Loader2, Users, Zap } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { Switch } from '@/components/ui/switch';
 import Rules from '@/components/Rules.jsx';
 import { api } from '../net/api.js';
 import { Field, GemRow, Segmented } from './parts.jsx';
@@ -13,20 +14,10 @@ const MODES = [
   { key: 'quick', icon: Zap, title: 'Quick match' },
 ];
 
-const EXPANSION = [{ value: 'base', label: 'Base game' }, { value: 'exp', label: 'Counterfeiters' }];
 const DIFFICULTIES = [{ value: 'easy', label: 'Easy' }, { value: 'medium', label: 'Medium' }, { value: 'hard', label: 'Hard' }];
 const DEPTHS = [{ value: 'quick', label: 'Quick' }, { value: 'standard', label: 'Standard' }, { value: 'deep', label: 'Deep' }];
 
 /** The choices every new game has. */
-// Games deal randomly generated cards until the official card list is supplied, so there is no choice to make.
-function Setup({ opts, set }) {
-  return (
-    <>
-      <Field label="Game"><Segmented value={opts.exp ? 'exp' : 'base'} onChange={(v) => set({ exp: v === 'exp' })} options={EXPANSION} /></Field>
-    </>
-  );
-}
-
 function CodeEntry({ onJoined }) {
   const [code, setCode] = useState('');
   const [error, setError] = useState('');
@@ -55,13 +46,13 @@ function CodeEntry({ onJoined }) {
   );
 }
 
-function GameDialog({ mode, onClose, onStart, onJoined }) {
-  const [opts, setOpts] = useState({ exp: false, source: 'random', difficulty: 'medium', depth: 'standard' });
+function GameDialog({ mode, exp, onClose, onStart, onJoined }) {
+  const [opts, setOpts] = useState({ source: 'random', difficulty: 'medium', depth: 'standard' });
   const [tab, setTab] = useState('create');
   const [busy, setBusy] = useState(false);
   const set = (patch) => setOpts((o) => ({ ...o, ...patch }));
   const title = MODES.find((m) => m.key === mode).title;
-  const go = async () => { setBusy(true); await onStart({ mode: mode === 'online' ? 'online' : mode, ...opts }); };
+  const go = async () => { setBusy(true); await onStart({ mode, exp, ...opts }); };
   const joining = mode === 'online' && tab === 'join';
   return (
     <Dialog open onOpenChange={(o) => !o && onClose()}>
@@ -74,7 +65,6 @@ function GameDialog({ mode, onClose, onStart, onJoined }) {
           {mode === 'online' && <Segmented value={tab} onChange={setTab} options={[{ value: 'create', label: 'Create a game' }, { value: 'join', label: 'Join with a code' }]} />}
           {joining ? <CodeEntry onJoined={onJoined} /> : (
             <>
-              <Setup opts={opts} set={set} />
               {mode === 'ai' && (
                 <>
                   <Field label="Difficulty"><Segmented value={opts.difficulty} onChange={(v) => set({ difficulty: v })} options={DIFFICULTIES} /></Field>
@@ -96,7 +86,10 @@ function GameDialog({ mode, onClose, onStart, onJoined }) {
 export default function Home({ onStart, onJoined, onQuick }) {
   const [open, setOpen] = useState(null);
   const [showRules, setShowRules] = useState(false);
-  const pick = (key) => (key === 'quick' ? onQuick() : setOpen(key));
+  const [exp, setExp] = useState(() => { try { return localStorage.getItem('sd-exp') === '1'; } catch { return false; } });
+  const changeExp = (v) => { setExp(v); try { localStorage.setItem('sd-exp', v ? '1' : '0'); } catch { /* ignore */ } };
+  // Playing on one device has nothing to choose, so it starts straight away.
+  const pick = (key) => (key === 'quick' ? onQuick() : key === 'device' ? onStart({ mode: 'device', exp, source: 'random' }) : setOpen(key));
   return (
     <div className="fixed inset-0 overflow-auto">
       <div className="mx-auto flex min-h-full max-w-2xl flex-col items-center justify-center gap-8 px-6 py-10">
@@ -117,11 +110,17 @@ export default function Home({ onStart, onJoined, onQuick }) {
             </button>
           ))}
         </div>
-        <Button variant="ghost" onClick={() => setShowRules(true)}><BookOpen /> Rules</Button>
+        <div className="flex items-center gap-4">
+          <Button variant="ghost" onClick={() => setShowRules(true)}><BookOpen /> Rules</Button>
+          <label className="flex cursor-pointer items-center gap-2 rounded-md px-3 py-2 text-sm font-medium hover:bg-accent">
+            Counterfeiters expansion
+            <Switch checked={exp} onCheckedChange={changeExp} />
+          </label>
+        </div>
       </div>
 
-      {open && <GameDialog mode={open} onClose={() => setOpen(null)} onStart={onStart} onJoined={onJoined} />}
-      {showRules && <Rules exp onClose={() => setShowRules(false)} />}
+      {open && <GameDialog mode={open} exp={exp} onClose={() => setOpen(null)} onStart={onStart} onJoined={onJoined} />}
+      {showRules && <Rules exp={exp} onClose={() => setShowRules(false)} />}
     </div>
   );
 }
