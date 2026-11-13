@@ -74,10 +74,10 @@
 .rmark.r { right: 8px; }
 .card.back { cursor: default; display: flex; align-items: center; justify-content: center; border-top-width: 1px; }
 .card.back[class*='lv'] { cursor: pointer; }
-.back.lv1 { background: #1f4a37; border-color: #2f6b50; }
-.back.lv2 { background: #5b4519; border-color: #84652a; }
-.back.lv3 { background: #1f3b69; border-color: #2f5a9c; }
-.back.lvcf { background: #3a2a58; border-color: #5d45a0; }
+.back.lv1 { background: url(/cards/back-green.svg) center / 100% 100% no-repeat; border-color: transparent; }
+.back.lv2 { background: url(/cards/back-yellow.svg) center / 100% 100% no-repeat; border-color: transparent; }
+.back.lv3 { background: url(/cards/back-blue.svg) center / 100% 100% no-repeat; border-color: transparent; }
+.back.lvcf { background: url(/cards/back-purple.svg) center / 100% 100% no-repeat; border-color: transparent; }
 .card.back .emblem { display: flex; flex-direction: column; align-items: center; gap: 8px; }
 .card.back .emblem b { font-size: 22px; font-weight: 800; letter-spacing: 0.02em; }
 .card.back .dots { display: flex; gap: 5px; }
@@ -114,3 +114,6 @@
 .note.iconly { left: 50%; right: auto; transform: translateX(-50%); width: fit-content; padding: 3px; line-height: 0; border-radius: 8px; }
 /* empty places for reserved cards, the same size as a reserved card */
 .compact-cards .slot { zoom: var(--z, 0.75); flex: 0 0 auto; width: 124px; aspect-ratio: 5 / 7; border: 1.5px dashed rgba(255, 255, 255, 0.2); border-radius: 10px; }
+
+.card.back .emblem { padding: 6px 10px; border-radius: 10px; background: rgba(10, 12, 18, 0.72); }
+.card.back .count { background: rgba(10, 12, 18, 0.8); }

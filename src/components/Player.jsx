@@ -33,7 +33,6 @@ export default function Player({ S, idx, dispatch }) {
       <div className="flex flex-wrap items-center justify-between gap-x-2 gap-y-1">
         <div className="flex items-center gap-2">
           <h3 className="text-base font-bold">{p.name}</h3>
-          {active && <Badge className="px-1.5 py-0 text-[10px]">Your turn</Badge>}
         </div>
         <div className="flex items-center gap-3">
           <Stat label="Prestige"><NumberTicker value={pts(p)} className="tracking-normal text-foreground dark:text-foreground" /></Stat>
