@@ -99,7 +99,7 @@ export default function Home({ onStart, onJoined, onQuick }) {
   const [showRules, setShowRules] = useState(false);
   const pick = (key) => (key === 'quick' ? onQuick() : setOpen(key));
   return (
-    <div className="fixed inset-0 overflow-auto bg-background">
+    <div className="fixed inset-0 overflow-auto">
       <div className="mx-auto flex min-h-full max-w-2xl flex-col items-center justify-center gap-8 px-6 py-10">
         <div className="space-y-4 text-center">
           <GemRow size={44} />

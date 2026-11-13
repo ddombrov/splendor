@@ -94,14 +94,14 @@ export default function Game({ session, onExit }) {
   }, [online, session.code, session.seat]);
   if (gone) {
     return (
-      <div className="fixed inset-0 flex flex-col items-center justify-center gap-4 bg-background text-center">
+      <div className="fixed inset-0 flex flex-col items-center justify-center gap-4 text-center">
         <p className="text-lg font-semibold">This game no longer exists.</p>
         <Button onClick={onExit}>Back to home</Button>
       </div>
     );
   }
   if (!init) {
-    return <div className="fixed inset-0 flex items-center justify-center bg-background"><Loader2 className="size-8 animate-spin text-muted-foreground" /></div>;
+    return <div className="fixed inset-0 flex items-center justify-center"><Loader2 className="size-8 animate-spin text-muted-foreground" /></div>;
   }
   return <Board session={session} onExit={onExit} init={init} />;
 }
@@ -238,7 +238,7 @@ function Board({ session, onExit, init }) {
 
   return (
     <>
-      <div className="fixed inset-0 overflow-hidden bg-background">
+      <div className="fixed inset-0 overflow-hidden">
         <div>
           <div className="stage relative flex flex-col gap-2 p-2.5" style={{ width: w, height: h, transform: `scale(${k})`, transformOrigin: '0 0', '--cell': `${cell}px` }}>
             <div className="absolute right-3 top-3 z-30 flex items-center gap-1.5">

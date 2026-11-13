@@ -5,7 +5,7 @@ import { api, onRemoteChange } from '../net/api.js';
 import { CodeBoxes, GemRow } from './parts.jsx';
 
 const Shell = ({ children }) => (
-  <div className="fixed inset-0 flex items-center justify-center overflow-auto bg-background p-6">
+  <div className="fixed inset-0 flex items-center justify-center overflow-auto p-6">
     <div className="flex w-full max-w-md flex-col items-center gap-6 text-center">{children}</div>
   </div>
 );
