@@ -22,8 +22,7 @@ export function TokenArt({ kind, size = 52 }) {
   return (
     <svg className="tokart" width={size} height={size} viewBox="0 0 100 100">
       <circle cx="50" cy="50" r="48" fill={p.b} stroke={p.d} strokeWidth="3" />
-      <circle cx="50" cy="50" r="38" fill="#10131a" />
-      <image href={`/gems/${kind}.png`} x="17" y="17" width="66" height="66" preserveAspectRatio="xMidYMid meet" />
+      <image href={`/gems/${kind}.png`} x="14" y="14" width="72" height="72" preserveAspectRatio="xMidYMid meet" />
     </svg>
   );
 }
