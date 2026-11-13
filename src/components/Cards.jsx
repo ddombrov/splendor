@@ -2,7 +2,7 @@ import { CF_TEXT, ROYAL_TEXT } from '../engine/data.js';
 import { PAL, Gem, Crown, AbilityIcon, Mini } from './Art.jsx';
 
 // Royal abilities that have a picture; the first three need no words, the rest keep their text.
-const ICON_ONLY = ['privilege', 'extra', 'steal'];
+const ICON_ONLY = ['privilege', 'extra', 'steal', 'take1'];
 const ROYAL_ICON = { privilege: 'privilege', extra: 'extra', steal: 'steal', take1: 'match', rtake3: 'match', rtake4: 'match' };
 
 const COST_ORDER = ['blue', 'white', 'green', 'black', 'red', 'pearl', 'glass'];
@@ -34,11 +34,12 @@ export function JewelCard({ card, onClick, selected, afford }) {
       title={title}
     >
       <div className="art"><Gem kind={kind} size={62} /></div>
-      <div className="pts">{card.pts || ''}</div>
-      <div className="crownrow">{Array.from({ length: card.crowns }, (_, i) => <Crown key={i} size={20} />)}</div>
+      <div className="ptsrow">
+        <div className="pts">{card.pts || ''}</div>
+        <div className="crownrow">{Array.from({ length: card.crowns }, (_, i) => <Crown key={i} size={22} />)}</div>
+      </div>
       <div className="bonus">
-        <Gem kind={kind} size={26} />
-        {card.n > 1 && <b>×{card.n}</b>}
+        {Array.from({ length: card.n }, (_, i) => <Gem key={i} kind={kind} size={card.n > 1 ? 22 : 26} />)}
       </div>
       {abil && (
         <div className="abil">

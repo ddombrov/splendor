@@ -223,9 +223,8 @@ export default function App() {
                     </div>
                   </div>
                   <div className="flex flex-col items-center gap-2">
-                    <div className="flex items-center gap-1.5 text-base font-semibold" title="Scrolls on the table">
-                      <Scroll size={24} />
-                      <span>{S.privBoard}</span>
+                    <div className="flex min-h-7 items-center -space-x-1.5" title="Scrolls on the table">
+                      {Array.from({ length: S.privBoard }, (_, i) => <Scroll key={i} size={28} />)}
                     </div>
                     <div className="flex flex-wrap justify-center gap-1.5">
                       <Button size="sm" disabled={!takeable} onClick={act({ type: 'take' })}>Take {S.sel.length || ''} selected</Button>

@@ -40,10 +40,10 @@
 .card.afford { box-shadow: 0 0 0 2px var(--good); }
 .card.sel { transform: translateY(-6px); box-shadow: 0 0 0 2px var(--gold); }
 .card .art { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; padding-bottom: 6px; opacity: 0.9; }
-.card .pts { position: absolute; left: 9px; top: 5px; font-size: 26px; font-weight: 800; line-height: 1.1; letter-spacing: -0.02em; }
-.card .crownrow { position: absolute; left: 9px; top: 38px; display: flex; flex-direction: column; gap: 2px; }
-.card .bonus { position: absolute; right: 8px; top: 8px; display: flex; flex-direction: column; align-items: center; }
-.card .bonus b { font-size: 11px; font-weight: 700; }
+.card .ptsrow { position: absolute; left: 9px; top: 5px; display: flex; align-items: center; gap: 4px; }
+.card .pts { font-size: 26px; font-weight: 800; line-height: 1.1; letter-spacing: -0.02em; }
+.card .crownrow { display: flex; align-items: center; gap: 0; }
+.card .bonus { position: absolute; right: 8px; top: 8px; display: flex; flex-direction: row; align-items: center; gap: 1px; }
 .card .costs { position: absolute; left: 7px; bottom: 7px; display: flex; flex-direction: column-reverse; gap: 3px; }
 .costpill {
   display: inline-flex; align-items: center; gap: 5px; padding: 2px 8px 2px 5px; border-radius: 999px;
@@ -61,7 +61,7 @@
 .cfcard { --lvl: #9b7bd6; --tint: 155, 123, 214; }
 .cfcard .note { left: 44px; right: 8px; top: 34px; font-size: 9px; padding: 4px 5px; }
 .cfhead { position: absolute; left: 9px; right: 9px; top: 7px; display: flex; align-items: center; gap: 5px; font-size: 9.5px; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase; color: #cdbbee; }
-.cfcrowns { top: auto; bottom: 8px; left: auto; right: 8px; flex-direction: row; }
+.card .cfcrowns { position: absolute; top: auto; bottom: 8px; left: auto; right: 8px; }
 .royal { --lvl: var(--gold); --tint: 217, 177, 90; }
 .royal.afford { box-shadow: 0 0 0 2px var(--gold); }
 .royal-crown { position: absolute; left: 0; right: 0; top: 36px; display: flex; justify-content: center; }
