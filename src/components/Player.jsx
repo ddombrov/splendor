@@ -66,13 +66,17 @@ export default function Player({ S, idx, dispatch, colW = 52 }) {
           if (!owned.length) return null;
           const z = colW / 124;
           const strip = Math.round(40 * z);
+          const full = Math.round(colW * 1.4);
           return (
-            <div key={c} className="compact-cards pointer-events-none relative shrink-0" style={{ width: colW, height: strip + (owned.length - 1) * strip, '--z': z }}>
-              {owned.map((card, i) => (
-                <div key={card.id} className="absolute left-0 overflow-hidden rounded-[6px]" style={{ top: i * strip, height: strip, width: colW }}>
-                  <JewelCard card={card} />
-                </div>
-              ))}
+            <div key={c} className="compact-cards pointer-events-none relative shrink-0" style={{ width: colW, height: (owned.length - 1) * strip + full, '--z': z }}>
+              {owned.map((card, i) => {
+                const last = i === owned.length - 1;
+                return (
+                  <div key={card.id} className="absolute left-0 overflow-hidden rounded-[6px]" style={{ top: i * strip, height: last ? full : strip, width: colW, zIndex: i }}>
+                    <JewelCard card={card} />
+                  </div>
+                );
+              })}
             </div>
           );
         })}
