@@ -1,6 +1,9 @@
 import { CF_TEXT, ROYAL_TEXT } from '../engine/data.js';
 import { PAL, Gem, Crown, AbilityIcon, Mini } from './Art.jsx';
 
+// Royal abilities that have a picture; the rest are text only.
+const ROYAL_ICON = { privilege: 'privilege', extra: 'extra', steal: 'steal', take1: 'match', rtake3: 'match', rtake4: 'match' };
+
 const COST_ORDER = ['blue', 'white', 'green', 'black', 'red', 'pearl', 'glass'];
 const AB_LABEL = { extra: 'Extra turn', privilege: 'Privilege', match: 'Match', steal: 'Steal', wild: 'Wild' };
 
@@ -38,7 +41,7 @@ export function JewelCard({ card, onClick, selected, afford }) {
       </div>
       {abil && (
         <div className="abil">
-          <AbilityIcon ab={abil} size={16} />
+          <AbilityIcon ab={abil} size={26} />
           <small>{card.ability && wild ? 'Wild+' : AB_LABEL[abil]}</small>
         </div>
       )}
@@ -65,8 +68,8 @@ export function RoyalCard({ card, onClick, glow }) {
   return (
     <div className={`card royal ${glow ? 'afford' : ''}`} onClick={onClick}>
       <div className="pts">{card.pts}</div>
-      <div className="royal-crown"><Crown size={58} /></div>
-      <div className="note royaltext">{ROYAL_TEXT[card.ab]}</div>
+      <div className="royal-crown"><Crown size={42} /></div>
+      <div className="note royaltext"><AbilityIcon ab={ROYAL_ICON[card.ab]} size={24} />{ROYAL_TEXT[card.ab]}</div>
       <div className="rmark l" title="Claim a royal card at 3 crowns"><Crown size={34} /><b>3</b></div>
       <div className="rmark r" title="Claim a royal card at 6 crowns"><Crown size={34} /><b>6</b></div>
     </div>

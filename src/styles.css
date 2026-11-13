@@ -13,11 +13,11 @@
 .board { display: grid; grid-template-columns: repeat(5, 62px); gap: 6px; }
 .cell {
   width: 62px; height: 62px; border-radius: 50%; display: flex; align-items: center; justify-content: center;
-  background: #12151c; box-shadow: inset 0 2px 5px rgba(0, 0, 0, 0.6);
+  background: #12151c;
 }
-.tok { cursor: pointer; line-height: 0; transition: transform 0.12s; filter: drop-shadow(0 2px 2px rgba(0, 0, 0, 0.5)); }
+.tok { cursor: pointer; line-height: 0; transition: transform 0.12s; }
 .tok:hover { transform: translateY(-2px) scale(1.05); }
-.tok.sel { transform: translateY(-3px) scale(1.08); filter: drop-shadow(0 0 0 transparent); outline: 2px solid var(--gold); outline-offset: 2px; border-radius: 50%; }
+.tok.sel { transform: translateY(-3px) scale(1.08); outline: 2px solid var(--gold); outline-offset: 2px; border-radius: 50%; }
 .tok.hl { outline: 2px solid var(--good); outline-offset: 2px; border-radius: 50%; }
 .tok.dim { opacity: 0.3; }
 .pile { transition: transform 0.12s; }
@@ -33,17 +33,16 @@
   position: relative; isolation: isolate; flex: 0 0 auto; width: 124px; aspect-ratio: 5 / 7; border-radius: 10px; cursor: pointer; overflow: hidden; color: #eef0f6;
   background: linear-gradient(180deg, rgba(var(--tint), 0.2) 0%, rgba(var(--tint), 0.06) 55%), #1a1f2b;
   border: 1px solid var(--line); border-top: 4px solid var(--lvl);
-  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.45); transition: transform 0.12s, box-shadow 0.12s;
+  transition: transform 0.12s;
 }
-.card:hover { transform: translateY(-3px); box-shadow: 0 8px 14px rgba(0, 0, 0, 0.5); }
+.card:hover { transform: translateY(-3px); }
 .card.l1 { --lvl: #4aa174; } .card.l2 { --lvl: #d0a248; } .card.l3 { --lvl: #5b8bd6; }
-.card.afford { box-shadow: 0 0 0 2px var(--good), 0 2px 6px rgba(0, 0, 0, 0.45); }
-.card.sel { transform: translateY(-6px); box-shadow: 0 0 0 2px var(--gold), 0 10px 16px rgba(0, 0, 0, 0.5); }
+.card.afford { box-shadow: 0 0 0 2px var(--good); }
+.card.sel { transform: translateY(-6px); box-shadow: 0 0 0 2px var(--gold); }
 .card .art { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; padding-bottom: 6px; opacity: 0.9; }
-.card .pts { text-shadow: 0 1px 3px rgba(0, 0, 0, 0.85); }
 .card .pts { position: absolute; left: 9px; top: 5px; font-size: 26px; font-weight: 800; line-height: 1.1; letter-spacing: -0.02em; }
 .card .crownrow { position: absolute; left: 9px; top: 38px; display: flex; flex-direction: column; gap: 2px; }
-.card .bonus { position: absolute; right: 8px; top: 8px; filter: drop-shadow(0 1px 2px rgba(0,0,0,.7)); display: flex; flex-direction: column; align-items: center; }
+.card .bonus { position: absolute; right: 8px; top: 8px; display: flex; flex-direction: column; align-items: center; }
 .card .bonus b { font-size: 11px; font-weight: 700; }
 .card .costs { position: absolute; left: 7px; bottom: 7px; display: flex; flex-direction: column-reverse; gap: 3px; }
 .costpill {
@@ -65,8 +64,8 @@
 .cfhead { position: absolute; left: 9px; right: 9px; top: 7px; display: flex; align-items: center; gap: 5px; font-size: 9.5px; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase; color: #cdbbee; }
 .cfcrowns { top: auto; bottom: 8px; left: auto; right: 8px; flex-direction: row; }
 .royal { --lvl: var(--gold); --tint: 217, 177, 90; }
-.royal.afford { box-shadow: 0 0 0 2px var(--gold), 0 2px 6px rgba(0, 0, 0, 0.45); }
-.royal-crown { position: absolute; left: 0; right: 0; top: 30px; display: flex; justify-content: center; }
+.royal.afford { box-shadow: 0 0 0 2px var(--gold); }
+.royal-crown { position: absolute; left: 0; right: 0; top: 36px; display: flex; justify-content: center; }
 .royaltext { top: auto; bottom: 42px; text-align: center; }
 .rmark { position: absolute; bottom: 8px; z-index: 2; width: 36px; height: 30px; display: flex; align-items: center; justify-content: center; }
 .rmark img { position: absolute; inset: 0; margin: auto; opacity: 0.35; width: 34px; height: 34px; }
@@ -107,3 +106,7 @@
 .stage .crownmark b { font-size: 20px; }
 .stage .crownmark svg { width: 38px; height: 30px; }
 .stage .preview { zoom: 0.78; }
+
+/* the royal ability text now sits beside a small picture */
+.royaltext { display: flex; align-items: center; justify-content: center; gap: 6px; }
+.cell { border-radius: 50%; }

@@ -13,7 +13,7 @@ import { createGame, reduce, cur, opp, plan, endOptions, validLine, selectedCard
 import { JewelCard, CfCard, RoyalCard, CardBack } from './components/Cards.jsx';
 import Player from './components/Player.jsx';
 import Rules from './components/Rules.jsx';
-import { TokenArt, Scroll, Gem, Mini } from './components/Art.jsx';
+import { TokenArt, Scroll, Gem, Mini, CompleteIcon } from './components/Art.jsx';
 
 // The engine is deterministic, so the screen supplies the seed for each new game.
 const newSeed = () => crypto.getRandomValues(new Uint32Array(1))[0];
@@ -275,16 +275,16 @@ export default function App() {
                             <SectionLabel>Reserve a card</SectionLabel>
                             <ul className="space-y-1">
                               <li className="flex items-center gap-1.5">
-                                {goldChosen ? <CircleCheck className="size-3.5 shrink-0 text-primary" /> : <Circle className="size-3.5 shrink-0 text-muted-foreground" />}
+                                {goldChosen ? <CompleteIcon size={16} /> : <Circle className="size-3.5 shrink-0 text-muted-foreground" />}
                                 Gold token on the board
                               </li>
                               <li className="flex items-center gap-1.5">
-                                {reservableSel ? <CircleCheck className="size-3.5 shrink-0 text-primary" /> : <Circle className="size-3.5 shrink-0 text-muted-foreground" />}
+                                {reservableSel ? <CompleteIcon size={16} /> : <Circle className="size-3.5 shrink-0 text-muted-foreground" />}
                                 {S.selCard?.src === 'deck' ? `Level ${S.selCard.l + 1} deck (top card)` : 'Card from the pyramid or a deck'}
                               </li>
                             </ul>
                             <div className="flex flex-wrap gap-1.5">
-                              <Button size="sm" disabled={!canRes} onClick={act({ type: 'reserve' })}>Complete move</Button>
+                              <Button size="sm" disabled={!canRes} onClick={act({ type: 'reserve' })}>{canRes && <CompleteIcon size={16} />}Complete move</Button>
                               <Button size="sm" variant="outline" onClick={act({ type: 'cancelReserve' })}>Cancel</Button>
                             </div>
                           </div>
