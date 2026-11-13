@@ -49,6 +49,7 @@ const ABILITY_ICON = { extra: 'go-again', privilege: 'scroll', match: 'take-from
 export function AbilityIcon({ ab, size = 24 }) {
   if (ab === 'crown') return <Crown size={size} />;
   if (ab === 'gold') return <Gem kind="gold" size={size} />;
+  if (ab.startsWith('gem:')) return <Gem kind={ab.slice(4)} size={size} />;
   const name = ABILITY_ICON[ab];
   if (!name) return null;
   return <img src={`/icons/${name}.png`} alt="" draggable={false} className="shrink-0 object-contain" style={{ width: size, height: size }} />;
