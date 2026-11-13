@@ -80,15 +80,7 @@ export function RoyalCard({ card, onClick, glow }) {
   );
 }
 
-export function CardBack({ level, count, onClick, label }) {
-  const dots = level === 'cf' ? 4 : level;
-  return (
-    <div className={`card back lv${level}`} onClick={count ? onClick : undefined}>
-      <div className="emblem">
-        <b>{label}</b>
-        <div className="dots">{Array.from({ length: dots }, (_, i) => <i key={i} />)}</div>
-      </div>
-      {count !== '' && <span className="count">{count}</span>}
-    </div>
-  );
+/** A face-down card or deck: just the back artwork. */
+export function CardBack({ level, count, onClick }) {
+  return <div className={`card back lv${level}`} onClick={count ? onClick : undefined} />;
 }

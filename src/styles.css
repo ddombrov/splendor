@@ -117,3 +117,11 @@
 
 .card.back .emblem { padding: 6px 10px; border-radius: 10px; background: rgba(10, 12, 18, 0.72); }
 .card.back .count { background: rgba(10, 12, 18, 0.8); }
+
+/* card fronts for the five gem colours; wild cards keep the plain tinted look */
+.card.jewel.k-white, .card.jewel.k-blue, .card.jewel.k-black, .card.jewel.k-red, .card.jewel.k-green { background-size: 100% 100%; background-repeat: no-repeat; background-position: center; }
+.card.jewel.k-white { background-image: url(/cards/front-white.svg); }
+.card.jewel.k-blue { background-image: url(/cards/front-blue.svg); }
+.card.jewel.k-black { background-image: url(/cards/front-black.svg); }
+.card.jewel.k-red { background-image: url(/cards/front-red.svg); }
+.card.jewel.k-green { background-image: url(/cards/front-green.svg); }
