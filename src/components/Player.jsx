@@ -17,7 +17,7 @@ const Stat = ({ title, children }) => (
 
 export default function Player({ S, idx, dispatch, colW = 52 }) {
   const p = S.players[idx];
-  const active = idx === S.cur;
+  const active = idx === S.cur && !S.awaitingFirst;
   const pd = S.pending;
   const canDisc = pd?.type === 'discard' && active;
   const canSteal = pd?.type === 'steal' && !active;
