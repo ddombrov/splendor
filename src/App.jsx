@@ -63,21 +63,21 @@ function TurnBar({ S, open, setOpen }) {
     <li className="flex items-start gap-2"><Icon className="mt-0.5 size-4 shrink-0 text-primary" />{children}</li>
   );
   return (
-    <Collapsible open={open} onOpenChange={setOpen} className={cn('rounded-xl border bg-card', S.toast && 'border-amber-500/50')}>
-      <div className="flex items-center gap-3 px-4 py-3">
-        {S.toast ? <TriangleAlert className="size-5 text-amber-400" /> : <Swords className="size-5 text-primary" />}
-        <div className="min-w-0 flex-1">
-          <div className="font-semibold">{p.name}'s turn</div>
-          {prompt && <div className={cn('text-sm', S.toast ? 'text-amber-300' : 'text-muted-foreground')}>{prompt}</div>}
+    <Collapsible open={open} onOpenChange={setOpen} className="relative z-20 shrink-0">
+      <div className={cn('flex h-10 items-center gap-2.5 rounded-lg border bg-card px-3', S.toast && 'border-amber-500/50')}>
+        {S.toast ? <TriangleAlert className="size-4 text-amber-400" /> : <Swords className="size-4 text-primary" />}
+        <div className="flex min-w-0 flex-1 items-baseline gap-3">
+          <span className="text-sm font-semibold">{p.name}'s turn</span>
+          {prompt && <span className={cn('truncate text-xs', S.toast ? 'text-amber-300' : 'text-muted-foreground')}>{prompt}</span>}
         </div>
         <CollapsibleTrigger asChild>
-          <Button variant="ghost" size="sm" className="text-muted-foreground">
-            Turn options <ChevronDown className={cn('transition-transform', open && 'rotate-180')} />
+          <Button variant="ghost" size="sm" className="h-7 text-xs text-muted-foreground">
+            Turn options <ChevronDown className={cn('size-3.5 transition-transform', open && 'rotate-180')} />
           </Button>
         </CollapsibleTrigger>
       </div>
-      <CollapsibleContent>
-        <div className="grid gap-4 border-t px-4 py-3 text-sm sm:grid-cols-2">
+      <CollapsibleContent className="absolute inset-x-0 top-full mt-1 rounded-lg border bg-card shadow-2xl">
+        <div className="grid gap-4 px-4 py-3 text-sm sm:grid-cols-2">
           <div>
             <div className="mb-2 text-[11px] font-semibold uppercase tracking-widest text-muted-foreground">Optional, before your action</div>
             <ul className="space-y-1.5">
@@ -102,7 +102,7 @@ function TurnBar({ S, open, setOpen }) {
 function Token({ kind, cls, onClick }) {
   return (
     <div className={`tok ${cls || ''}`} onClick={onClick}>
-      <TokenArt kind={kind} size={54} />
+      <TokenArt kind={kind} size={44} />
     </div>
   );
 }
@@ -114,7 +114,22 @@ const ButtonRow = ({ children, className }) => (
   <div className={cn('flex flex-wrap justify-center gap-2', className)}>{children}</div>
 );
 
+// The whole game is laid out on a fixed-size stage and scaled to fit the window, so it never scrolls.
+const STAGE_W = 1600;
+const STAGE_H = 900;
+function useFitScale() {
+  const fit = () => Math.max(0.4, Math.min(window.innerWidth / STAGE_W, window.innerHeight / STAGE_H));
+  const [k, setK] = useState(fit);
+  useEffect(() => {
+    const onResize = () => setK(fit());
+    window.addEventListener('resize', onResize);
+    return () => window.removeEventListener('resize', onResize);
+  }, []);
+  return k;
+}
+
 export default function App() {
+  const k = useFitScale();
   const [exp, setExp] = useState(readExp);
   const [S, dispatch] = useReducer(reduce, null, () => createGame(exp, newSeed()));
   const [showRules, setShowRules] = useState(false);
@@ -122,7 +137,7 @@ export default function App() {
   const [ask, setAsk] = useState(null);
   const [lastAsk, setLastAsk] = useState(null);
   const [helpOpen, setHelpOpen] = useState(() => {
-    try { return localStorage.getItem('sd-help') !== '0'; } catch { return true; }
+    try { return localStorage.getItem('sd-help') === '1'; } catch { return false; }
   });
   const setHelp = (v) => {
     setHelpOpen(v);
@@ -164,180 +179,186 @@ export default function App() {
 
   return (
     <>
-      <header className="relative flex h-44 items-start justify-end gap-2 overflow-hidden border-b px-5 py-3">
-        <img src="/images/banner.png" alt="" aria-hidden className="absolute inset-0 -z-20 h-full w-full scale-110 object-cover opacity-60 blur-xl" />
-        <img src="/images/banner.png" alt="Splendor Duel" className="absolute inset-y-0 left-1/2 -z-10 h-full -translate-x-1/2" />
-        <div className="absolute inset-0 -z-10 bg-gradient-to-r from-background/70 via-transparent to-background/70" />
-        <Button variant="secondary" className="bg-background/70 backdrop-blur" onClick={() => setShowLog(true)}><History /> Log</Button>
-        <DropdownMenu>
-          <DropdownMenuTrigger asChild>
-            <Button variant="secondary" className="bg-background/70 backdrop-blur"><Settings /> Settings <ChevronDown className="opacity-60" /></Button>
-          </DropdownMenuTrigger>
-          <DropdownMenuContent align="end" className="w-72">
-            <DropdownMenuItem onSelect={toggleExp} className="gap-2 py-2.5">
-              <FlaskConical />
-              <span>Counterfeiters expansion</span>
-              <Switch checked={exp} className="pointer-events-none ml-auto" tabIndex={-1} />
-            </DropdownMenuItem>
-            <DropdownMenuItem onSelect={() => setShowRules(true)} className="gap-2 py-2.5"><BookOpen /> Rules</DropdownMenuItem>
-            <DropdownMenuSeparator />
-            <DropdownMenuItem onSelect={newGame} className="gap-2 py-2.5"><RotateCcw /> New game</DropdownMenuItem>
-          </DropdownMenuContent>
-        </DropdownMenu>
-      </header>
+      <div className="fixed inset-0 flex items-center justify-center overflow-hidden bg-background">
+        <div style={{ width: STAGE_W * k, height: STAGE_H * k }}>
+          <div className="stage flex flex-col gap-2 p-2.5" style={{ width: STAGE_W, height: STAGE_H, transform: `scale(${k})`, transformOrigin: '0 0' }}>
+            <header className="relative flex h-12 shrink-0 items-center justify-end gap-2 overflow-hidden rounded-lg border px-3">
+              <img src="/images/banner.png" alt="" aria-hidden className="absolute inset-0 -z-20 h-full w-full scale-110 object-cover opacity-60 blur-xl" />
+              <img src="/images/banner.png" alt="Splendor Duel" className="absolute inset-y-0 left-1/2 -z-10 h-full -translate-x-1/2" />
+              <div className="absolute inset-0 -z-10 bg-gradient-to-r from-background/70 via-transparent to-background/70" />
+              <Button variant="secondary" size="sm" className="bg-background/70 backdrop-blur" onClick={() => setShowLog(true)}><History /> Log</Button>
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button variant="secondary" size="sm" className="bg-background/70 backdrop-blur"><Settings /> Settings <ChevronDown className="opacity-60" /></Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end" className="w-72">
+                  <DropdownMenuItem onSelect={toggleExp} className="gap-2 py-2.5">
+                    <FlaskConical />
+                    <span>Counterfeiters expansion</span>
+                    <Switch checked={exp} className="pointer-events-none ml-auto" tabIndex={-1} />
+                  </DropdownMenuItem>
+                  <DropdownMenuItem onSelect={() => setShowRules(true)} className="gap-2 py-2.5"><BookOpen /> Rules</DropdownMenuItem>
+                  <DropdownMenuSeparator />
+                  <DropdownMenuItem onSelect={newGame} className="gap-2 py-2.5"><RotateCcw /> New game</DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
+            </header>
 
-      <main className="mx-auto flex max-w-[1480px] flex-col gap-4 p-4">
-        <TurnBar S={S} open={helpOpen} setOpen={setHelp} />
+            <TurnBar S={S} open={helpOpen} setOpen={setHelp} />
 
-        <div className="grid grid-cols-1 items-start gap-4 lg:grid-cols-[minmax(280px,1fr)_auto_minmax(280px,1fr)]">
-          <Player S={S} idx={0} dispatch={dispatch} />
-          <Card className="order-first gap-3 p-4 lg:order-none lg:min-w-[400px]">
-            <SectionLabel>Board</SectionLabel>
-            <div className="board-wrap">
-              <div className="board">
-                {S.board.map((c, i) => {
-                  let cls = selIdx.includes(i) ? 'sel' : '';
-                  if (pd?.type === 'pick') cls += c === pd.color || (pd.plus && c !== 'gold' && pd.left === 2) ? ' hl' : ' dim';
-                  else if (pd?.type === 'multi') cls += c === 'gold' ? ' dim' : '';
-                  else if (pd) cls += ' dim';
-                  return (
-                    <div className="cell" key={i}>
-                      {c && <Token kind={c} cls={cls} onClick={() => dispatch({ type: 'tok', i })} />}
+            <div className="grid min-h-0 flex-1 grid-cols-[320px_372px_minmax(0,1fr)] gap-3">
+              {/* Left: both players, one above the other */}
+              <div className="flex min-h-0 flex-col gap-3">
+                <Player S={S} idx={0} dispatch={dispatch} />
+                <Player S={S} idx={1} dispatch={dispatch} />
+              </div>
+
+              {/* Middle: the board and the selected card */}
+              <div className="flex min-h-0 flex-col gap-3">
+                <Card className="shrink-0 gap-2 p-3">
+                  <SectionLabel>Board</SectionLabel>
+                  <div className="board-wrap">
+                    <div className="board">
+                      {S.board.map((c, i) => {
+                        let cls = selIdx.includes(i) ? 'sel' : '';
+                        if (pd?.type === 'pick') cls += c === pd.color || (pd.plus && c !== 'gold' && pd.left === 2) ? ' hl' : ' dim';
+                        else if (pd?.type === 'multi') cls += c === 'gold' ? ' dim' : '';
+                        else if (pd) cls += ' dim';
+                        return (
+                          <div className="cell" key={i}>
+                            {c && <Token kind={c} cls={cls} onClick={() => dispatch({ type: 'tok', i })} />}
+                          </div>
+                        );
+                      })}
                     </div>
-                  );
-                })}
-              </div>
-            </div>
-            <div className="flex items-center justify-center gap-6 text-sm text-muted-foreground">
-              <span className="flex items-center gap-2">
-                Scrolls on the table
-                {Array.from({ length: S.privBoard }, (_, i) => <Scroll key={i} size={18} />)}
-                {S.privBoard === 0 && 'none'}
-              </span>
-              <span>Bag: {S.bag.length}</span>
-            </div>
-            <ButtonRow>
-              <Button disabled={!takeable} onClick={act({ type: 'take' })}>Take {S.sel.length || ''} selected</Button>
-              <Button variant="outline" disabled={!(idle && (p.priv > 0 || S.mode === 'priv2'))} onClick={act({ type: 'priv' })}>
-                {S.mode ? 'Cancel privilege' : `Use privilege (${p.priv})`}
-              </Button>
-              <Button variant="outline" disabled={!(idle && S.bag.length)} onClick={act({ type: 'repl' })}>Refill board</Button>
-              {pd?.type === 'multi' && <Button onClick={act({ type: 'confirmMulti' })}>Confirm {pd.sel.length} token{pd.sel.length === 1 ? '' : 's'}</Button>}
-              {(['freeReserve', 'freeCf'].includes(pd?.type) || (pd?.type === 'pick' && pd.plus)) && <Button variant="outline" onClick={act({ type: 'skip' })}>Skip</Button>}
-            </ButtonRow>
-          </Card>
-          <Player S={S} idx={1} dispatch={dispatch} />
-        </div>
+                  </div>
+                  <div className="flex items-center justify-center gap-5 text-xs text-muted-foreground">
+                    <span className="flex items-center gap-1.5">
+                      Scrolls on the table
+                      {Array.from({ length: S.privBoard }, (_, i) => <Scroll key={i} size={15} />)}
+                      {S.privBoard === 0 && 'none'}
+                    </span>
+                    <span>Bag: {S.bag.length}</span>
+                  </div>
+                  <ButtonRow className="gap-1.5">
+                    <Button size="sm" disabled={!takeable} onClick={act({ type: 'take' })}>Take {S.sel.length || ''} selected</Button>
+                    <Button size="sm" variant="outline" disabled={!(idle && (p.priv > 0 || S.mode === 'priv2'))} onClick={act({ type: 'priv' })}>
+                      {S.mode ? 'Cancel privilege' : `Use privilege (${p.priv})`}
+                    </Button>
+                    <Button size="sm" variant="outline" disabled={!(idle && S.bag.length)} onClick={act({ type: 'repl' })}>Refill board</Button>
+                    {pd?.type === 'multi' && <Button size="sm" onClick={act({ type: 'confirmMulti' })}>Confirm {pd.sel.length} token{pd.sel.length === 1 ? '' : 's'}</Button>}
+                    {(['freeReserve', 'freeCf'].includes(pd?.type) || (pd?.type === 'pick' && pd.plus)) && <Button size="sm" variant="outline" onClick={act({ type: 'skip' })}>Skip</Button>}
+                  </ButtonRow>
+                </Card>
 
-        <Card className="p-4">
-          <div className="grid items-start gap-6 xl:grid-cols-[minmax(0,1fr)_340px]">
-            <div className="flex min-w-0 flex-col gap-3">
-              <SectionLabel>Royal cards{S.exp ? ` · deck ${S.rdeck.length}` : ''}</SectionLabel>
-              <div className="rowline">
-                {S.royals.map((r, i) => (
-                  <RoyalCard key={r.id} card={r} glow={pd?.type === 'royal'} onClick={() => dispatch({ type: 'royal', i })} />
+                <Card className="min-h-0 flex-1 gap-2 overflow-hidden p-3">
+                  <SectionLabel>Selected card</SectionLabel>
+                  <div className="flex min-h-0 gap-3">
+                    <div className="shrink-0">
+                      {card ? (
+                        <div className="preview">{card.kind === 'cf' ? <CfCard card={card} /> : <JewelCard card={card} />}</div>
+                      ) : (
+                        <img src="/images/box-art-sm.jpg" alt="Splendor Duel box art" className="w-24 rounded-lg border shadow-lg" />
+                      )}
+                    </div>
+                    <div className="flex min-w-0 flex-1 flex-col gap-2 text-xs">
+                      {card ? (
+                        <div className="flex flex-wrap items-center gap-1.5">
+                          {payPlan ? (
+                            <>
+                              <span className="text-muted-foreground">You pay</span>
+                              {payList.size === 0 && <span className="font-semibold">nothing</span>}
+                              {[...payList].map(([kind, n]) => (
+                                <span key={kind} className="costpill"><Mini kind={kind} size={14} /><b>{n}</b></span>
+                              ))}
+                            </>
+                          ) : (
+                            <span className="text-muted-foreground">Not enough tokens for this card yet.</span>
+                          )}
+                        </div>
+                      ) : (
+                        <p className="text-muted-foreground">Select a card to see its cost, what you would pay, and to buy or reserve it.</p>
+                      )}
+                      <div><Button size="sm" disabled={!canBuy} onClick={act({ type: 'buy' })}>Buy</Button></div>
+                      {(goldChosen || reservableSel) && (
+                        <div className="space-y-2 rounded-md border p-2">
+                          <SectionLabel>Reserve a card</SectionLabel>
+                          <ul className="space-y-1">
+                            <li className="flex items-center gap-1.5">
+                              {goldChosen ? <CircleCheck className="size-3.5 text-primary" /> : <Circle className="size-3.5 text-muted-foreground" />}
+                              Gold token on the board
+                            </li>
+                            <li className="flex items-center gap-1.5">
+                              {reservableSel ? <CircleCheck className="size-3.5 text-primary" /> : <Circle className="size-3.5 text-muted-foreground" />}
+                              {S.selCard?.src === 'deck' ? `Level ${S.selCard.l + 1} deck (top card)` : 'Card from the pyramid or a deck'}
+                            </li>
+                          </ul>
+                          <div className="flex gap-1.5">
+                            <Button size="sm" disabled={!canRes} onClick={act({ type: 'reserve' })}>Complete move</Button>
+                            <Button size="sm" variant="outline" onClick={act({ type: 'cancelReserve' })}>Cancel</Button>
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                </Card>
+              </div>
+
+              {/* Right: all the cards */}
+              <Card className="compact-cards min-h-0 gap-2 overflow-hidden p-3" style={{ '--z': S.exp ? 0.8 : 1 }}>
+                <SectionLabel>Royal cards{S.exp ? ` · deck ${S.rdeck.length}` : ''}</SectionLabel>
+                <div className="flex items-center gap-2">
+                  <CrownMark n={3} title="Claim a royal card at 3 crowns" />
+                  <div className="compact-cards" style={{ '--z': 0.6 }}>
+                    <div className="rowline">
+                      {S.royals.map((r, i) => (
+                        <RoyalCard key={r.id} card={r} glow={pd?.type === 'royal'} onClick={() => dispatch({ type: 'royal', i })} />
+                      ))}
+                      {!S.royals.length && <span className="text-xs text-muted-foreground">All claimed</span>}
+                    </div>
+                  </div>
+                  <div className="ml-auto"><CrownMark n={6} title="Claim a royal card at 6 crowns" /></div>
+                </div>
+                <SectionLabel>Cards</SectionLabel>
+                {[0, 1, 2].map((l) => (
+                  <div className="rowline" key={l}>
+                    <CardBack level={l + 1} label={`L${l + 1}`} count={S.decks[l].length} onClick={() => dispatch({ type: 'card', src: 'deck', l })} />
+                    {S.pyr[l].map((c, i) => (
+                      <JewelCard key={c.id} card={c} selected={S.selCard?.src === 'pyr' && S.selCard.l === l && S.selCard.i === i}
+                        afford={plans(c)} onClick={() => dispatch({ type: 'card', src: 'pyr', l, i })} />
+                    ))}
+                  </div>
                 ))}
-                {!S.royals.length && <span className="text-sm text-muted-foreground">All claimed</span>}
-              </div>
-              <div className="flex items-end justify-between px-1">
-                <CrownMark n={3} title="Claim a royal card at 3 crowns" />
-                <CrownMark n={6} title="Claim a royal card at 6 crowns" />
-              </div>
-              <Separator />
-              <SectionLabel>Cards</SectionLabel>
-              {[0, 1, 2].map((l) => (
-                <div className="rowline" key={l}>
-                  <CardBack level={l + 1} label={`L${l + 1}`} count={S.decks[l].length} onClick={() => dispatch({ type: 'card', src: 'deck', l })} />
-                  {S.pyr[l].map((c, i) => (
-                    <JewelCard key={c.id} card={c} selected={S.selCard?.src === 'pyr' && S.selCard.l === l && S.selCard.i === i}
-                      afford={plans(c)} onClick={() => dispatch({ type: 'card', src: 'pyr', l, i })} />
-                  ))}
-                </div>
-              ))}
-              {S.exp && (
-                <div className="rowline">
-                  <CardBack level="cf" label="CF" count={S.cdeck.length} onClick={() => dispatch({ type: 'card', src: 'cdeck' })} />
-                  {S.crow.map((c, i) => (
-                    <CfCard key={c.id} card={c} selected={S.selCard?.src === 'cf' && S.selCard.i === i}
-                      afford={plans(c) || pd?.type === 'freeCf'} onClick={() => dispatch({ type: 'card', src: 'cf', i })} />
-                  ))}
-                </div>
-              )}
-              {pd?.type === 'wild' && (
-                <ButtonRow>
-                  {pd.colors.map((c) => <Button key={c} variant="outline" onClick={act({ type: 'wild', c })}><Gem kind={c} size={18} /> {c}</Button>)}
-                </ButtonRow>
-              )}
-              {pd?.type === 'endabil' && (
-                <ButtonRow>
-                  {endOpts.map((o) => <Button key={o.k} variant="outline" onClick={act({ type: 'endabil', k: o.k })}>{o.t}</Button>)}
-                  <Button onClick={act({ type: 'endDone' })}>Done</Button>
-                </ButtonRow>
-              )}
-              {pd?.type === 'peek' && (
-                <div className="rowline">
-                  {pd.cards.map((c, i) => <JewelCard key={c.id} card={c} afford onClick={() => dispatch({ type: 'peekPick', i })} />)}
-                </div>
-              )}
+                {S.exp && (
+                  <div className="rowline">
+                    <CardBack level="cf" label="CF" count={S.cdeck.length} onClick={() => dispatch({ type: 'card', src: 'cdeck' })} />
+                    {S.crow.map((c, i) => (
+                      <CfCard key={c.id} card={c} selected={S.selCard?.src === 'cf' && S.selCard.i === i}
+                        afford={plans(c) || pd?.type === 'freeCf'} onClick={() => dispatch({ type: 'card', src: 'cf', i })} />
+                    ))}
+                  </div>
+                )}
+                {pd?.type === 'wild' && (
+                  <ButtonRow>
+                    {pd.colors.map((c) => <Button key={c} size="sm" variant="outline" onClick={act({ type: 'wild', c })}><Gem kind={c} size={16} /> {c}</Button>)}
+                  </ButtonRow>
+                )}
+                {pd?.type === 'endabil' && (
+                  <ButtonRow>
+                    {endOpts.map((o) => <Button key={o.k} size="sm" variant="outline" onClick={act({ type: 'endabil', k: o.k })}>{o.t}</Button>)}
+                    <Button size="sm" onClick={act({ type: 'endDone' })}>Done</Button>
+                  </ButtonRow>
+                )}
+                {pd?.type === 'peek' && (
+                  <div className="rowline">
+                    {pd.cards.map((c, i) => <JewelCard key={c.id} card={c} afford onClick={() => dispatch({ type: 'peekPick', i })} />)}
+                  </div>
+                )}
+              </Card>
             </div>
-
-            <aside className="flex flex-col items-center gap-4 xl:sticky xl:top-4">
-              <SectionLabel className="self-start">Selected card</SectionLabel>
-              {card ? (
-                <>
-                  <div className="preview py-2">
-                    {card.kind === 'cf' ? <CfCard card={card} /> : <JewelCard card={card} />}
-                  </div>
-                  <div className="flex min-h-8 flex-wrap items-center justify-center gap-2 text-sm">
-                    {payPlan ? (
-                      <>
-                        <span className="text-muted-foreground">You pay</span>
-                        {payList.size === 0 && <span className="font-semibold">nothing</span>}
-                        {[...payList].map(([k, n]) => (
-                          <span key={k} className="costpill"><Mini kind={k} size={15} /><b>{n}</b></span>
-                        ))}
-                      </>
-                    ) : (
-                      <span className="text-muted-foreground">Not enough tokens for this card yet.</span>
-                    )}
-                  </div>
-                  <ButtonRow>
-                    <Button disabled={!canBuy} onClick={act({ type: 'buy' })}>Buy</Button>
-                  </ButtonRow>
-                </>
-              ) : (
-                <>
-                  <img src="/images/box-art-sm.jpg" alt="Splendor Duel box art" className="w-60 rounded-xl border shadow-lg" />
-                  <p className="text-center text-sm text-muted-foreground">Select a card to see its cost, what you would pay, and to buy or reserve it.</p>
-                  <ButtonRow>
-                    <Button disabled>Buy</Button>
-                  </ButtonRow>
-                </>
-              )}
-              {(goldChosen || reservableSel) && (
-                <div className="w-full space-y-3 rounded-lg border p-3 text-sm">
-                  <SectionLabel>Reserve a card</SectionLabel>
-                  <ul className="space-y-1.5">
-                    <li className="flex items-center gap-2">
-                      {goldChosen ? <CircleCheck className="size-4 text-primary" /> : <Circle className="size-4 text-muted-foreground" />}
-                      Gold token on the board
-                    </li>
-                    <li className="flex items-center gap-2">
-                      {reservableSel ? <CircleCheck className="size-4 text-primary" /> : <Circle className="size-4 text-muted-foreground" />}
-                      {S.selCard?.src === 'deck' ? `Level ${S.selCard.l + 1} deck (top card)` : 'Card from the pyramid or a deck'}
-                    </li>
-                  </ul>
-                  <p className="text-xs text-muted-foreground">Choose them in any order, then complete the move.</p>
-                  <ButtonRow>
-                    <Button disabled={!canRes} onClick={act({ type: 'reserve' })}>Complete move</Button>
-                    <Button variant="outline" onClick={act({ type: 'cancelReserve' })}>Cancel</Button>
-                  </ButtonRow>
-                </div>
-              )}
-            </aside>
           </div>
-        </Card>
-      </main>
+        </div>
+      </div>
 
       {showRules && <Rules exp={exp} onClose={() => setShowRules(false)} />}
 

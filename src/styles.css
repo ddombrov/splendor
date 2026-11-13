@@ -90,3 +90,15 @@
 .preview { zoom: 1.5; }
 .preview .card { cursor: default; }
 .preview .card:hover { transform: none; }
+
+/* One-page layout: the whole game lives on a fixed-size stage that is scaled to fit the window. */
+.compact-cards .card { zoom: var(--z, 0.75); }
+.compact-cards .rowline { gap: 6px; padding: 2px; overflow: visible; }
+.compact-cards .rowline.wrap { flex-wrap: wrap; }
+.stage .board-wrap { padding: 9px; border-radius: 12px; }
+.stage .board { grid-template-columns: repeat(5, 52px); gap: 5px; }
+.stage .cell { width: 52px; height: 52px; }
+.stage .crownmark { width: 46px; height: 38px; }
+.stage .crownmark b { font-size: 20px; }
+.stage .crownmark svg { width: 38px; height: 30px; }
+.stage .preview { zoom: 0.78; }
