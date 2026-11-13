@@ -131,10 +131,6 @@ function useFitScale() {
 
 export default function App() {
   const { k, w, h } = useFitScale();
-  // Spare width is shared between the board and the cards; spare height makes both bigger too.
-  const cardsW = Math.round(780 + Math.max(0, w - MIN_W) * 0.5);
-  const boardColW = w - 20 - 250 - cardsW - 24;
-  const cell = Math.max(64, Math.min(Math.floor((boardColW - 72) / 5), Math.floor((h - 213) / 5)));
   const [exp, setExp] = useState(readExp);
   const [S, dispatch] = useReducer(reduce, null, () => createGame(exp, newSeed()));
   const [showRules, setShowRules] = useState(false);
@@ -143,7 +139,16 @@ export default function App() {
   const [lastAsk, setLastAsk] = useState(null);
   const [showOptions, setShowOptions] = useState(false);
   const p = cur(S), pd = S.pending;
-  const cardZoom = Math.max(0.5, Math.min(S.exp ? (h - 470) / 522 : (h - 470) / 522, (cardsW - 70) / 744, 1.2));
+  // Layout numbers. The cards get the size their rows allow, the board takes what is left, and any
+  // spare width goes to the players, the cards and the board in that order of need.
+  const extra = Math.max(0, w - MIN_W);
+  const playersW = Math.round(Math.min(250 + extra * 0.2, 360));
+  const cardRows = S.exp ? 5 : 4;
+  const zByHeight = (h - 72 - 24 - (cardRows - 1) * 8 - cardRows * 4) / (cardRows * 174);
+  const cardsW = Math.round(Math.min(764 + extra * 0.5, 744 * Math.min(zByHeight, 1.2) + 70));
+  const cardZoom = Math.max(0.5, Math.min(zByHeight, (cardsW - 64) / 744, 1.2));
+  const boardColW = w - 20 - playersW - cardsW - 24;
+  const cell = Math.max(64, Math.min(Math.floor((boardColW - 72) / 5), Math.floor((h - 425) / 5)));
   const card = selectedCard(S);
   const act = (a) => () => dispatch(a);
 
@@ -202,97 +207,61 @@ export default function App() {
               </DropdownMenu>
             </TurnBar>
 
-            <div className="grid min-h-0 flex-1 gap-3" style={{ gridTemplateColumns: `250px minmax(0,1fr) ${cardsW}px` }}>
+            <div className="grid min-h-0 flex-1 gap-3" style={{ gridTemplateColumns: `${playersW}px minmax(0,1fr) ${cardsW}px` }}>
               {/* Left: both players */}
               <div className="flex min-h-0 flex-col gap-3">
                 <Player S={S} idx={0} dispatch={dispatch} />
                 <Player S={S} idx={1} dispatch={dispatch} />
               </div>
 
-              {/* Middle: the board, as wide as it can go */}
-              <Card className="min-h-0 justify-center gap-3 p-3">
-                <div className="board-wrap mx-auto">
-                  <div className="board">
-                    {S.board.map((c, i) => {
-                      let cls = selIdx.includes(i) ? 'sel' : '';
-                      if (pd?.type === 'pick') cls += c === pd.color || (pd.plus && c !== 'gold' && pd.left === 2) ? ' hl' : ' dim';
-                      else if (pd?.type === 'multi') cls += c === 'gold' ? ' dim' : '';
-                      else if (pd) cls += ' dim';
-                      return (
-                        <div className="cell" key={i}>
-                          {c && <Token kind={c} cls={cls} size={Math.round(cell * 0.85)} onClick={() => dispatch({ type: 'tok', i })} />}
-                        </div>
-                      );
-                    })}
-                  </div>
-                </div>
-                <div className="flex flex-col items-center gap-2">
-                  <div className="flex items-center gap-5 text-xs text-muted-foreground">
-                    <span className="flex items-center gap-1.5">
-                      Scrolls on the table
-                      {Array.from({ length: S.privBoard }, (_, i) => <Scroll key={i} size={15} />)}
-                      {S.privBoard === 0 && 'none'}
-                    </span>
-                    <span>Bag: {S.bag.length}</span>
-                  </div>
-                  <div className="flex flex-wrap justify-center gap-1.5">
-                    <Button size="sm" disabled={!takeable} onClick={act({ type: 'take' })}>Take {S.sel.length || ''} selected</Button>
-                    <Button size="sm" variant="outline" disabled={!(idle && (p.priv > 0 || S.mode === 'priv2'))} onClick={act({ type: 'priv' })}>
-                      {S.mode ? 'Cancel privilege' : `Use privilege (${p.priv})`}
-                    </Button>
-                    <Button size="sm" variant="outline" disabled={!(idle && S.bag.length)} onClick={act({ type: 'repl' })}>Refill board</Button>
-                    {pd?.type === 'multi' && <Button size="sm" onClick={act({ type: 'confirmMulti' })}>Confirm {pd.sel.length} token{pd.sel.length === 1 ? '' : 's'}</Button>}
-                    {(['freeReserve', 'freeCf'].includes(pd?.type) || (pd?.type === 'pick' && pd.plus)) && <Button size="sm" variant="outline" onClick={act({ type: 'skip' })}>Skip</Button>}
-                  </div>
-                </div>
-              </Card>
-
-              {/* Right: all the cards, with the selected card in the bottom right corner */}
-              <Card className="compact-cards min-h-0 gap-2 overflow-hidden p-3" style={{ '--z': cardZoom }}>
-                <div className="rowline">
-                  {S.royals.map((r, i) => (
-                    <RoyalCard key={r.id} card={r} glow={pd?.type === 'royal'} onClick={() => dispatch({ type: 'royal', i })} />
-                  ))}
-                  {!S.royals.length && <span className="text-xs text-muted-foreground">All claimed</span>}
-                </div>
-                {[0, 1].map((l) => (
-                  <div className="rowline" key={l}>
-                    <CardBack level={l + 1} label={`L${l + 1}`} count={S.decks[l].length} onClick={() => dispatch({ type: 'card', src: 'deck', l })} />
-                    {S.pyr[l].map((c, i) => (
-                      <JewelCard key={c.id} card={c} selected={S.selCard?.src === 'pyr' && S.selCard.l === l && S.selCard.i === i}
-                        afford={plans(c)} onClick={() => dispatch({ type: 'card', src: 'pyr', l, i })} />
-                    ))}
-                  </div>
-                ))}
-
-                <div className="flex items-start gap-3">
-                  <div className="flex min-w-0 flex-col gap-2">
-                    <div className="rowline">
-                      <CardBack level={3} label="L3" count={S.decks[2].length} onClick={() => dispatch({ type: 'card', src: 'deck', l: 2 })} />
-                      {S.pyr[2].map((c, i) => (
-                        <JewelCard key={c.id} card={c} selected={S.selCard?.src === 'pyr' && S.selCard.l === 2 && S.selCard.i === i}
-                          afford={plans(c)} onClick={() => dispatch({ type: 'card', src: 'pyr', l: 2, i })} />
-                      ))}
+              {/* Middle: the board, with the selected card underneath */}
+              <div className="flex min-h-0 flex-col gap-3">
+                <Card className="shrink-0 gap-3 p-3">
+                  <div className="board-wrap mx-auto">
+                    <div className="board">
+                      {S.board.map((c, i) => {
+                        let cls = selIdx.includes(i) ? 'sel' : '';
+                        if (pd?.type === 'pick') cls += c === pd.color || (pd.plus && c !== 'gold' && pd.left === 2) ? ' hl' : ' dim';
+                        else if (pd?.type === 'multi') cls += c === 'gold' ? ' dim' : '';
+                        else if (pd) cls += ' dim';
+                        return (
+                          <div className="cell" key={i}>
+                            {c && <Token kind={c} cls={cls} size={Math.round(cell * 0.85)} onClick={() => dispatch({ type: 'tok', i })} />}
+                          </div>
+                        );
+                      })}
                     </div>
-                    {S.exp && (
-                      <div className="rowline">
-                        <CardBack level="cf" label="CF" count={S.cdeck.length} onClick={() => dispatch({ type: 'card', src: 'cdeck' })} />
-                        {S.crow.map((c, i) => (
-                          <CfCard key={c.id} card={c} selected={S.selCard?.src === 'cf' && S.selCard.i === i}
-                            afford={plans(c) || pd?.type === 'freeCf'} onClick={() => dispatch({ type: 'card', src: 'cf', i })} />
-                        ))}
-                      </div>
-                    )}
                   </div>
+                  <div className="flex flex-col items-center gap-2">
+                    <div className="flex items-center gap-5 text-xs text-muted-foreground">
+                      <span className="flex items-center gap-1.5">
+                        Scrolls on the table
+                        {Array.from({ length: S.privBoard }, (_, i) => <Scroll key={i} size={15} />)}
+                        {S.privBoard === 0 && 'none'}
+                      </span>
+                      <span>Bag: {S.bag.length}</span>
+                    </div>
+                    <div className="flex flex-wrap justify-center gap-1.5">
+                      <Button size="sm" disabled={!takeable} onClick={act({ type: 'take' })}>Take {S.sel.length || ''} selected</Button>
+                      <Button size="sm" variant="outline" disabled={!(idle && (p.priv > 0 || S.mode === 'priv2'))} onClick={act({ type: 'priv' })}>
+                        {S.mode ? 'Cancel privilege' : `Use privilege (${p.priv})`}
+                      </Button>
+                      <Button size="sm" variant="outline" disabled={!(idle && S.bag.length)} onClick={act({ type: 'repl' })}>Refill board</Button>
+                      {pd?.type === 'multi' && <Button size="sm" onClick={act({ type: 'confirmMulti' })}>Confirm {pd.sel.length} token{pd.sel.length === 1 ? '' : 's'}</Button>}
+                      {(['freeReserve', 'freeCf'].includes(pd?.type) || (pd?.type === 'pick' && pd.plus)) && <Button size="sm" variant="outline" onClick={act({ type: 'skip' })}>Skip</Button>}
+                    </div>
+                  </div>
+                </Card>
 
-                  {(card || goldChosen || reservableSel) && (
-                    <div className="ml-auto flex w-[200px] shrink-0 flex-col items-center gap-2 rounded-lg border bg-background/40 p-2.5">
+                <Card className={cn('min-h-0 flex-1 overflow-hidden p-3', !(card || goldChosen || reservableSel) && 'border-dashed bg-transparent')}>
+                  {card || goldChosen || reservableSel ? (
+                    <div className="flex min-h-0 gap-3">
                       {card && (
                         <div className="compact-cards pointer-events-none shrink-0" style={{ '--z': 0.7 }}>
                           {card.kind === 'cf' ? <CfCard card={card} /> : <JewelCard card={card} />}
                         </div>
                       )}
-                      <div className="flex w-full min-w-0 flex-col gap-2 text-xs">
+                      <div className="flex min-w-0 flex-1 flex-col gap-2 text-xs">
                         {card && (
                           <>
                             <div className="flex flex-wrap items-center gap-1.5">
@@ -316,15 +285,15 @@ export default function App() {
                             <SectionLabel>Reserve a card</SectionLabel>
                             <ul className="space-y-1">
                               <li className="flex items-center gap-1.5">
-                                {goldChosen ? <CircleCheck className="size-3.5 text-primary" /> : <Circle className="size-3.5 text-muted-foreground" />}
+                                {goldChosen ? <CircleCheck className="size-3.5 shrink-0 text-primary" /> : <Circle className="size-3.5 shrink-0 text-muted-foreground" />}
                                 Gold token on the board
                               </li>
                               <li className="flex items-center gap-1.5">
-                                {reservableSel ? <CircleCheck className="size-3.5 text-primary" /> : <Circle className="size-3.5 text-muted-foreground" />}
+                                {reservableSel ? <CircleCheck className="size-3.5 shrink-0 text-primary" /> : <Circle className="size-3.5 shrink-0 text-muted-foreground" />}
                                 {S.selCard?.src === 'deck' ? `Level ${S.selCard.l + 1} deck (top card)` : 'Card from the pyramid or a deck'}
                               </li>
                             </ul>
-                            <div className="flex gap-1.5">
+                            <div className="flex flex-wrap gap-1.5">
                               <Button size="sm" disabled={!canRes} onClick={act({ type: 'reserve' })}>Complete move</Button>
                               <Button size="sm" variant="outline" onClick={act({ type: 'cancelReserve' })}>Cancel</Button>
                             </div>
@@ -332,9 +301,40 @@ export default function App() {
                         )}
                       </div>
                     </div>
+                  ) : (
+                    <div className="flex h-full items-center justify-center px-4 text-center text-xs text-muted-foreground">
+                      Pick a card to see what it costs and to buy it. To reserve one, pick a gold token and a card.
+                    </div>
                   )}
-                </div>
+                </Card>
+              </div>
 
+              {/* Right: all the cards */}
+              <Card className="compact-cards min-h-0 gap-2 overflow-hidden p-3" style={{ '--z': cardZoom }}>
+                <div className="rowline">
+                  {S.royals.map((r, i) => (
+                    <RoyalCard key={r.id} card={r} glow={pd?.type === 'royal'} onClick={() => dispatch({ type: 'royal', i })} />
+                  ))}
+                  {!S.royals.length && <span className="text-xs text-muted-foreground">All claimed</span>}
+                </div>
+                {[0, 1, 2].map((l) => (
+                  <div className="rowline" key={l}>
+                    <CardBack level={l + 1} label={`L${l + 1}`} count={S.decks[l].length} onClick={() => dispatch({ type: 'card', src: 'deck', l })} />
+                    {S.pyr[l].map((c, i) => (
+                      <JewelCard key={c.id} card={c} selected={S.selCard?.src === 'pyr' && S.selCard.l === l && S.selCard.i === i}
+                        afford={plans(c)} onClick={() => dispatch({ type: 'card', src: 'pyr', l, i })} />
+                    ))}
+                  </div>
+                ))}
+                {S.exp && (
+                  <div className="rowline">
+                    <CardBack level="cf" label="CF" count={S.cdeck.length} onClick={() => dispatch({ type: 'card', src: 'cdeck' })} />
+                    {S.crow.map((c, i) => (
+                      <CfCard key={c.id} card={c} selected={S.selCard?.src === 'cf' && S.selCard.i === i}
+                        afford={plans(c) || pd?.type === 'freeCf'} onClick={() => dispatch({ type: 'card', src: 'cf', i })} />
+                    ))}
+                  </div>
+                )}
                 {pd?.type === 'wild' && (
                   <ButtonRow>
                     {pd.colors.map((c) => <Button key={c} size="sm" variant="outline" onClick={act({ type: 'wild', c })}><Gem kind={c} size={16} /> {c}</Button>)}
