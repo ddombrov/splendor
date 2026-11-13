@@ -16,12 +16,16 @@ export function Gem({ kind, size = 28, className = '' }) {
   return <img src={src} width={size} height={size} alt="" draggable={false} className={`gem-img ${className}`} />;
 }
 
-/** A flat token: a coloured rim, a dark centre, and the gem picture. No gloss and no shadow. */
+// A token is a vibrant rim around a dimmer disc of the same colour, so the gem stands out.
+const RIM = { blue: '#3b82f6', white: '#e4ebf5', green: '#22c55e', black: '#7b8499', red: '#ef4444', pearl: '#d9b8ec', glass: '#a855f7', gold: '#facc15' };
+const DISC = { blue: '#173a82', white: '#6c7d96', green: '#0f5a31', black: '#2b313d', red: '#7d1622', pearl: '#7a5a92', glass: '#4a1d82', gold: '#8a6205' };
+
+/** A flat token: a vibrant rim, a dimmed disc of the same colour, and the gem on top. No gloss and no shadow. */
 export function TokenArt({ kind, size = 52 }) {
-  const p = PAL[kind];
   return (
     <svg className="tokart" width={size} height={size} viewBox="0 0 100 100">
-      <circle cx="50" cy="50" r="48" fill={p.b} stroke={p.d} strokeWidth="3" />
+      <circle cx="50" cy="50" r="48" fill={RIM[kind]} />
+      <circle cx="50" cy="50" r="39" fill={DISC[kind]} />
       <image href={`/gems/${kind}.png`} x="14" y="14" width="72" height="72" preserveAspectRatio="xMidYMid meet" />
     </svg>
   );
