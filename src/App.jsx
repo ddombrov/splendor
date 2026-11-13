@@ -48,21 +48,6 @@ function statusText(S) {
   return null;
 }
 
-function TurnBar({ S, children }) {
-  const p = cur(S);
-  const prompt = statusText(S);
-  return (
-    <div className={cn('flex h-11 shrink-0 items-center gap-2.5 rounded-lg border bg-card px-3', S.toast && 'border-amber-500/50')}>
-      {S.toast ? <TriangleAlert className="size-4 text-amber-400" /> : <Swords className="size-4 text-primary" />}
-      <div className="flex min-w-0 flex-1 items-baseline gap-3">
-        <span className="text-sm font-semibold">{p.name}'s turn</span>
-        {prompt && <span className={cn('truncate text-xs', S.toast ? 'text-amber-300' : 'text-muted-foreground')}>{prompt}</span>}
-      </div>
-      {children}
-    </div>
-  );
-}
-
 function TurnOptionsDialog({ open, onOpenChange }) {
   const Item = ({ icon: Icon, children }) => (
     <li className="flex items-start gap-2"><Icon className="mt-0.5 size-4 shrink-0 text-primary" />{children}</li>
@@ -141,14 +126,15 @@ export default function App() {
   const p = cur(S), pd = S.pending;
   // Layout numbers. The cards get the size their rows allow, the board takes what is left, and any
   // spare width goes to the players, the cards and the board in that order of need.
+  const prompt = statusText(S);
   const extra = Math.max(0, w - MIN_W);
   const playersW = Math.round(Math.min(250 + extra * 0.2, 360));
   const cardRows = S.exp ? 5 : 4;
-  const zByHeight = (h - 72 - 24 - (cardRows - 1) * 8 - cardRows * 4) / (cardRows * 174);
+  const zByHeight = (h - 20 - 24 - (cardRows - 1) * 8 - cardRows * 4) / (cardRows * 174);
   const cardsW = Math.round(Math.min(764 + extra * 0.5, 744 * Math.min(zByHeight, 1.2) + 70));
   const cardZoom = Math.max(0.5, Math.min(zByHeight, (cardsW - 64) / 744, 1.2));
   const boardColW = w - 20 - playersW - cardsW - 24;
-  const cell = Math.max(64, Math.min(Math.floor((boardColW - 72) / 5), Math.floor((h - 425) / 5)));
+  const cell = Math.max(64, Math.min(Math.floor((boardColW - 72) / 5), Math.floor((h - 373) / 5)));
   const card = selectedCard(S);
   const act = (a) => () => dispatch(a);
 
@@ -186,12 +172,12 @@ export default function App() {
     <>
       <div className="fixed inset-0 overflow-hidden bg-background">
         <div>
-          <div className="stage flex flex-col gap-2 p-2.5" style={{ width: w, height: h, transform: `scale(${k})`, transformOrigin: '0 0', '--cell': `${cell}px` }}>
-            <TurnBar S={S}>
+          <div className="stage relative flex flex-col gap-2 p-2.5" style={{ width: w, height: h, transform: `scale(${k})`, transformOrigin: '0 0', '--cell': `${cell}px` }}>
+            <div className="absolute right-3 top-3 z-30 flex items-center gap-1.5">
               <Button variant="ghost" size="sm" onClick={() => setShowLog(true)}><History /> Log</Button>
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
-                  <Button variant="outline" size="sm"><Settings /> Settings <ChevronDown className="opacity-60" /></Button>
+                  <Button variant="secondary" size="sm"><Settings /> Settings <ChevronDown className="opacity-60" /></Button>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="end" className="w-72">
                   <DropdownMenuItem onSelect={() => setShowOptions(true)} className="gap-2 py-2.5"><ListChecks /> Turn options</DropdownMenuItem>
@@ -205,8 +191,12 @@ export default function App() {
                   <DropdownMenuItem onSelect={newGame} className="gap-2 py-2.5"><RotateCcw /> New game</DropdownMenuItem>
                 </DropdownMenuContent>
               </DropdownMenu>
-            </TurnBar>
-
+            </div>
+            {prompt && (
+              <div className={cn('absolute left-1/2 top-3 z-30 max-w-[55%] -translate-x-1/2 truncate rounded-full border bg-card/95 px-4 py-1.5 text-xs shadow-lg backdrop-blur', S.toast ? 'border-amber-500/50 text-amber-300' : 'text-foreground')}>
+                {prompt}
+              </div>
+            )}
             <div className="grid min-h-0 flex-1 gap-3" style={{ gridTemplateColumns: `${playersW}px minmax(0,1fr) ${cardsW}px` }}>
               {/* Left: both players */}
               <div className="flex min-h-0 flex-col gap-3">
@@ -317,15 +307,6 @@ export default function App() {
                   ))}
                   {!S.royals.length && <span className="text-xs text-muted-foreground">All claimed</span>}
                 </div>
-                {[0, 1, 2].map((l) => (
-                  <div className="rowline" key={l}>
-                    <CardBack level={l + 1} label={`L${l + 1}`} count={S.decks[l].length} onClick={() => dispatch({ type: 'card', src: 'deck', l })} />
-                    {S.pyr[l].map((c, i) => (
-                      <JewelCard key={c.id} card={c} selected={S.selCard?.src === 'pyr' && S.selCard.l === l && S.selCard.i === i}
-                        afford={plans(c)} onClick={() => dispatch({ type: 'card', src: 'pyr', l, i })} />
-                    ))}
-                  </div>
-                ))}
                 {S.exp && (
                   <div className="rowline">
                     <CardBack level="cf" label="CF" count={S.cdeck.length} onClick={() => dispatch({ type: 'card', src: 'cdeck' })} />
@@ -335,6 +316,15 @@ export default function App() {
                     ))}
                   </div>
                 )}
+                {[2, 1, 0].map((l) => (
+                  <div className="rowline" key={l}>
+                    <CardBack level={l + 1} label={`L${l + 1}`} count={S.decks[l].length} onClick={() => dispatch({ type: 'card', src: 'deck', l })} />
+                    {S.pyr[l].map((c, i) => (
+                      <JewelCard key={c.id} card={c} selected={S.selCard?.src === 'pyr' && S.selCard.l === l && S.selCard.i === i}
+                        afford={plans(c)} onClick={() => dispatch({ type: 'card', src: 'pyr', l, i })} />
+                    ))}
+                  </div>
+                ))}
                 {pd?.type === 'wild' && (
                   <ButtonRow>
                     {pd.colors.map((c) => <Button key={c} size="sm" variant="outline" onClick={act({ type: 'wild', c })}><Gem kind={c} size={16} /> {c}</Button>)}

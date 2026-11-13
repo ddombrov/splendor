@@ -47,7 +47,7 @@ export default function Player({ S, idx, dispatch }) {
         </div>
       </div>
 
-      <Label>Tokens ({total(p)})</Label>
+      <Label>Tokens{total(p) > 0 ? ` (${total(p)})` : ''}</Label>
       <div className="flex min-h-9 flex-wrap items-center gap-2.5">
         {tokens.length === 0 && <span className="text-xs text-muted-foreground">None</span>}
         {tokens.map((k) => {
@@ -94,7 +94,7 @@ export default function Player({ S, idx, dispatch }) {
         </>
       )}
 
-      <Label>Reserved ({p.res.length})</Label>
+      <Label>Reserved{p.res.length > 0 ? ` (${p.res.length})` : ''}</Label>
       <div className="compact-cards" style={{ "--z": 0.52 }}>
         <div className="rowline wrap">
           {p.res.length === 0 && <span className="text-xs text-muted-foreground">None</span>}
