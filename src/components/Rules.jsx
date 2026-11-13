@@ -85,7 +85,7 @@ export default function Rules({ exp, onClose }) {
       <DialogContent className="flex h-[86vh] flex-col gap-3 sm:max-w-4xl">
         <DialogHeader>
           <DialogTitle>Rules</DialogTitle>
-          <DialogDescription>Quick summary, or the full rulebooks as PDFs.</DialogDescription>
+          <DialogDescription className="sr-only">Game rules</DialogDescription>
         </DialogHeader>
         <Tabs defaultValue="summary" className="flex min-h-0 flex-1 flex-col">
           <TabsList>
