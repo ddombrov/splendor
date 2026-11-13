@@ -1,5 +1,5 @@
 import { describe, expect, it, vi } from 'vitest';
-import { createGame, cur, opp, reduce } from './engine.js';
+import { createGame, cur, opp, reduce, limitCount as limit } from './engine.js';
 
 const play = (state, ...actions) => actions.reduce((s, a) => reduce(s, a), state);
 const click = (...cells) => cells.map((i) => ({ type: 'tok', i }));
@@ -260,5 +260,73 @@ describe('choosing who goes first', () => {
     expect(state.awaitingFirst).toBe(false);
     expect(state.cur).toBe(0);
     expect(state.players.map((p) => p.priv)).toEqual([0, 1]);
+  });
+});
+
+describe('the ten token limit when taking', () => {
+  const withTokens = (state, n) => {
+    state.players[0].tok.blue = n;
+    return state;
+  };
+
+  it('does not let a take push the player over ten', () => {
+    const state = withTokens(gameWithBoard({ 0: 'red', 1: 'green' }), 9);
+    const picked = play(state, ...click(0, 1));
+    expect(picked.sel).toEqual([0]);
+    expect(picked.toast).toBeTruthy();
+    const after = play(picked, { type: 'take' });
+    expect(after.players[0].tok.red).toBe(1);
+    expect(limit(after.players[0])).toBe(10);
+    expect(after.pending).toBeNull();
+  });
+
+  it('lets a take reach exactly ten', () => {
+    const state = withTokens(gameWithBoard({ 0: 'red', 1: 'green' }), 8);
+    const after = play(state, ...click(0, 1), { type: 'take' });
+    expect(limit(after.players[0])).toBe(10);
+    expect(after.cur).toBe(1);
+  });
+
+  it('refuses any token when already at ten', () => {
+    const state = withTokens(gameWithBoard({ 0: 'red' }), 10);
+    const picked = play(state, ...click(0));
+    expect(picked.sel).toEqual([]);
+    expect(picked.toast).toBeTruthy();
+  });
+
+  it('refuses a privilege token when at ten, and keeps the privilege', () => {
+    const state = withTokens(gameWithBoard({ 0: 'red' }), 10);
+    state.players[0].priv = 1;
+    const after = play(state, { type: 'priv' }, ...click(0));
+    expect(after.players[0].priv).toBe(1);
+    expect(after.board[0]).toBe('red');
+  });
+
+  it('refuses choosing gold to reserve when at ten', () => {
+    const state = withTokens(gameWithBoard({ 3: 'gold' }), 10);
+    const after = play(state, ...click(3));
+    expect(after.goldSel).toBeNull();
+    expect(after.toast).toBeTruthy();
+  });
+});
+
+describe('returning a token to get under the limit', () => {
+  it('lets a player at ten return one token to the bag before their action', () => {
+    const state = gameWithBoard({ 0: 'red' });
+    state.players[0].tok.blue = 10;
+    const bag = state.bag.length;
+    const after = play(state, { type: 'giveBack', c: 'blue' });
+    expect(after.players[0].tok.blue).toBe(9);
+    expect(after.bag).toHaveLength(bag + 1);
+    expect(after.cur).toBe(0);
+    const taken = play(after, ...click(0), { type: 'take' });
+    expect(taken.players[0].tok.red).toBe(1);
+  });
+
+  it('does not let a player below ten give tokens away', () => {
+    const state = gameWithBoard({ 0: 'red' });
+    state.players[0].tok.blue = 9;
+    const after = play(state, { type: 'giveBack', c: 'blue' });
+    expect(after.players[0].tok.blue).toBe(9);
   });
 });

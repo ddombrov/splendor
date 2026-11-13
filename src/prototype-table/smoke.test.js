@@ -4,7 +4,7 @@
 import { createElement } from 'react';
 import { renderToString } from 'react-dom/server';
 import { expect, test } from 'vitest';
-import { createGame, cur, endOptions, plan, reduce } from '../engine/engine.js';
+import { createGame, cur, endOptions, plan, reduce, limitCount } from '../engine/engine.js';
 import { nextRandom } from '../engine/rng.js';
 import { derive } from './table.js';
 import A from './A.jsx';
@@ -53,6 +53,7 @@ function walk(seed, onState) {
     S.crow.forEach((c, i) => plan(S, p, c) && buyable.push({ src: 'cf', i }));
     const free = cells.filter((i) => S.board[i] !== 'gold');
     const roll = pick(10);
+    if (limitCount(p) >= 10 && !buyable.length) S = reduce(S, { type: 'giveBack', c: choose(held(p, true)) });
 
     if (buyable.length && roll < 6) {
       S = reduce(S, { type: 'card', ...choose(buyable) });

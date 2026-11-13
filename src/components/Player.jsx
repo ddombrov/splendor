@@ -6,7 +6,7 @@ import { cn } from '@/lib/utils';
 import { COLORS, CF_TEXT } from '../engine/data.js';
 import { JewelCard, CardBack } from './Cards.jsx';
 import { TokenArt, Gem, Scroll, Crown } from './Art.jsx';
-import { bonuses, colorPts, crowns, kinds, plan, pts, resCap } from '../engine/engine.js';
+import { bonuses, colorPts, crowns, kinds, plan, pts, resCap, roomLeft } from '../engine/engine.js';
 
 const Label = ({ children }) => (
   <div className="mt-2 mb-1 text-[10px] font-semibold uppercase tracking-widest text-muted-foreground">{children}</div>
@@ -24,6 +24,7 @@ export default function Player({ S, idx, dispatch }) {
   const pd = S.pending;
   const canDisc = pd?.type === 'discard' && active;
   const canSteal = pd?.type === 'steal' && !active;
+  const canReturn = active && !S.main && !pd && roomLeft(p) === 0;
   const b = bonuses(p);
   const tokens = [...kinds(S), 'gold'].filter((k) => p.tok[k] > 0);
 
@@ -49,9 +50,9 @@ export default function Player({ S, idx, dispatch }) {
 
       <div className="mt-3 flex min-h-10 items-end gap-2.5">
         {tokens.map((k) => {
-          const click = canDisc ? () => dispatch({ type: 'disc', c: k }) : canSteal && k !== 'gold' ? () => dispatch({ type: 'steal', c: k }) : null;
+          const click = canReturn ? () => dispatch({ type: 'giveBack', c: k }) : canDisc ? () => dispatch({ type: 'disc', c: k }) : canSteal && k !== 'gold' ? () => dispatch({ type: 'steal', c: k }) : null;
           return (
-            <div key={k} title={`${k}: ${p.tok[k]}`} onClick={click} className={cn('flex flex-col-reverse items-center', click && 'pile click')}>
+            <div key={k} title={canReturn ? `Return a ${k} token to the bag` : `${k}: ${p.tok[k]}`} onClick={click} className={cn('flex flex-col-reverse items-center', click && 'pile click')}>
               {Array.from({ length: p.tok[k] }, (_, i) => (
                 <div key={i} className="leading-none" style={{ marginBottom: i ? -18 : 0 }}><TokenArt kind={k} size={32} /></div>
               ))}
@@ -60,8 +61,7 @@ export default function Player({ S, idx, dispatch }) {
         })}
       </div>
 
-      <Label>Bonuses</Label>
-      <div className="flex flex-wrap gap-1.5">
+      <div className="mt-3 flex min-h-7 flex-wrap gap-1.5">
         {COLORS.filter((c) => b[c]).map((c) => (
           <Badge key={c} variant="outline" className="gap-1 px-1.5 py-0.5 text-xs">
             <Gem kind={c} size={13} />
@@ -69,7 +69,6 @@ export default function Player({ S, idx, dispatch }) {
             {colorPts(p, c) ? <span className="text-muted-foreground">· {colorPts(p, c)}</span> : null}
           </Badge>
         ))}
-        {!COLORS.some((c) => b[c]) && <span className="text-xs text-muted-foreground">None</span>}
       </div>
 
       {p.royals.length > 0 && (

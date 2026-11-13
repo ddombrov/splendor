@@ -1,4 +1,4 @@
-import { createGame, cur, endOptions, plan, reduce, validLine } from './engine.js';
+import { createGame, cur, endOptions, limitCount, plan, reduce, validLine } from './engine.js';
 import { nextRandom } from './rng.js';
 
 /** An independent generator, so the player's choices never depend on the game's own random state. */
@@ -53,6 +53,9 @@ export function playRandomGame(exp, seed) {
       S.crow.forEach((c, i) => plan(S, p, c) && buyable.push({ src: 'cf', i }));
       const free = cells.filter((i) => S.board[i] !== 'gold');
       const roll = pick(10);
+      if (limitCount(p) >= 10 && !buyable.length) {
+        S = reduce(S, { type: 'giveBack', c: choose(held(p, { gold: true })) });
+      }
 
       if (buyable.length && roll < 6) {
         S = reduce(S, { type: 'card', ...choose(buyable) });

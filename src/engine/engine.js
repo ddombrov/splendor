@@ -28,6 +28,7 @@ export const total = (p) => Object.values(p.tok).reduce((a, b) => a + b, 0);
 export const hasAb = (p, ab) => p.cf.some((c) => c.ab === ab);
 export const resCap = (p) => (hasAb(p, 'reserve5') ? 5 : 3);
 export const limitCount = (p) => total(p) - (hasAb(p, 'nolimit') ? p.tok.glass : 0);
+export const roomLeft = (p) => Math.max(0, 10 - limitCount(p));
 export const bonuses = (p) => {
   const b = Object.fromEntries(COLORS.map((c) => [c, 0]));
   p.cards.forEach((c) => c.color && (b[c.color] += c.n));
@@ -324,6 +325,13 @@ function doBuy(S, color) {
 
 /* ---------- action handlers ---------- */
 const handlers = {
+  // Before the main action, a player stuck at ten tokens may return one to the bag.
+  giveBack(S, { c }) {
+    const p = cur(S);
+    if (S.main || S.pending || roomLeft(p) > 0 || !(p.tok[c] > 0)) return;
+    p.tok[c]--; S.bag.push(c);
+    log(S, `${p.name} returns a ${c} token to the bag.`);
+  },
   chooseFirst(S, { player }) {
     if (S.awaitingFirst && (player === 0 || player === 1)) startWith(S, player);
   },
@@ -349,12 +357,14 @@ const handlers = {
     if (S.main) return;
     if (S.mode === 'priv2') {
       if (c === 'gold') return;
+      if (roomLeft(p) < 1) { S.toast = 'You already hold 10 tokens.'; return; }
       takeFromBoard(S, i); S.mode = null;
       log(S, `${p.name} takes a second token with the privilege bonus.`);
       return;
     }
     if (S.mode === 'priv') {
       if (c === 'gold' || p.priv < 1) return;
+      if (roomLeft(p) < 1) { S.toast = 'You already hold 10 tokens.'; return; }
       p.priv--; S.privBoard++;
       takeFromBoard(S, i);
       log(S, `${p.name} spends a privilege to take a ${c} token.`);
@@ -364,6 +374,7 @@ const handlers = {
     }
     if (c === 'gold') {
       if (p.res.length >= resCap(p)) { S.toast = `You already hold ${resCap(p)} reserved cards.`; return; }
+      if (S.goldSel !== i && roomLeft(p) < 1) { S.toast = 'You already hold 10 tokens.'; return; }
       S.goldSel = S.goldSel === i ? null : i;
       S.sel = [];
       return;
@@ -372,12 +383,14 @@ const handlers = {
     const k = S.sel.indexOf(i);
     if (k >= 0) S.sel.splice(k, 1);
     else {
+      if (roomLeft(p) < 1) { S.toast = 'You already hold 10 tokens.'; return; }
       const next = [...S.sel, i];
+      if (next.length > roomLeft(p) && validLine(S, next)) { S.toast = `You can only take ${roomLeft(p)} more token${roomLeft(p) === 1 ? '' : 's'} (10 token limit).`; return; }
       S.sel = validLine(S, next) ? next : [i];
     }
   },
   take(S) {
-    if (S.main || S.pending || !validLine(S, S.sel)) return;
+    if (S.main || S.pending || !validLine(S, S.sel) || S.sel.length > roomLeft(cur(S))) return;
     const p = cur(S), cols = S.sel.map((i) => S.board[i]);
     S.sel.forEach((i) => (S.board[i] = null));
     cols.forEach((c) => p.tok[c]++);
