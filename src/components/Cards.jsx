@@ -68,10 +68,10 @@ export function CfCard({ card, onClick, selected, afford }) {
 export function RoyalCard({ card, onClick, glow }) {
   return (
     <div className={`card royal ${glow ? 'afford' : ''}`} onClick={onClick}>
-      <div className="pts">{card.pts}</div>
+      <div className="ptsrow"><div className="pts">{card.pts}</div></div>
       <div className="royal-crown"><Crown size={42} /></div>
-      <div className="note royaltext">
-        {ROYAL_ICON[card.ab] && <AbilityIcon ab={ROYAL_ICON[card.ab]} size={ICON_ONLY.includes(card.ab) ? 36 : 24} />}
+      <div className={`note royaltext ${ICON_ONLY.includes(card.ab) ? 'iconly' : ''}`}>
+        {ROYAL_ICON[card.ab] && <AbilityIcon ab={ROYAL_ICON[card.ab]} size={ICON_ONLY.includes(card.ab) ? 40 : 24} />}
         {!ICON_ONLY.includes(card.ab) && ROYAL_TEXT[card.ab]}
       </div>
       <div className="rmark l" title="Claim a royal card at 3 crowns"><Crown size={34} /><b>3</b></div>

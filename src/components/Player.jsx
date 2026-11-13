@@ -6,7 +6,7 @@ import { cn } from '@/lib/utils';
 import { COLORS, CF_TEXT } from '../engine/data.js';
 import { JewelCard, CardBack } from './Cards.jsx';
 import { TokenArt, Gem, Scroll, Crown } from './Art.jsx';
-import { bonuses, colorPts, crowns, kinds, plan, pts, total } from '../engine/engine.js';
+import { bonuses, colorPts, crowns, kinds, plan, pts, resCap } from '../engine/engine.js';
 
 const Label = ({ children }) => (
   <div className="mt-2 mb-1 text-[10px] font-semibold uppercase tracking-widest text-muted-foreground">{children}</div>
@@ -48,17 +48,14 @@ export default function Player({ S, idx, dispatch }) {
         </div>
       </div>
 
-      <Label>Tokens{total(p) > 0 ? ` (${total(p)})` : ''}</Label>
-      <div className="flex min-h-9 flex-wrap items-center gap-2.5">
-        {tokens.length === 0 && <span className="text-xs text-muted-foreground">None</span>}
+      <div className="mt-3 flex min-h-10 items-end gap-2.5">
         {tokens.map((k) => {
           const click = canDisc ? () => dispatch({ type: 'disc', c: k }) : canSteal && k !== 'gold' ? () => dispatch({ type: 'steal', c: k }) : null;
           return (
-            <div key={k} title={k} onClick={click} className={cn('relative leading-none', click && 'pile click')}>
-              <TokenArt kind={k} size={28} />
-              <span className="absolute -right-1.5 -bottom-1 flex h-4 min-w-4 items-center justify-center rounded-full bg-primary px-0.5 text-[10px] font-bold text-primary-foreground">
-                {p.tok[k]}
-              </span>
+            <div key={k} title={`${k}: ${p.tok[k]}`} onClick={click} className={cn('flex flex-col-reverse items-center', click && 'pile click')}>
+              {Array.from({ length: p.tok[k] }, (_, i) => (
+                <div key={i} className="leading-none" style={{ marginBottom: i ? -18 : 0 }}><TokenArt kind={k} size={32} /></div>
+              ))}
             </div>
           );
         })}
@@ -95,12 +92,12 @@ export default function Player({ S, idx, dispatch }) {
         </>
       )}
 
-      <Label>Reserved{p.res.length > 0 ? ` (${p.res.length})` : ''}</Label>
-      <div className="compact-cards" style={{ "--z": 0.52 }}>
+      <div className="compact-cards mt-3" style={{ '--z': 0.52 }}>
         <div className="rowline wrap">
-          {p.res.length === 0 && <span className="text-xs text-muted-foreground">None</span>}
-          {p.res.map((c, i) =>
-            active ? (
+          {Array.from({ length: resCap(p) }, (_, i) => {
+            const c = p.res[i];
+            if (!c) return <div key={`slot${i}`} className="slot" />;
+            return active ? (
               <JewelCard
                 key={c.id}
                 card={c}
@@ -110,8 +107,8 @@ export default function Player({ S, idx, dispatch }) {
               />
             ) : (
               <CardBack key={c.id} level={c.level} label="?" count="" />
-            ),
-          )}
+            );
+          })}
         </div>
       </div>
     </Card>

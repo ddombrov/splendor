@@ -51,7 +51,7 @@
 }
 .costpill b { font-size: 13px; font-weight: 700; line-height: 1; min-width: 8px; text-align: center; }
 .card .abil {
-  position: absolute; right: 6px; bottom: 6px; padding: 3px; border-radius: 8px; line-height: 0;
+  position: absolute; right: 6px; bottom: 6px; padding: 2px; border-radius: 7px; line-height: 0;
   background: rgba(10, 12, 18, 0.72); border: 1px solid rgba(255, 255, 255, 0.14);
 }
 .note {
@@ -109,3 +109,8 @@
 /* the royal ability text now sits beside a small picture */
 .royaltext { display: flex; align-items: center; justify-content: center; gap: 6px; }
 .cell { border-radius: 50%; }
+
+/* a power that is only a picture gets a box that hugs the picture */
+.note.iconly { left: 50%; right: auto; transform: translateX(-50%); width: fit-content; padding: 3px; line-height: 0; border-radius: 8px; }
+/* empty places for reserved cards, the same size as a reserved card */
+.compact-cards .slot { zoom: var(--z, 0.75); flex: 0 0 auto; width: 124px; aspect-ratio: 5 / 7; border: 1.5px dashed rgba(255, 255, 255, 0.2); border-radius: 10px; }

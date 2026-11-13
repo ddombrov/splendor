@@ -117,7 +117,7 @@ function useFitScale() {
 export default function App() {
   const { k, w, h } = useFitScale();
   const [exp, setExp] = useState(readExp);
-  const [S, dispatch] = useReducer(reduce, null, () => createGame(exp, newSeed()));
+  const [S, dispatch] = useReducer(reduce, null, () => createGame(exp, newSeed(), null));
   const [showRules, setShowRules] = useState(false);
   const [showLog, setShowLog] = useState(false);
   const [ask, setAsk] = useState(null);
@@ -146,14 +146,14 @@ export default function App() {
   const applyExp = (v) => {
     setExp(v);
     try { localStorage.setItem('sd-exp', v ? '1' : '0'); } catch { /* ignore */ }
-    dispatch({ type: 'new', exp: v, seed: newSeed() });
+    dispatch({ type: 'new', exp: v, seed: newSeed(), first: null });
   };
   const toggleExp = () => {
     const v = !exp;
     if (S.log.length <= 1) applyExp(v);
     else openAsk({ title: v ? 'Enable the expansion?' : 'Disable the expansion?', msg: 'Switching expansion mode starts a new game. The current game will be lost.', yes: v ? 'Enable and restart' : 'Disable and restart', onYes: () => applyExp(v) });
   };
-  const newGame = () => openAsk({ title: 'Start a new game?', msg: 'The current game will be lost.', yes: 'New game', onYes: () => dispatch({ type: 'new', exp, seed: newSeed() }) });
+  const newGame = () => openAsk({ title: 'Start a new game?', msg: 'The current game will be lost.', yes: 'New game', onYes: () => dispatch({ type: 'new', exp, seed: newSeed(), first: null }) });
 
   const idle = !S.main && !pd;
   const plans = (c) => !S.main && !pd && !!plan(S, p, c);
@@ -174,13 +174,13 @@ export default function App() {
         <div>
           <div className="stage relative flex flex-col gap-2 p-2.5" style={{ width: w, height: h, transform: `scale(${k})`, transformOrigin: '0 0', '--cell': `${cell}px` }}>
             <div className="absolute right-3 top-3 z-30 flex items-center gap-1.5">
-              <Button variant="ghost" size="sm" onClick={() => setShowLog(true)}><History /> Log</Button>
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
                   <Button variant="secondary" size="sm"><Settings /> Settings <ChevronDown className="opacity-60" /></Button>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="end" className="w-72">
                   <DropdownMenuItem onSelect={() => setShowOptions(true)} className="gap-2 py-2.5"><ListChecks /> Turn options</DropdownMenuItem>
+                  <DropdownMenuItem onSelect={() => setShowLog(true)} className="gap-2 py-2.5"><History /> Log</DropdownMenuItem>
                   <DropdownMenuItem onSelect={toggleExp} className="gap-2 py-2.5">
                     <FlaskConical />
                     <span>Counterfeiters expansion</span>
@@ -364,10 +364,29 @@ export default function App() {
         </DialogContent>
       </Dialog>
 
+      <Dialog open={S.awaitingFirst} onOpenChange={() => {}}>
+        <DialogContent className="sm:max-w-md" showCloseButton={false}>
+          <DialogHeader>
+            <DialogTitle>Who goes first?</DialogTitle>
+            <DialogDescription>The other player starts with a scroll.</DialogDescription>
+          </DialogHeader>
+          <div className="grid gap-3 sm:grid-cols-2">
+            {[0, 1].map((i) => (
+              <Button key={i} variant="outline" className="h-auto flex-col gap-2 py-4" onClick={() => dispatch({ type: 'chooseFirst', player: i })}>
+                <span className="text-base font-semibold">{S.players[i].name} goes first</span>
+                <span className="flex items-center gap-1.5 text-xs font-normal text-muted-foreground">
+                  <Scroll size={22} /> {S.players[1 - i].name} gets a scroll
+                </span>
+              </Button>
+            ))}
+          </div>
+        </DialogContent>
+      </Dialog>
+
       <Dialog open={!!S.over} onOpenChange={() => {}}>
         <DialogContent className="sm:max-w-sm" showCloseButton={false}>
           <DialogHeader><DialogTitle>Game over</DialogTitle><DialogDescription>{S.over} wins!</DialogDescription></DialogHeader>
-          <DialogFooter><Button onClick={() => dispatch({ type: 'new', exp, seed: newSeed() })}>Play again</Button></DialogFooter>
+          <DialogFooter><Button onClick={() => dispatch({ type: 'new', exp, seed: newSeed(), first: null })}>Play again</Button></DialogFooter>
         </DialogContent>
       </Dialog>
     </>

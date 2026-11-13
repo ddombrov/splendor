@@ -214,3 +214,51 @@ describe('reserving a card', () => {
     expect(after.toast).toBeTruthy();
   });
 });
+
+describe('choosing who goes first', () => {
+  const ask = () => createGame(false, 5, null);
+
+  it('waits for the choice, with all three scrolls still on the table', () => {
+    const state = ask();
+    expect(state.awaitingFirst).toBe(true);
+    expect(state.privBoard).toBe(3);
+    expect(state.players.map((p) => p.priv)).toEqual([0, 0]);
+  });
+
+  it('ignores moves until someone has been chosen', () => {
+    const state = ask();
+    const cell = state.board.findIndex((c) => c && c !== 'gold');
+    const after = play(state, ...click(cell), { type: 'take' });
+    expect(after.players[0].tok).toEqual(state.players[0].tok);
+    expect(after.cur).toBe(0);
+    expect(after.awaitingFirst).toBe(true);
+  });
+
+  it('lets player 1 go first and gives player 2 a scroll', () => {
+    const after = reduce(ask(), { type: 'chooseFirst', player: 0 });
+    expect(after.awaitingFirst).toBe(false);
+    expect(after.cur).toBe(0);
+    expect(after.players.map((p) => p.priv)).toEqual([0, 1]);
+    expect(after.privBoard).toBe(2);
+  });
+
+  it('lets player 2 go first and gives player 1 a scroll', () => {
+    const after = reduce(ask(), { type: 'chooseFirst', player: 1 });
+    expect(after.cur).toBe(1);
+    expect(after.players.map((p) => p.priv)).toEqual([1, 0]);
+    expect(after.privBoard).toBe(2);
+  });
+
+  it('cannot be chosen a second time', () => {
+    const once = reduce(ask(), { type: 'chooseFirst', player: 1 });
+    const twice = reduce(once, { type: 'chooseFirst', player: 0 });
+    expect(twice).toEqual(once);
+  });
+
+  it('keeps the old behaviour when the first player is given up front', () => {
+    const state = createGame(false, 5);
+    expect(state.awaitingFirst).toBe(false);
+    expect(state.cur).toBe(0);
+    expect(state.players.map((p) => p.priv)).toEqual([0, 1]);
+  });
+});

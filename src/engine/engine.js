@@ -145,7 +145,8 @@ const mkPlayer = (name) => ({
   cards: [], cf: [], res: [], priv: 0, royals: [], r3: false, r6: false,
 });
 
-export function createGame(exp = false, seed) {
+// `first` is 0 or 1 to start with that player, or null to wait until someone is chosen.
+export function createGame(exp = false, seed, first = 0) {
   if (!Number.isInteger(seed)) throw new Error('createGame needs an integer seed');
   const gen = { rng: seed >>> 0 };
   const rand = () => nextRandom(gen);
@@ -161,20 +162,28 @@ export function createGame(exp = false, seed) {
     decks: [genJewels(1, rand), genJewels(2, rand), genJewels(3, rand)], pyr: [[], [], []],
     cdeck: exp ? genCounterfeiters(rand) : [], crow: [],
     royals: royalPool.splice(0, 4), rdeck: royalPool,
-    privBoard: 2, sel: [], goldSel: null, selCard: null, mode: null, main: false, pending: null,
+    privBoard: 3, awaitingFirst: false, sel: [], goldSel: null, selCard: null, mode: null, main: false, pending: null,
     queue: [], extra: false, over: null, log: [], used: {}, toast: null,
   };
-  S.players[1].priv = 1;
   fillBoard(S);
   // Level 1 shows 5 cards, level 2 shows 4, level 3 shows 3.
   [5, 4, 3].forEach((n, l) => { for (let i = 0; i < n; i++) S.pyr[l].push(S.decks[l].pop()); });
   if (exp) for (let i = 0; i < 3; i++) S.crow.push(S.cdeck.pop());
   S.rng = gen.rng;
-  log(S, `Game started${exp ? ' with the Counterfeiters expansion' : ''}. Player 2 begins with one privilege.`);
+  log(S, `Game started${exp ? ' with the Counterfeiters expansion' : ''}.`);
+  if (first === null) { S.awaitingFirst = true; log(S, 'Choose who goes first.'); } else startWith(S, first);
   return S;
 }
 
 /* ---------- helpers that mutate a cloned state ---------- */
+/** Whoever goes first starts the game, and the other player takes a scroll. */
+function startWith(S, player) {
+  S.cur = player;
+  S.awaitingFirst = false;
+  givePriv(S, 1 - player);
+  log(S, `${S.players[player].name} goes first. ${S.players[1 - player].name} takes a scroll.`);
+}
+
 function givePriv(S, to) {
   if (S.privBoard > 0) { S.privBoard--; S.players[to].priv++; return true; }
   if (S.players[1 - to].priv > 0) { S.players[1 - to].priv--; S.players[to].priv++; return true; }
@@ -315,6 +324,9 @@ function doBuy(S, color) {
 
 /* ---------- action handlers ---------- */
 const handlers = {
+  chooseFirst(S, { player }) {
+    if (S.awaitingFirst && (player === 0 || player === 1)) startWith(S, player);
+  },
   tok(S, { i }) {
     const p = cur(S), c = S.board[i], pd = S.pending;
     if (c == null) return;
@@ -522,10 +534,11 @@ const handlers = {
 };
 
 export function reduce(state, a) {
-  if (a.type === 'new') return createGame(a.exp, a.seed);
+  if (a.type === 'new') return createGame(a.exp, a.seed, a.first);
   const S = structuredClone(state);
   S.toast = null;
   if (S.over) return state;
+  if (S.awaitingFirst && a.type !== 'chooseFirst') return state;
   handlers[a.type]?.(S, a);
   return S;
 }
