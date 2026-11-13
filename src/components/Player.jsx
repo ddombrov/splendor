@@ -1,4 +1,3 @@
-import { Star } from 'lucide-react';
 import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { NumberTicker } from '@/components/ui/number-ticker';
@@ -36,7 +35,6 @@ export default function Player({ S, idx, dispatch, colW = 52 }) {
         <div className="flex items-center gap-3">
           <Stat title="Prestige points">
             <NumberTicker value={pts(p)} className="tracking-normal text-foreground dark:text-foreground" />
-            <Star className="size-5 fill-amber-400 text-amber-400" />
           </Stat>
           <Stat title="Crowns">
             <NumberTicker value={crowns(p)} className="tracking-normal text-foreground dark:text-foreground" />

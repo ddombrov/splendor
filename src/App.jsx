@@ -230,7 +230,7 @@ export default function App() {
                     <div className="flex flex-wrap justify-center gap-1.5">
                       <Button size="sm" disabled={!takeable} onClick={act({ type: 'take' })}>Take {S.sel.length || ''} selected</Button>
                       <Button size="sm" variant="outline" disabled={!(idle && (p.priv > 0 || S.mode === 'priv2'))} onClick={act({ type: 'priv' })}>
-                        {S.mode ? 'Cancel privilege' : `Use privilege (${p.priv})`}
+                        {S.mode ? 'Cancel privilege' : 'Use privilege'}
                       </Button>
                       <Button size="sm" variant="outline" disabled={!(idle && S.bag.length)} onClick={act({ type: 'repl' })}>Refill board</Button>
                       {pd?.type === 'multi' && <Button size="sm" onClick={act({ type: 'confirmMulti' })}>Confirm {pd.sel.length} token{pd.sel.length === 1 ? '' : 's'}</Button>}
