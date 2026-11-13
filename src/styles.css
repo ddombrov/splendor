@@ -128,3 +128,4 @@
 .card.cfcard { background: url(/cards/front-purple.svg) center / 100% 100% no-repeat; }
 .back.lvhidden { background: url(/cards/back-rainbow.svg) center / 100% 100% no-repeat; border-color: transparent; }
 .iconcount { position: absolute; right: -6px; bottom: -4px; min-width: 20px; height: 20px; padding: 0 4px; border-radius: 10px; background: #12151c; color: #fff; font-size: 13px; font-weight: 800; line-height: 20px; text-align: center; }
+.iconsub { position: absolute; left: -10px; bottom: -6px; line-height: 0; }

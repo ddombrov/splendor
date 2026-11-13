@@ -10,6 +10,12 @@ const CF_ICON = {
   red2: (c) => [`gem:${c.rc}`, '−2'],
   pearl1: () => ['gem:pearl', '−1'],
   priv2: () => ['privilege', '2'],
+  xturn: () => ['extra', '', 'privilege'],
+  xsteal: () => ['steal', '', 'privilege'],
+  royalbuy: () => ['crown', '+'],
+  crowns2: () => ['crown', '2'],
+  reserve5: () => ['takecard', '5'],
+  matchplus: () => ['match', '2'],
 };
 // A number drawn on the picture, for powers that take several tokens.
 const ICON_COUNT = { rtake3: 3, rtake4: 4, rbag2: 2, w9c: '−1', w9k: '−1' };
@@ -69,11 +75,12 @@ export function CfCard({ card, onClick, selected, afford }) {
         <span>Counterfeiter</span>
       </div>
       {card.crowns > 0 && <div className="crownrow cfcrowns"><Crown size={20} /><Crown size={20} /></div>}
-      {CF_ICON[card.ab] ? (() => { const [pic, num] = CF_ICON[card.ab](card); return (
+      {CF_ICON[card.ab] ? (() => { const [pic, num, sub] = CF_ICON[card.ab](card); return (
         <div className="note iconly">
           <span className="relative inline-flex">
             <AbilityIcon ab={pic} size={44} />
-            <b className="iconcount">{num}</b>
+            {num && <b className="iconcount">{num}</b>}
+            {sub && <span className="iconsub"><AbilityIcon ab={sub} size={24} /></span>}
           </span>
         </div>
       ); })() : (
