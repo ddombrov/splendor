@@ -54,7 +54,7 @@ export default function Player({ S, idx, dispatch }) {
           const click = canDisc ? () => dispatch({ type: 'disc', c: k }) : canSteal && k !== 'gold' ? () => dispatch({ type: 'steal', c: k }) : null;
           return (
             <div key={k} title={k} onClick={click} className={cn('relative leading-none', click && 'pile click')}>
-              <TokenArt kind={k} size={32} />
+              <TokenArt kind={k} size={28} />
               <span className="absolute -right-1.5 -bottom-1 flex h-4 min-w-4 items-center justify-center rounded-full bg-primary px-0.5 text-[10px] font-bold text-primary-foreground">
                 {p.tok[k]}
               </span>
@@ -95,7 +95,7 @@ export default function Player({ S, idx, dispatch }) {
       )}
 
       <Label>Reserved ({p.res.length})</Label>
-      <div className="compact-cards" style={{ '--z': 0.58 }}>
+      <div className="compact-cards" style={{ "--z": 0.52 }}>
         <div className="rowline wrap">
           {p.res.length === 0 && <span className="text-xs text-muted-foreground">None</span>}
           {p.res.map((c, i) =>

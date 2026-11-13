@@ -102,7 +102,7 @@ function TurnBar({ S, open, setOpen }) {
 function Token({ kind, cls, onClick }) {
   return (
     <div className={`tok ${cls || ''}`} onClick={onClick}>
-      <TokenArt kind={kind} size={44} />
+      <TokenArt kind={kind} size={64} />
     </div>
   );
 }
@@ -235,7 +235,7 @@ export default function App() {
                         </span>
                         <span>Bag: {S.bag.length}</span>
                       </div>
-                      <div className="flex w-full max-w-[230px] flex-col gap-1.5">
+                      <div className="flex w-full max-w-[190px] flex-col gap-1.5">
                         <Button size="sm" disabled={!takeable} onClick={act({ type: 'take' })}>Take {S.sel.length || ''} selected</Button>
                         <Button size="sm" variant="outline" disabled={!(idle && (p.priv > 0 || S.mode === 'priv2'))} onClick={act({ type: 'priv' })}>
                           {S.mode ? 'Cancel privilege' : `Use privilege (${p.priv})`}
