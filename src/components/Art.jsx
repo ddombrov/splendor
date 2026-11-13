@@ -1,5 +1,3 @@
-import { Crown as CrownIcon } from 'lucide-react';
-
 export const PAL = {
   blue: { h: '#cfe6ff', l: '#7db4ff', b: '#2f6fe0', d: '#14409a', glow: '59,130,246' },
   white: { h: '#ffffff', l: '#eef3f9', b: '#c3d0e0', d: '#8b9bb3', glow: '226,232,240' },
@@ -35,10 +33,9 @@ export function Scroll({ size = 20 }) {
   return <img src="/icons/scroll.png" height={size} alt="" draggable={false} className="shrink-0" style={{ width: 'auto', height: size }} />;
 }
 
-/** The picture is only legible when it is big; tiny crowns keep a clean outline. */
+/** The crown picture, the same one the royal cards use, at any size. */
 export function Crown({ size = 16 }) {
-  if (size >= 28) return <img src="/gems/crown.png" width={size} height={size} alt="" draggable={false} className="gem-img shrink-0" />;
-  return <CrownIcon size={size} strokeWidth={1.5} fill="currentColor" className="shrink-0 text-amber-400" />;
+  return <img src="/gems/crown.png" width={size} height={size} alt="" draggable={false} className="gem-img shrink-0" />;
 }
 
 /** The small icon used in cost pills and chips: the same pictures as the gems. */

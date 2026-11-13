@@ -1,11 +1,23 @@
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { AbilityIcon } from './Art.jsx';
 
 const H = ({ children }) => <h4 className="mt-5 mb-1 text-sm font-semibold text-primary">{children}</h4>;
 const P = ({ children }) => <p className="my-1 text-sm leading-relaxed">{children}</p>;
 const L = ({ items }) => (
   <ul className="ml-5 list-disc space-y-1 text-sm leading-relaxed">
     {items.map(([b, t], i) => <li key={i}>{b && <b>{b} </b>}{t}</li>)}
+  </ul>
+);
+
+const IconList = ({ items }) => (
+  <ul className="space-y-2.5 text-sm leading-relaxed">
+    {items.map(([ab, bold, text]) => (
+      <li key={bold} className="flex items-start gap-3">
+        <AbilityIcon ab={ab} size={32} />
+        <span><b>{bold}</b> {text}</span>
+      </li>
+    ))}
   </ul>
 );
 
@@ -26,16 +38,16 @@ function Summary({ exp }) {
         ['Take 1 gold and reserve 1 card', 'from the pyramid or the top of a deck. Needs gold on the board and fewer than 3 reserved cards. Gold can only be gained this way.'],
         ['Buy 1 card', 'from the pyramid or your reserve. Pay its cost minus your bonuses. Gold is wild. Spent tokens go back in the bag.'],
       ]} />
-      <H>Card abilities</H>
-      <L items={[
-        ['Extra turn:', 'take another turn right after this one.'],
-        ['Wild bonus:', 'copy the colour of one of your existing bonuses. You cannot buy it with no bonus cards.'],
-        ['Matching token:', "take a board token of this card's colour, if any."],
-        ['Privilege:', 'take one. If none are on the table, take one from your opponent.'],
-        ['Steal:', 'take 1 gem or pearl from your opponent, never gold.'],
+      <H>Card pictures</H>
+      <IconList items={[
+        ['extra', 'Go again:', 'take another turn right after this one.'],
+        ['wild', 'Rainbow gem:', 'a wild bonus. Copy the colour of one of your existing bonuses. You cannot buy it with no bonus cards.'],
+        ['match', 'Board:', "take a token of this card's colour from the board, if there is one."],
+        ['privilege', 'Scroll:', 'take a privilege. If none are on the table, take one from your opponent.'],
+        ['steal', 'Hand:', 'steal 1 gem or pearl from your opponent, never gold.'],
       ]} />
       <H>Crowns and royals</H>
-      <P>On reaching your 3rd and 6th crown, take one of the royal cards and resolve its ability. This is not an action.</P>
+      <P>Each crown picture on a card counts toward your crowns. On reaching your 3rd and 6th crown, take one of the royal cards and resolve its ability. This is not an action. The 3 and 6 on every royal card are a reminder of that.</P>
       <H>End of turn</H>
       <P>If you hold more than 10 tokens, discard down to 10. Then check the victory conditions.</P>
       <H>Privileges</H>

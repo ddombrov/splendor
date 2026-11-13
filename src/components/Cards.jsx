@@ -1,7 +1,8 @@
 import { CF_TEXT, ROYAL_TEXT } from '../engine/data.js';
 import { PAL, Gem, Crown, AbilityIcon, Mini } from './Art.jsx';
 
-// Royal abilities that have a picture; the rest are text only.
+// Royal abilities that have a picture; the first three need no words, the rest keep their text.
+const ICON_ONLY = ['privilege', 'extra', 'steal'];
 const ROYAL_ICON = { privilege: 'privilege', extra: 'extra', steal: 'steal', take1: 'match', rtake3: 'match', rtake4: 'match' };
 
 const COST_ORDER = ['blue', 'white', 'green', 'black', 'red', 'pearl', 'glass'];
@@ -34,15 +35,14 @@ export function JewelCard({ card, onClick, selected, afford }) {
     >
       <div className="art"><Gem kind={kind} size={62} /></div>
       <div className="pts">{card.pts || ''}</div>
-      <div className="crownrow">{Array.from({ length: card.crowns }, (_, i) => <Crown key={i} size={15} />)}</div>
+      <div className="crownrow">{Array.from({ length: card.crowns }, (_, i) => <Crown key={i} size={20} />)}</div>
       <div className="bonus">
         <Gem kind={kind} size={26} />
         {card.n > 1 && <b>×{card.n}</b>}
       </div>
       {abil && (
         <div className="abil">
-          <AbilityIcon ab={abil} size={26} />
-          <small>{card.ability && wild ? 'Wild+' : AB_LABEL[abil]}</small>
+          <AbilityIcon ab={abil} size={28} />
         </div>
       )}
       <Costs cost={card.cost} />
@@ -57,7 +57,7 @@ export function CfCard({ card, onClick, selected, afford }) {
         <Mini kind="glass" size={16} />
         <span>Counterfeiter</span>
       </div>
-      {card.crowns > 0 && <div className="crownrow cfcrowns"><Crown size={15} /><Crown size={15} /></div>}
+      {card.crowns > 0 && <div className="crownrow cfcrowns"><Crown size={20} /><Crown size={20} /></div>}
       <div className="note">{CF_TEXT[card.ab](card)}</div>
       <Costs cost={card.cost} />
     </div>
@@ -69,7 +69,10 @@ export function RoyalCard({ card, onClick, glow }) {
     <div className={`card royal ${glow ? 'afford' : ''}`} onClick={onClick}>
       <div className="pts">{card.pts}</div>
       <div className="royal-crown"><Crown size={42} /></div>
-      <div className="note royaltext"><AbilityIcon ab={ROYAL_ICON[card.ab]} size={24} />{ROYAL_TEXT[card.ab]}</div>
+      <div className="note royaltext">
+        {ROYAL_ICON[card.ab] && <AbilityIcon ab={ROYAL_ICON[card.ab]} size={ICON_ONLY.includes(card.ab) ? 36 : 24} />}
+        {!ICON_ONLY.includes(card.ab) && ROYAL_TEXT[card.ab]}
+      </div>
       <div className="rmark l" title="Claim a royal card at 3 crowns"><Crown size={34} /><b>3</b></div>
       <div className="rmark r" title="Claim a royal card at 6 crowns"><Crown size={34} /><b>6</b></div>
     </div>

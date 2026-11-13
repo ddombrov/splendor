@@ -39,10 +39,11 @@ export default function Player({ S, idx, dispatch }) {
           <Stat label="Prestige"><NumberTicker value={pts(p)} className="tracking-normal text-foreground dark:text-foreground" /></Stat>
           <Stat label="Crowns">
             <NumberTicker value={crowns(p)} className="tracking-normal text-foreground dark:text-foreground" />
-            <Crown size={13} />
+            <Crown size={20} />
           </Stat>
           <Stat label="Scrolls">
-            {p.priv ? Array.from({ length: p.priv }, (_, i) => <Scroll key={i} size={15} />) : <span className="text-muted-foreground/60">0</span>}
+            <Scroll size={22} />
+            <span>{p.priv}</span>
           </Stat>
         </div>
       </div>

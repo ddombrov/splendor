@@ -223,13 +223,9 @@ export default function App() {
                     </div>
                   </div>
                   <div className="flex flex-col items-center gap-2">
-                    <div className="flex items-center gap-5 text-xs text-muted-foreground">
-                      <span className="flex items-center gap-1.5">
-                        Scrolls on the table
-                        {Array.from({ length: S.privBoard }, (_, i) => <Scroll key={i} size={15} />)}
-                        {S.privBoard === 0 && 'none'}
-                      </span>
-                      <span>Bag: {S.bag.length}</span>
+                    <div className="flex items-center gap-1.5 text-base font-semibold" title="Scrolls on the table">
+                      <Scroll size={24} />
+                      <span>{S.privBoard}</span>
                     </div>
                     <div className="flex flex-wrap justify-center gap-1.5">
                       <Button size="sm" disabled={!takeable} onClick={act({ type: 'take' })}>Take {S.sel.length || ''} selected</Button>
@@ -243,8 +239,9 @@ export default function App() {
                   </div>
                 </Card>
 
-                <Card className={cn('min-h-0 flex-1 overflow-hidden p-3', !(card || goldChosen || reservableSel) && 'border-dashed bg-transparent')}>
-                  {card || goldChosen || reservableSel ? (
+                {(card || goldChosen || reservableSel) && (
+                <Card className="min-h-0 flex-1 overflow-hidden p-3">
+                  {(
                     <div className="flex min-h-0 gap-3">
                       {card && (
                         <div className="compact-cards pointer-events-none shrink-0" style={{ '--z': 0.7 }}>
@@ -291,12 +288,9 @@ export default function App() {
                         )}
                       </div>
                     </div>
-                  ) : (
-                    <div className="flex h-full items-center justify-center px-4 text-center text-xs text-muted-foreground">
-                      Pick a card to see what it costs and to buy it. To reserve one, pick a gold token and a card.
-                    </div>
                   )}
                 </Card>
+                )}
               </div>
 
               {/* Right: all the cards */}
