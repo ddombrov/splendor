@@ -15,13 +15,15 @@ const Stat = ({ title, children }) => (
   <div title={title} className="flex h-7 items-center gap-1 text-xl font-extrabold leading-none">{children}</div>
 );
 
-export default function Player({ S, idx, dispatch, colW = 52 }) {
+export default function Player({ S, idx, dispatch, colW = 52, viewer = null }) {
   const p = S.players[idx];
   const active = idx === S.cur && !S.awaitingFirst;
   const pd = S.pending;
-  const canDisc = pd?.type === 'discard' && active;
-  const canSteal = pd?.type === 'steal' && !active;
-  const canReturn = active && !S.main && !pd && roomLeft(p) === 0;
+  const mine = viewer == null || viewer === S.cur;
+  const showReserved = viewer == null ? active : idx === viewer;
+  const canDisc = pd?.type === 'discard' && active && mine;
+  const canSteal = pd?.type === 'steal' && !active && mine;
+  const canReturn = active && mine && !S.main && !pd && roomLeft(p) === 0;
   const b = bonuses(p);
   const tokens = [...kinds(S), 'gold'].filter((k) => p.tok[k] > 0);
 
@@ -106,7 +108,7 @@ export default function Player({ S, idx, dispatch, colW = 52 }) {
           {Array.from({ length: resCap(p) }, (_, i) => {
             const c = p.res[i];
             if (!c) return <div key={`slot${i}`} className="slot" />;
-            return active ? (
+            return showReserved ? (
               <JewelCard
                 key={c.id}
                 card={c}

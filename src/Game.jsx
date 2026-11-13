@@ -1,0 +1,478 @@
+import { useCallback, useEffect, useRef, useState } from 'react';
+import confetti from 'canvas-confetti';
+import { Check, Copy, DoorOpen, Flag, Loader2, ListChecks, History, BookOpen, RotateCcw, Settings, ChevronDown, TriangleAlert, CircleCheck, Circle, Swords, ScrollText, RefreshCw, Hand, Bookmark, ShoppingCart } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { Card } from '@/components/ui/card';
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
+import { ScrollArea } from '@/components/ui/scroll-area';
+import { Separator } from '@/components/ui/separator';
+import { Switch } from '@/components/ui/switch';
+import { cn } from '@/lib/utils';
+import { api, onRemoteChange } from './net/api.js';
+import { botActions } from './engine/bot.js';
+import { createGame, reduce, cur, opp, plan, endOptions, validLine, selectedCard, resCap } from './engine/engine.js';
+import { JewelCard, CfCard, RoyalCard, CardBack } from './components/Cards.jsx';
+import Player from './components/Player.jsx';
+import Rules from './components/Rules.jsx';
+import { TokenArt, Scroll, Gem, Mini, CompleteIcon } from './components/Art.jsx';
+
+// The engine is deterministic, so the screen supplies the seed for each new game.
+const newSeed = () => crypto.getRandomValues(new Uint32Array(1))[0];
+
+function statusText(S) {
+  const p = cur(S), pd = S.pending;
+  if (S.toast) return S.toast;
+  if (pd) {
+    switch (pd.type) {
+      case 'pick': return `${p.name}: take a token from the board (highlighted).${pd.plus ? ' You may take 2 of the matching colour, or any 1 token.' : ''}`;
+      case 'multi': return `${p.name}: choose up to ${pd.max} token${pd.max > 1 ? 's' : ''}${pd.rule === 'same' ? ' of one type' : ''}, then confirm.`;
+      case 'steal': return `${p.name}: click one of ${opp(S).name}'s tokens to steal it.`;
+      case 'royal': return `${p.name}: choose a royal card.`;
+      case 'discard': return `${p.name}: more than 10 tokens. Click your tokens to discard down to 10.`;
+      case 'wild': return `${p.name}: choose the colour for your wild bonus.`;
+      case 'freeReserve': return `${p.name}: click a card or deck to reserve it, or skip.`;
+      case 'freeCf': return `${p.name}: take a counterfeiter card for free.`;
+      case 'endabil': return `${p.name}: use a counterfeiter ability, or finish your turn.`;
+      case 'peek': return `${p.name}: choose 1 of these 3 cards to reserve.`;
+      default: break;
+    }
+  }
+  if (S.mode === 'priv') return `${p.name}: click any non-gold token to take it with your privilege.`;
+  if (S.mode === 'priv2') return `${p.name}: counterfeiter bonus, click one more non-gold token.`;
+  if (S.goldSel != null) return `${p.name}: gold token chosen. Choose a card or deck to reserve, then press Complete move.`;
+  return null;
+}
+
+function TurnOptionsDialog({ open, onOpenChange }) {
+  const Item = ({ icon: Icon, children }) => (
+    <li className="flex items-start gap-2"><Icon className="mt-0.5 size-4 shrink-0 text-primary" />{children}</li>
+  );
+  return (
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogContent className="sm:max-w-2xl">
+        <DialogHeader>
+          <DialogTitle>Turn options</DialogTitle>
+          <DialogDescription>What you can do on your turn.</DialogDescription>
+        </DialogHeader>
+        <div className="grid gap-6 text-sm sm:grid-cols-2">
+          <div>
+            <div className="mb-2 text-[11px] font-semibold uppercase tracking-widest text-muted-foreground">Optional, before your action</div>
+            <ul className="space-y-2">
+              <Item icon={ScrollText}>Use a privilege to take any one non-gold token.</Item>
+              <Item icon={RefreshCw}>Refill the board from the bag. Your opponent gets a privilege.</Item>
+            </ul>
+          </div>
+          <div>
+            <div className="mb-2 text-[11px] font-semibold uppercase tracking-widest text-muted-foreground">Then choose one</div>
+            <ul className="space-y-2">
+              <Item icon={Hand}>Take up to 3 tokens in a straight line.</Item>
+              <Item icon={Bookmark}>Reserve a card and take a gold token.</Item>
+              <Item icon={ShoppingCart}>Buy a card from the pyramid or your reserve.</Item>
+            </ul>
+          </div>
+        </div>
+      </DialogContent>
+    </Dialog>
+  );
+}
+
+function Token({ kind, cls, onClick, size }) {
+  return (
+    <div className={`tok ${cls || ''}`} onClick={onClick}>
+      <TokenArt kind={kind} size={size} />
+    </div>
+  );
+}
+
+const SectionLabel = ({ children, className }) => (
+  <div className={cn('text-[11px] font-semibold uppercase tracking-widest text-muted-foreground', className)}>{children}</div>
+);
+const ButtonRow = ({ children, className }) => (
+  <div className={cn('flex flex-wrap justify-center gap-2', className)}>{children}</div>
+);
+
+// The game is laid out on a stage that matches the window exactly. The scale is chosen so a
+// 1560 by 900 design always fits, and any extra width or height is shared out by the layout.
+const MIN_W = 1560;
+const MIN_H = 900;
+function useFitScale() {
+  const read = () => {
+    const k = Math.max(0.4, Math.min(window.innerWidth / MIN_W, window.innerHeight / MIN_H));
+    return { k, w: window.innerWidth / k, h: window.innerHeight / k };
+  };
+  const [fit, setFit] = useState(read);
+  useEffect(() => {
+    const onResize = () => setFit(read());
+    window.addEventListener('resize', onResize);
+    return () => window.removeEventListener('resize', onResize);
+  }, []);
+  return fit;
+}
+
+const freshGame = (session) => {
+  const g = createGame(session.exp, newSeed(), null);
+  if (session.mode === 'ai') g.players[1].name = 'Computer';
+  return g;
+};
+
+/** Loads an online game from the server, then hands it to the board. */
+export default function Game({ session, onExit }) {
+  const online = session.mode === 'online';
+  const [init, setInit] = useState(() => (online ? null : { S: freshGame(session), rev: 0 }));
+  const [gone, setGone] = useState(false);
+  useEffect(() => {
+    if (!online) return;
+    api.getRoom(session.code, session.seat).then((room) => (room ? setInit({ S: room.S, rev: room.rev }) : setGone(true)));
+  }, [online, session.code, session.seat]);
+  if (gone) {
+    return (
+      <div className="fixed inset-0 flex flex-col items-center justify-center gap-4 bg-background text-center">
+        <p className="text-lg font-semibold">This game no longer exists.</p>
+        <Button onClick={onExit}>Back to home</Button>
+      </div>
+    );
+  }
+  if (!init) {
+    return <div className="fixed inset-0 flex items-center justify-center bg-background"><Loader2 className="size-8 animate-spin text-muted-foreground" /></div>;
+  }
+  return <Board session={session} onExit={onExit} init={init} />;
+}
+
+const ago = (t) => {
+  if (!t) return 'not yet';
+  const sec = Math.max(0, Math.round((Date.now() - t) / 1000));
+  if (sec < 10) return 'just now';
+  if (sec < 60) return `${sec}s ago`;
+  if (sec < 3600) return `${Math.floor(sec / 60)} min ago`;
+  return `${Math.floor(sec / 3600)} h ago`;
+};
+
+function Board({ session, onExit, init }) {
+  const { k, w, h } = useFitScale();
+  const { exp } = session;
+  const online = session.mode === 'online';
+  const vsAi = session.mode === 'ai';
+  const seat = online ? session.seat : vsAi ? 0 : null; // whose screen this is; null means both players share it
+  const [S, setS] = useState(init.S);
+  const Sref = useRef(init.S);
+  const revRef = useRef(init.rev);
+  const [remote, setRemote] = useState(null);
+  const [, setTick] = useState(0);
+  const [copied, setCopied] = useState(false);
+
+  const adopt = useCallback((next, rev) => { Sref.current = next; revRef.current = rev; setS(next); }, []);
+  const push = useCallback(async (next) => {
+    const res = await api.pushState(session.code, seat, revRef.current, next);
+    if (res.ok) revRef.current = res.room.rev; else adopt(res.room.S, res.room.rev);
+  }, [session.code, seat, adopt]);
+
+  /** Every change to the game goes through here, so online rules about whose turn it is live in one place. */
+  const dispatch = useCallback((a) => {
+    const before = Sref.current;
+    if (seat != null && a.type !== 'resign') {
+      const mine = before.awaitingFirst ? (a.type === 'chooseFirst' && (!online || seat === 0)) : before.cur === seat;
+      if (!mine) return;
+    }
+    const next = reduce(before, a);
+    if (next === before) return;
+    Sref.current = next;
+    setS(next);
+    if (online) push(next);
+  }, [seat, online, push]);
+
+  // Online: poll for the other player's moves, and when another tab changes the room.
+  useEffect(() => {
+    if (!online) return undefined;
+    const pull = async () => {
+      const room = await api.getRoom(session.code, seat);
+      if (!room) return;
+      setRemote({ active: room.active, seated: !!room.seats[1] });
+      if (room.rev > revRef.current) adopt(room.S, room.rev);
+    };
+    pull();
+    const id = setInterval(() => { pull(); setTick((t) => t + 1); }, 2000);
+    const off = onRemoteChange(pull);
+    return () => { clearInterval(id); off(); };
+  }, [online, session.code, seat, adopt]);
+
+  // Against the computer: it plays seat 1 after a short pause.
+  useEffect(() => {
+    if (!vsAi || S.over || S.awaitingFirst || S.cur !== 1) return undefined;
+    const t = setTimeout(() => {
+      let next = Sref.current;
+      for (const a of botActions(next)) next = reduce(next, a);
+      if (next !== Sref.current) { Sref.current = next; setS(next); }
+    }, 700);
+    return () => clearTimeout(t);
+  }, [S, vsAi]);
+
+  const myTurn = seat == null || (S.awaitingFirst ? seat === 0 : S.cur === seat);
+  const [showRules, setShowRules] = useState(false);
+  const [showLog, setShowLog] = useState(false);
+  const [ask, setAsk] = useState(null);
+  const [lastAsk, setLastAsk] = useState(null);
+  const [showOptions, setShowOptions] = useState(false);
+  const [picked, setPicked] = useState(null);
+  const p = cur(S), pd = S.pending;
+  // Layout numbers. The cards get the size their rows allow, the board takes what is left, and any
+  // spare width goes to the players, the cards and the board in that order of need.
+  const prompt = statusText(S);
+  const extra = Math.max(0, w - MIN_W);
+  const playersW = Math.round(Math.min(250 + extra * 0.2, 360));
+  const colW = Math.max(40, Math.floor((playersW - 24 - 2 - 4 * 4) / 5));
+  const cardRows = S.exp ? 5 : 4;
+  const zByHeight = (h - 20 - 24 - (cardRows - 1) * 8 - cardRows * 4) / (cardRows * 174);
+  const cardsW = Math.round(Math.min(764 + extra * 0.5, 744 * Math.min(zByHeight, 1.2) + 70));
+  const cardZoom = Math.max(0.5, Math.min(zByHeight, (cardsW - 64) / 744, 1.2));
+  const boardColW = w - 20 - playersW - cardsW - 24;
+  const cell = Math.max(64, Math.min(Math.floor((boardColW - 72) / 5), Math.floor((h - 373) / 5)));
+  const card = selectedCard(S);
+  const act = (a) => () => dispatch(a);
+
+  useEffect(() => {
+    if (S.over) confetti({ particleCount: 160, spread: 85, origin: { y: 0.6 }, colors: ['#d9b15a', '#5b8bd6', '#4aa174', '#d8283a', '#ffffff'] });
+  }, [S.over]);
+
+  const openAsk = (a) => { setLastAsk(a); setAsk(a); };
+  const restart = () => openAsk({ title: 'Start over?', msg: 'The current game will be lost.', yes: 'Start over', onYes: () => adopt(freshGame(session), 0) });
+  const leave = () => openAsk({ title: 'Leave this game?', msg: online ? 'You can come back with the game code while it still exists.' : 'The current game will be lost.', yes: 'Leave', onYes: onExit });
+  const resign = () => openAsk({ title: 'Resign?', msg: 'The other player wins.', yes: 'Resign', onYes: () => dispatch({ type: 'resign', player: seat ?? S.cur }) });
+  const copyCode = () => {
+    try { navigator.clipboard.writeText(session.code); } catch { /* ignore */ }
+    setCopied(true);
+    setTimeout(() => setCopied(false), 1500);
+  };
+  const opponentActive = remote ? ago(remote.active[1 - seat]) : '';
+
+  const idle = !S.main && !pd && myTurn;
+  const plans = (c) => idle && !!plan(S, p, c);
+  const canBuy = idle && card && !!plan(S, p, card);
+  const reservableSel = !!S.selCard && (S.selCard.src === 'pyr' || S.selCard.src === 'deck') && p.res.length < resCap(p);
+  const goldChosen = S.goldSel != null;
+  const canRes = idle && goldChosen && reservableSel;
+  const takeable = idle && validLine(S, S.sel);
+  // The action in progress comes from what the player has chosen, or from the button they pressed.
+  const action = S.sel.length ? 'take' : S.goldSel != null ? 'reserve' : S.mode ? 'priv' : picked || (card ? 'buy' : null);
+  const canComplete = { take: takeable, buy: canBuy, reserve: canRes, refill: idle && !!S.bag.length, priv: false }[action];
+  const complete = () => {
+    const type = { take: 'take', buy: 'buy', reserve: 'reserve', refill: 'repl' }[action];
+    setPicked(null);
+    dispatch({ type });
+  };
+  const cancel = () => { setPicked(null); dispatch({ type: 'cancelAction' }); };
+  const choose = (what) => {
+    dispatch({ type: 'cancelAction' });
+    if (what === 'priv') dispatch({ type: 'priv' });
+    else setPicked(what);
+  };
+  const endOpts = pd?.type === 'endabil' ? endOptions(S) : [];
+  const selIdx = pd?.type === 'multi' ? pd.sel : S.goldSel != null ? [...S.sel, S.goldSel] : S.sel;
+  const shownAsk = ask || lastAsk;
+
+  return (
+    <>
+      <div className="fixed inset-0 overflow-hidden bg-background">
+        <div>
+          <div className="stage relative flex flex-col gap-2 p-2.5" style={{ width: w, height: h, transform: `scale(${k})`, transformOrigin: '0 0', '--cell': `${cell}px` }}>
+            <div className="absolute right-3 top-3 z-30 flex items-center gap-1.5">
+              {online && (
+                <div className="flex items-center gap-2 rounded-md border bg-card px-2.5 py-1 text-xs">
+                  <span className="text-muted-foreground">Code</span>
+                  <span className="font-bold tracking-[0.2em]">{session.code}</span>
+                  <button type="button" onClick={copyCode} className="text-muted-foreground hover:text-foreground" title="Copy the code">
+                    {copied ? <Check className="size-3.5" /> : <Copy className="size-3.5" />}
+                  </button>
+                  <span className="border-l pl-2 text-muted-foreground">{remote && !remote.seated ? 'Waiting for opponent' : `Opponent ${opponentActive}`}</span>
+                </div>
+              )}
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button variant="secondary" size="sm"><Settings /> Settings <ChevronDown className="opacity-60" /></Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end" className="w-72">
+                  <DropdownMenuItem onSelect={() => setShowOptions(true)} className="gap-2 py-2.5"><ListChecks /> Turn options</DropdownMenuItem>
+                  <DropdownMenuItem onSelect={() => setShowLog(true)} className="gap-2 py-2.5"><History /> Log</DropdownMenuItem>
+                  <DropdownMenuItem onSelect={() => setShowRules(true)} className="gap-2 py-2.5"><BookOpen /> Rules</DropdownMenuItem>
+                  <DropdownMenuSeparator />
+                  {!online && <DropdownMenuItem onSelect={restart} className="gap-2 py-2.5"><RotateCcw /> Start over</DropdownMenuItem>}
+                  <DropdownMenuItem onSelect={resign} className="gap-2 py-2.5"><Flag /> Resign</DropdownMenuItem>
+                  <DropdownMenuItem onSelect={leave} className="gap-2 py-2.5"><DoorOpen /> Leave game</DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
+            </div>
+            {prompt && (
+              <div className={cn('absolute left-1/2 top-3 z-30 max-w-[55%] -translate-x-1/2 truncate rounded-full border bg-card/95 px-4 py-1.5 text-xs shadow-lg backdrop-blur', S.toast ? 'border-amber-500/50 text-amber-300' : 'text-foreground')}>
+                {prompt}
+              </div>
+            )}
+            <div className="grid min-h-0 flex-1 gap-3" style={{ gridTemplateColumns: `${playersW}px minmax(0,1fr) ${cardsW}px` }}>
+              {/* Left: both players */}
+              <div className="flex min-h-0 flex-col gap-3">
+                <Player S={S} idx={0} dispatch={dispatch} colW={colW} viewer={seat} />
+                <Player S={S} idx={1} dispatch={dispatch} colW={colW} viewer={seat} />
+              </div>
+
+              {/* Middle: the board, with the selected card underneath */}
+              <div className="flex min-h-0 flex-col gap-3">
+                <Card className="shrink-0 gap-3 p-3">
+                  <div className="board-wrap mx-auto">
+                    <div className="board">
+                      {S.board.map((c, i) => {
+                        let cls = selIdx.includes(i) ? 'sel' : '';
+                        if (pd?.type === 'pick') cls += c === pd.color || (pd.plus && c !== 'gold' && pd.left === 2) ? ' hl' : ' dim';
+                        else if (pd?.type === 'multi') cls += c === 'gold' ? ' dim' : '';
+                        else if (pd) cls += ' dim';
+                        return (
+                          <div className="cell" key={i}>
+                            {c && <Token kind={c} cls={cls} size={Math.round(cell * 0.85)} onClick={() => dispatch({ type: 'tok', i })} />}
+                          </div>
+                        );
+                      })}
+                    </div>
+                  </div>
+                  <div className="flex flex-col items-center gap-2">
+                    <div className="flex min-h-7 items-center -space-x-1.5" title="Scrolls on the table">
+                      {Array.from({ length: S.privBoard }, (_, i) => <Scroll key={i} size={28} />)}
+                    </div>
+                    <div className="flex flex-wrap justify-center gap-1.5">
+                      {action ? (
+                        <>
+                          {action !== 'priv' && (
+                            <Button size="sm" disabled={!canComplete} onClick={complete}>{canComplete && <CompleteIcon size={16} />}{{ take: 'Take tokens', buy: 'Buy card', reserve: 'Reserve card', refill: 'Refill board' }[action]}</Button>
+                          )}
+                          <Button size="sm" variant="outline" disabled={!idle} onClick={cancel}>Cancel</Button>
+                        </>
+                      ) : (
+                        <>
+                          <Button size="sm" variant="outline" disabled={!(idle && S.bag.length)} onClick={() => choose('refill')}>Refill board</Button>
+                          <Button size="sm" variant="outline" disabled={!idle} onClick={() => choose('buy')}>Buy</Button>
+                          <Button size="sm" variant="outline" disabled={!(idle && S.board.includes('gold') && p.res.length < resCap(p))} onClick={() => choose('reserve')}>Reserve</Button>
+                          <Button size="sm" variant="outline" disabled={!(idle && (p.priv > 0 || S.mode === 'priv2'))} onClick={() => choose('priv')}>Use privilege</Button>
+                        </>
+                      )}
+                      {pd?.type === 'multi' && <Button size="sm" onClick={act({ type: 'confirmMulti' })}>Confirm {pd.sel.length} token{pd.sel.length === 1 ? '' : 's'}</Button>}
+                      {(['freeReserve', 'freeCf'].includes(pd?.type) || (pd?.type === 'pick' && pd.plus)) && <Button size="sm" variant="outline" onClick={act({ type: 'skip' })}>Skip</Button>}
+                    </div>
+                  </div>
+                </Card>
+
+                {card && (
+                  <Card className="min-h-0 flex-1 overflow-hidden p-3">
+                    <div className="compact-cards pointer-events-none" style={{ '--z': 0.7 }}>
+                      {card.kind === 'cf' ? <CfCard card={card} /> : <JewelCard card={card} />}
+                    </div>
+                  </Card>
+                )}
+              </div>
+
+              {/* Right: all the cards */}
+              <Card className="compact-cards min-h-0 gap-2 overflow-hidden p-3" style={{ '--z': cardZoom }}>
+                <div className="rowline">
+                  {S.royals.map((r, i) => (
+                    <RoyalCard key={r.id} card={r} glow={pd?.type === 'royal'} onClick={() => dispatch({ type: 'royal', i })} />
+                  ))}
+                  {!S.royals.length && <span className="text-xs text-muted-foreground">All claimed</span>}
+                </div>
+                {S.exp && (
+                  <div className="rowline">
+                    <CardBack level="cf" label="CF" count={S.cdeck.length} onClick={() => dispatch({ type: 'card', src: 'cdeck' })} />
+                    {S.crow.map((c, i) => (
+                      <CfCard key={c.id} card={c} selected={S.selCard?.src === 'cf' && S.selCard.i === i}
+                        afford={plans(c) || pd?.type === 'freeCf'} onClick={() => dispatch({ type: 'card', src: 'cf', i })} />
+                    ))}
+                  </div>
+                )}
+                {[2, 1, 0].map((l) => (
+                  <div className="rowline" key={l}>
+                    <CardBack level={l + 1} label={`L${l + 1}`} count={S.decks[l].length} onClick={() => dispatch({ type: 'card', src: 'deck', l })} />
+                    {S.pyr[l].map((c, i) => (
+                      <JewelCard key={c.id} card={c} selected={S.selCard?.src === 'pyr' && S.selCard.l === l && S.selCard.i === i}
+                        afford={plans(c)} onClick={() => dispatch({ type: 'card', src: 'pyr', l, i })} />
+                    ))}
+                  </div>
+                ))}
+                {pd?.type === 'wild' && (
+                  <ButtonRow>
+                    {pd.colors.map((c) => <Button key={c} size="sm" variant="outline" onClick={act({ type: 'wild', c })}><Gem kind={c} size={16} /> {c}</Button>)}
+                  </ButtonRow>
+                )}
+                {pd?.type === 'endabil' && (
+                  <ButtonRow>
+                    {endOpts.map((o) => <Button key={o.k} size="sm" variant="outline" onClick={act({ type: 'endabil', k: o.k })}>{o.t}</Button>)}
+                    <Button size="sm" onClick={act({ type: 'endDone' })}>Done</Button>
+                  </ButtonRow>
+                )}
+                {pd?.type === 'peek' && (
+                  <div className="rowline">
+                    {pd.cards.map((c, i) => <JewelCard key={c.id} card={c} afford onClick={() => dispatch({ type: 'peekPick', i })} />)}
+                  </div>
+                )}
+              </Card>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {showRules && <Rules exp={exp} onClose={() => setShowRules(false)} />}
+      <TurnOptionsDialog open={showOptions} onOpenChange={setShowOptions} />
+
+      <Dialog open={showLog} onOpenChange={setShowLog}>
+        <DialogContent className="sm:max-w-lg">
+          <DialogHeader><DialogTitle>Game log</DialogTitle><DialogDescription>Most recent first.</DialogDescription></DialogHeader>
+          <ScrollArea className="h-[50vh] pr-3">
+            <ul className="space-y-1.5 text-sm">
+              {S.log.map((l, i) => <li key={i} className={i === 0 ? 'text-foreground' : 'text-muted-foreground'}>{l}</li>)}
+            </ul>
+          </ScrollArea>
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={!!ask} onOpenChange={(o) => !o && setAsk(null)}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader><DialogTitle>{shownAsk?.title}</DialogTitle><DialogDescription>{shownAsk?.msg}</DialogDescription></DialogHeader>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setAsk(null)}>Cancel</Button>
+            <Button onClick={() => { const f = ask.onYes; setAsk(null); f(); }}>{shownAsk?.yes}</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={S.awaitingFirst && !S.over} onOpenChange={() => {}}>
+        <DialogContent className="sm:max-w-md" showCloseButton={false}>
+          <DialogHeader>
+            <DialogTitle>Who goes first?</DialogTitle>
+            <DialogDescription>The other player starts with a scroll.</DialogDescription>
+          </DialogHeader>
+          {online && seat !== 0 ? (
+            <p className="flex items-center gap-2 text-sm text-muted-foreground"><Loader2 className="size-4 animate-spin" /> Waiting for Player 1 to choose.</p>
+          ) : (
+            <div className="grid gap-3 sm:grid-cols-2">
+              {[0, 1].map((i) => (
+                <Button key={i} variant="outline" className="h-auto flex-col gap-2 py-4" onClick={() => dispatch({ type: 'chooseFirst', player: i })}>
+                  <span className="text-base font-semibold">{S.players[i].name} goes first</span>
+                  <span className="flex items-center gap-1.5 text-xs font-normal text-muted-foreground">
+                    <Scroll size={22} /> {S.players[1 - i].name} gets a scroll
+                  </span>
+                </Button>
+              ))}
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={!!S.over} onOpenChange={() => {}}>
+        <DialogContent className="sm:max-w-sm" showCloseButton={false}>
+          <DialogHeader>
+            <DialogTitle>Game over</DialogTitle>
+            <DialogDescription>{S.resigned != null ? `${S.players[S.resigned].name} resigned. ` : ''}{S.over} wins!</DialogDescription>
+          </DialogHeader>
+          <DialogFooter>
+            <Button variant="outline" onClick={onExit}>Back to home</Button>
+            {!online && <Button onClick={() => adopt(freshGame(session), 0)}>Play again</Button>}
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+    </>
+  );
+}

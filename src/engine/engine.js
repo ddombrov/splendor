@@ -326,6 +326,12 @@ function doBuy(S, color) {
 
 /* ---------- action handlers ---------- */
 const handlers = {
+  resign(S, { player }) {
+    if (player !== 0 && player !== 1) return;
+    S.resigned = player;
+    S.over = S.players[1 - player].name;
+    log(S, `${S.players[player].name} resigned.`);
+  },
   // Drops whatever the player has half chosen: tokens, a gold token, a card, or privilege mode.
   cancelAction(S) {
     if (S.main || S.pending) return;
@@ -557,7 +563,7 @@ export function reduce(state, a) {
   const S = structuredClone(state);
   S.toast = null;
   if (S.over) return state;
-  if (S.awaitingFirst && a.type !== 'chooseFirst') return state;
+  if (S.awaitingFirst && a.type !== 'chooseFirst' && a.type !== 'resign') return state;
   handlers[a.type]?.(S, a);
   return S;
 }

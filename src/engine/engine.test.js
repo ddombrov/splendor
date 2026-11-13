@@ -372,3 +372,22 @@ describe('cancelling a half-made action', () => {
     expect(reduce(priv, { type: 'cancelAction' }).players[0].priv).toBe(1);
   });
 });
+
+describe('resigning', () => {
+  it('ends the game with the other player as the winner', () => {
+    const state = createGame(false, 4, 0);
+    const after = reduce(state, { type: 'resign', player: 0 });
+    expect(after.over).toBe('Player 2');
+    expect(after.resigned).toBe(0);
+  });
+
+  it('works even before anyone has been chosen to go first', () => {
+    const after = reduce(createGame(false, 4, null), { type: 'resign', player: 1 });
+    expect(after.over).toBe('Player 1');
+  });
+
+  it('does nothing once the game is over', () => {
+    const over = reduce(createGame(false, 4, 0), { type: 'resign', player: 0 });
+    expect(reduce(over, { type: 'resign', player: 1 })).toEqual(over);
+  });
+});
