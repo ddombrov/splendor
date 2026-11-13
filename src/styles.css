@@ -96,8 +96,8 @@
 .compact-cards .rowline { gap: 6px; padding: 2px; overflow: visible; }
 .compact-cards .rowline.wrap { flex-wrap: wrap; }
 .stage .board-wrap { padding: 9px; border-radius: 12px; }
-.stage .board { grid-template-columns: repeat(5, 92px); gap: 6px; }
-.stage .cell { width: 92px; height: 92px; }
+.stage .board { grid-template-columns: repeat(5, var(--cell, 92px)); gap: 6px; }
+.stage .cell { width: var(--cell, 92px); height: var(--cell, 92px); }
 .stage .crownmark { width: 46px; height: 38px; }
 .stage .crownmark b { font-size: 20px; }
 .stage .crownmark svg { width: 38px; height: 30px; }

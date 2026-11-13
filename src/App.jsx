@@ -103,10 +103,10 @@ function TurnOptionsDialog({ open, onOpenChange }) {
   );
 }
 
-function Token({ kind, cls, onClick }) {
+function Token({ kind, cls, onClick, size }) {
   return (
     <div className={`tok ${cls || ''}`} onClick={onClick}>
-      <TokenArt kind={kind} size={78} />
+      <TokenArt kind={kind} size={size} />
     </div>
   );
 }
@@ -118,22 +118,30 @@ const ButtonRow = ({ children, className }) => (
   <div className={cn('flex flex-wrap justify-center gap-2', className)}>{children}</div>
 );
 
-// The whole game is laid out on a fixed-size stage and scaled to fit the window, so it never scrolls.
-const STAGE_W = 1600;
-const STAGE_H = 900;
+// The game is laid out on a stage that matches the window exactly. The scale is chosen so a
+// 1560 by 900 design always fits, and any extra width or height is shared out by the layout.
+const MIN_W = 1560;
+const MIN_H = 900;
 function useFitScale() {
-  const fit = () => Math.max(0.4, Math.min(window.innerWidth / STAGE_W, window.innerHeight / STAGE_H));
-  const [k, setK] = useState(fit);
+  const read = () => {
+    const k = Math.max(0.4, Math.min(window.innerWidth / MIN_W, window.innerHeight / MIN_H));
+    return { k, w: window.innerWidth / k, h: window.innerHeight / k };
+  };
+  const [fit, setFit] = useState(read);
   useEffect(() => {
-    const onResize = () => setK(fit());
+    const onResize = () => setFit(read());
     window.addEventListener('resize', onResize);
     return () => window.removeEventListener('resize', onResize);
   }, []);
-  return k;
+  return fit;
 }
 
 export default function App() {
-  const k = useFitScale();
+  const { k, w, h } = useFitScale();
+  // Spare width is shared between the board and the cards; spare height makes both bigger too.
+  const cardsW = Math.round(780 + Math.max(0, w - MIN_W) * 0.5);
+  const boardColW = w - 20 - 250 - cardsW - 24;
+  const cell = Math.max(64, Math.min(Math.floor((boardColW - 72) / 5), Math.floor((h - 213) / 5)));
   const [exp, setExp] = useState(readExp);
   const [S, dispatch] = useReducer(reduce, null, () => createGame(exp, newSeed()));
   const [showRules, setShowRules] = useState(false);
@@ -142,6 +150,7 @@ export default function App() {
   const [lastAsk, setLastAsk] = useState(null);
   const [showOptions, setShowOptions] = useState(false);
   const p = cur(S), pd = S.pending;
+  const cardZoom = Math.max(0.5, Math.min(S.exp ? (h - 600) / 348 : (h - 572) / 348, (cardsW - 70) / 744, 1.2));
   const card = selectedCard(S);
   const act = (a) => () => dispatch(a);
 
@@ -177,9 +186,9 @@ export default function App() {
 
   return (
     <>
-      <div className="fixed inset-0 flex items-center justify-center overflow-hidden bg-background">
-        <div style={{ width: STAGE_W * k, height: STAGE_H * k }}>
-          <div className="stage flex flex-col gap-2 p-2.5" style={{ width: STAGE_W, height: STAGE_H, transform: `scale(${k})`, transformOrigin: '0 0' }}>
+      <div className="fixed inset-0 overflow-hidden bg-background">
+        <div>
+          <div className="stage flex flex-col gap-2 p-2.5" style={{ width: w, height: h, transform: `scale(${k})`, transformOrigin: '0 0', '--cell': `${cell}px` }}>
             <TurnBar S={S}>
               <Button variant="ghost" size="sm" onClick={() => setShowLog(true)}><History /> Log</Button>
               <DropdownMenu>
@@ -200,7 +209,7 @@ export default function App() {
               </DropdownMenu>
             </TurnBar>
 
-            <div className="grid min-h-0 flex-1 grid-cols-[250px_minmax(0,1fr)_780px] gap-3">
+            <div className="grid min-h-0 flex-1 gap-3" style={{ gridTemplateColumns: `250px minmax(0,1fr) ${cardsW}px` }}>
               {/* Left: both players */}
               <div className="flex min-h-0 flex-col gap-3">
                 <Player S={S} idx={0} dispatch={dispatch} />
@@ -218,7 +227,7 @@ export default function App() {
                       else if (pd) cls += ' dim';
                       return (
                         <div className="cell" key={i}>
-                          {c && <Token kind={c} cls={cls} onClick={() => dispatch({ type: 'tok', i })} />}
+                          {c && <Token kind={c} cls={cls} size={Math.round(cell * 0.85)} onClick={() => dispatch({ type: 'tok', i })} />}
                         </div>
                       );
                     })}
@@ -246,7 +255,7 @@ export default function App() {
               </Card>
 
               {/* Right: all the cards, with the selected card in the bottom right corner */}
-              <Card className="compact-cards min-h-0 gap-2 overflow-hidden p-3" style={{ '--z': S.exp ? 0.84 : 0.9 }}>
+              <Card className="compact-cards min-h-0 gap-2 overflow-hidden p-3" style={{ '--z': cardZoom }}>
                 <div className="flex items-center gap-2">
                   <CrownMark n={3} title="Claim a royal card at 3 crowns" />
                   <div className="compact-cards" style={{ '--z': 0.6 }}>
