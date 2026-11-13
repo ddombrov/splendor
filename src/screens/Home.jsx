@@ -9,12 +9,12 @@ import { Field, GemRow, Segmented } from './parts.jsx';
 const MODES = [
   { key: 'device', icon: Users, title: 'Play on this device' },
   { key: 'ai', icon: Bot, title: 'Play the computer' },
-  { key: 'online', icon: Globe, title: 'Play online' },
+  { key: 'online', icon: Globe, title: 'Play with friends' },
   { key: 'quick', icon: Zap, title: 'Quick match' },
 ];
 
 const EXPANSION = [{ value: 'base', label: 'Base game' }, { value: 'exp', label: 'Counterfeiters' }];
-const SOURCES = [{ value: 'random', label: 'Random' }, { value: 'official', label: 'Official', disabled: true }];
+const SOURCES = [{ value: 'random', label: 'Random' }, { value: 'official', label: 'Official' }];
 const DIFFICULTIES = [{ value: 'easy', label: 'Easy' }, { value: 'medium', label: 'Medium' }, { value: 'hard', label: 'Hard' }];
 const DEPTHS = [{ value: 'quick', label: 'Quick' }, { value: 'standard', label: 'Standard' }, { value: 'deep', label: 'Deep' }];
 
