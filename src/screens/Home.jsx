@@ -106,13 +106,13 @@ export default function Home({ onStart, onJoined, onQuick }) {
           <h1 className="text-5xl font-extrabold tracking-tight">Splendor Duel</h1>
           <p className="text-muted-foreground">A two-player game of jewels, crowns and prestige.</p>
         </div>
-        <div className="grid w-full gap-3 sm:grid-cols-2">
-          {MODES.map(({ key, icon: Icon, title, blurb }, i) => (
+        <div className="grid w-full gap-3 sm:grid-flow-col sm:grid-cols-2 sm:grid-rows-2">
+          {MODES.map(({ key, icon: Icon, title, blurb }) => (
             <button
               key={key}
               type="button"
               onClick={() => pick(key)}
-              className={`flex items-center gap-4 rounded-xl border bg-card p-4 text-left transition hover:border-primary hover:bg-accent ${i === 0 ? 'sm:col-span-2' : ''}`}
+              className={`flex items-center gap-4 rounded-xl border bg-card p-4 text-left transition hover:border-primary hover:bg-accent`}
             >
               <Icon className="size-7 shrink-0 text-primary" />
               <span>
