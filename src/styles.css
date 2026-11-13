@@ -131,3 +131,4 @@
 .iconsub { position: absolute; left: -10px; bottom: -6px; line-height: 0; }
 .iconsub.xmark { left: auto; right: -12px; bottom: -8px; }
 .iconsub.eye { left: 44%; top: 34%; bottom: auto; transform: translate(-50%, -50%); }
+.card.royal { background: url(/cards/front-yellow.svg) center / 100% 100% no-repeat; }
