@@ -1,5 +1,6 @@
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Bookmark, Hand, RefreshCw, ScrollText, ShoppingCart } from 'lucide-react';
 import { AbilityIcon } from './Art.jsx';
 
 const H = ({ children }) => <h4 className="mt-5 mb-1 text-sm font-semibold text-primary">{children}</h4>;
@@ -7,6 +8,15 @@ const P = ({ children }) => <p className="my-1 text-sm leading-relaxed">{childre
 const L = ({ items }) => (
   <ul className="ml-5 list-disc space-y-1 text-sm leading-relaxed">
     {items.map(([b, t], i) => <li key={i}>{b && <b>{b} </b>}{t}</li>)}
+  </ul>
+);
+
+const Sub = ({ children }) => <div className="mt-3 mb-1 text-[11px] font-semibold uppercase tracking-widest text-muted-foreground">{children}</div>;
+const Steps = ({ items }) => (
+  <ul className="space-y-2 text-sm leading-relaxed">
+    {items.map(([Icon, text]) => (
+      <li key={text} className="flex items-start gap-2.5"><Icon className="mt-0.5 size-4 shrink-0 text-primary" />{text}</li>
+    ))}
   </ul>
 );
 
@@ -27,16 +37,16 @@ function Summary({ exp }) {
       <H>Goal</H>
       <P>Win at the end of your turn with 20 prestige points, 10 crowns, or 10 prestige points on cards of one colour.</P>
       <H>Your turn</H>
-      <P>First do none, one, or both optional actions in this order, then exactly one mandatory action.</P>
-      <L items={[
-        ['Use a privilege:', 'return a privilege scroll to the table to take 1 gem or pearl token of your choice from the board. Never gold.'],
-        ['Replenish the board:', 'only if the bag is not empty. Put all bag tokens on empty spaces following the spiral. Your opponent takes a privilege.'],
+      <Sub>Optional, before your action</Sub>
+      <Steps items={[
+        [ScrollText, 'Use a privilege: return a scroll to take 1 gem or pearl token of your choice from the board. Never gold.'],
+        [RefreshCw, 'Refill the board, only if the bag is not empty. Your opponent takes a privilege.'],
       ]} />
-      <P><b>Mandatory action, pick one:</b></P>
-      <L items={[
-        ['Take up to 3 tokens', 'in an unbroken straight line (row, column or diagonal). No gold. Taking 3 of one colour or 2 pearls gives your opponent a privilege.'],
-        ['Take 1 gold and reserve 1 card', 'from the pyramid or the top of a deck. Needs gold on the board and fewer than 3 reserved cards. Gold can only be gained this way.'],
-        ['Buy 1 card', 'from the pyramid or your reserve. Pay its cost minus your bonuses. Gold is wild. Spent tokens go back in the bag.'],
+      <Sub>Then choose one</Sub>
+      <Steps items={[
+        [Hand, 'Take up to 3 tokens in an unbroken straight line. No gold. Taking 3 of one colour or 2 pearls gives your opponent a privilege.'],
+        [Bookmark, 'Reserve a card: take a gold token and reserve a card from the pyramid or the top of a deck. Needs gold on the board and fewer than 3 reserved cards.'],
+        [ShoppingCart, 'Buy a card from the pyramid or your reserve. Pay its cost minus your bonuses. Gold is wild. Spent tokens go back in the bag.'],
       ]} />
       <H>Card pictures</H>
       <IconList items={[

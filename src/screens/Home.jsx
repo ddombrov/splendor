@@ -7,10 +7,10 @@ import { api } from '../net/api.js';
 import { Field, GemRow, Segmented } from './parts.jsx';
 
 const MODES = [
-  { key: 'device', icon: Users, title: 'Play on this device', blurb: 'Two people, one screen' },
-  { key: 'ai', icon: Bot, title: 'Play the computer', blurb: 'Choose a difficulty and how far ahead it thinks' },
-  { key: 'online', icon: Globe, title: 'Play online', blurb: 'Create a game or join with a code' },
-  { key: 'quick', icon: Zap, title: 'Quick match', blurb: 'Be paired with another player' },
+  { key: 'device', icon: Users, title: 'Play on this device' },
+  { key: 'ai', icon: Bot, title: 'Play the computer' },
+  { key: 'online', icon: Globe, title: 'Play online' },
+  { key: 'quick', icon: Zap, title: 'Quick match' },
 ];
 
 const EXPANSION = [{ value: 'base', label: 'Base game' }, { value: 'exp', label: 'Counterfeiters' }];
@@ -104,10 +104,9 @@ export default function Home({ onStart, onJoined, onQuick }) {
         <div className="space-y-4 text-center">
           <GemRow size={44} />
           <h1 className="text-5xl font-extrabold tracking-tight">Splendor Duel</h1>
-          <p className="text-muted-foreground">A two-player game of jewels, crowns and prestige.</p>
-        </div>
+                  </div>
         <div className="grid w-full gap-3 sm:grid-flow-col sm:grid-cols-2 sm:grid-rows-2">
-          {MODES.map(({ key, icon: Icon, title, blurb }) => (
+          {MODES.map(({ key, icon: Icon, title }) => (
             <button
               key={key}
               type="button"
@@ -115,10 +114,7 @@ export default function Home({ onStart, onJoined, onQuick }) {
               className={`flex items-center gap-4 rounded-xl border bg-card p-4 text-left transition hover:border-primary hover:bg-accent`}
             >
               <Icon className="size-7 shrink-0 text-primary" />
-              <span>
-                <span className="block font-semibold">{title}</span>
-                <span className="text-sm text-muted-foreground">{blurb}</span>
-              </span>
+              <span className="font-semibold">{title}</span>
             </button>
           ))}
         </div>

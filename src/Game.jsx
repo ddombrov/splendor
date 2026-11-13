@@ -44,39 +44,6 @@ function statusText(S) {
   return null;
 }
 
-function TurnOptionsDialog({ open, onOpenChange }) {
-  const Item = ({ icon: Icon, children }) => (
-    <li className="flex items-start gap-2"><Icon className="mt-0.5 size-4 shrink-0 text-primary" />{children}</li>
-  );
-  return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-2xl">
-        <DialogHeader>
-          <DialogTitle>Turn options</DialogTitle>
-          <DialogDescription>What you can do on your turn.</DialogDescription>
-        </DialogHeader>
-        <div className="grid gap-6 text-sm sm:grid-cols-2">
-          <div>
-            <div className="mb-2 text-[11px] font-semibold uppercase tracking-widest text-muted-foreground">Optional, before your action</div>
-            <ul className="space-y-2">
-              <Item icon={ScrollText}>Use a privilege to take any one non-gold token.</Item>
-              <Item icon={RefreshCw}>Refill the board from the bag. Your opponent gets a privilege.</Item>
-            </ul>
-          </div>
-          <div>
-            <div className="mb-2 text-[11px] font-semibold uppercase tracking-widest text-muted-foreground">Then choose one</div>
-            <ul className="space-y-2">
-              <Item icon={Hand}>Take up to 3 tokens in a straight line.</Item>
-              <Item icon={Bookmark}>Reserve a card and take a gold token.</Item>
-              <Item icon={ShoppingCart}>Buy a card from the pyramid or your reserve.</Item>
-            </ul>
-          </div>
-        </div>
-      </DialogContent>
-    </Dialog>
-  );
-}
-
 function Token({ kind, cls, onClick, size }) {
   return (
     <div className={`tok ${cls || ''}`} onClick={onClick}>
@@ -212,7 +179,6 @@ function Board({ session, onExit, init }) {
   const [showLog, setShowLog] = useState(false);
   const [ask, setAsk] = useState(null);
   const [lastAsk, setLastAsk] = useState(null);
-  const [showOptions, setShowOptions] = useState(false);
   const [picked, setPicked] = useState(null);
   const p = cur(S), pd = S.pending;
   // Layout numbers. The cards get the size their rows allow, the board takes what is left, and any
@@ -291,7 +257,6 @@ function Board({ session, onExit, init }) {
                   <Button variant="secondary" size="sm"><Settings /> Settings <ChevronDown className="opacity-60" /></Button>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="end" className="w-72">
-                  <DropdownMenuItem onSelect={() => setShowOptions(true)} className="gap-2 py-2.5"><ListChecks /> Turn options</DropdownMenuItem>
                   <DropdownMenuItem onSelect={() => setShowLog(true)} className="gap-2 py-2.5"><History /> Log</DropdownMenuItem>
                   <DropdownMenuItem onSelect={() => setShowRules(true)} className="gap-2 py-2.5"><BookOpen /> Rules</DropdownMenuItem>
                   <DropdownMenuSeparator />
@@ -415,7 +380,6 @@ function Board({ session, onExit, init }) {
       </div>
 
       {showRules && <Rules exp={exp} onClose={() => setShowRules(false)} />}
-      <TurnOptionsDialog open={showOptions} onOpenChange={setShowOptions} />
 
       <Dialog open={showLog} onOpenChange={setShowLog}>
         <DialogContent className="sm:max-w-lg">
