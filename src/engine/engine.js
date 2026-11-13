@@ -161,12 +161,13 @@ export function createGame(exp = false, seed) {
     decks: [genJewels(1, rand), genJewels(2, rand), genJewels(3, rand)], pyr: [[], [], []],
     cdeck: exp ? genCounterfeiters(rand) : [], crow: [],
     royals: royalPool.splice(0, 4), rdeck: royalPool,
-    privBoard: 2, sel: [], selCard: null, mode: null, main: false, pending: null,
+    privBoard: 2, sel: [], goldSel: null, selCard: null, mode: null, main: false, pending: null,
     queue: [], extra: false, over: null, log: [], used: {}, toast: null,
   };
   S.players[1].priv = 1;
   fillBoard(S);
-  [3, 4, 5].forEach((n, l) => { for (let i = 0; i < n; i++) S.pyr[l].push(S.decks[l].pop()); });
+  // Level 1 shows 5 cards, level 2 shows 4, level 3 shows 3.
+  [5, 4, 3].forEach((n, l) => { for (let i = 0; i < n; i++) S.pyr[l].push(S.decks[l].pop()); });
   if (exp) for (let i = 0; i < 3; i++) S.crow.push(S.cdeck.pop());
   S.rng = gen.rng;
   log(S, `Game started${exp ? ' with the Counterfeiters expansion' : ''}. Player 2 begins with one privilege.`);
@@ -186,7 +187,7 @@ function refillPyr(S, l, i) {
 function toBag(S, k, n) { for (let i = 0; i < n; i++) S.bag.push(k); }
 
 function finishMain(S, steps = []) {
-  S.main = true; S.mode = null; S.sel = []; S.selCard = null;
+  S.main = true; S.mode = null; S.sel = []; S.goldSel = null; S.selCard = null;
   S.queue = [...steps, 'royal', 'endabil', 'discard', 'win', 'switch'];
   runQueue(S);
 }
@@ -258,7 +259,7 @@ function doStep(S, step) {
     }
     case 'switch':
       if (S.extra) S.extra = false; else S.cur = 1 - S.cur;
-      S.main = false; S.pending = null; S.used = {};
+      S.main = false; S.pending = null; S.used = {}; S.goldSel = null;
       return true;
     default: return true;
   }
@@ -349,7 +350,13 @@ const handlers = {
       if (bonus) { S.used[bonus.id] = true; S.mode = 'priv2'; } else S.mode = null;
       return;
     }
-    if (c === 'gold') { S.toast = 'Gold can only be taken by reserving a card.'; return; }
+    if (c === 'gold') {
+      if (p.res.length >= resCap(p)) { S.toast = `You already hold ${resCap(p)} reserved cards.`; return; }
+      S.goldSel = S.goldSel === i ? null : i;
+      S.sel = [];
+      return;
+    }
+    S.goldSel = null;
     const k = S.sel.indexOf(i);
     if (k >= 0) S.sel.splice(k, 1);
     else {
@@ -424,14 +431,20 @@ const handlers = {
   },
   reserve(S) {
     const p = cur(S), s = S.selCard;
-    if (S.main || S.pending || !s || (s.src !== 'pyr' && s.src !== 'deck') || p.res.length >= resCap(p)) return;
-    const gi = S.board.indexOf('gold');
-    if (gi < 0) return;
+    if (S.main || S.pending) return;
+    if (S.goldSel == null || S.board[S.goldSel] !== 'gold') { S.toast = 'Choose a gold token on the board to reserve.'; return; }
+    if (!s || (s.src !== 'pyr' && s.src !== 'deck')) { S.toast = 'Choose a card or a deck to reserve.'; return; }
+    if (p.res.length >= resCap(p)) { S.toast = `You already hold ${resCap(p)} reserved cards.`; return; }
     const c = reserveCard(S, s);
-    if (!c) return;
-    S.board[gi] = null; p.tok.gold++; p.res.push(c);
-    log(S, `${p.name} reserves a level ${c.level} card.`);
+    if (!c) { S.toast = 'That deck is empty.'; return; }
+    S.board[S.goldSel] = null; p.tok.gold++; p.res.push(c);
+    log(S, `${p.name} reserves a level ${c.level} card and takes a gold token.`);
     finishMain(S, S.exp && hasAb(p, 'reserve5') && p.res.length < resCap(p) ? ['freeReserve'] : []);
+  },
+  cancelReserve(S) {
+    if (S.main || S.pending) return;
+    S.goldSel = null;
+    if (S.selCard && (S.selCard.src === 'pyr' || S.selCard.src === 'deck')) S.selCard = null;
   },
   skip(S) {
     if (!S.pending) return;

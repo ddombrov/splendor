@@ -1,6 +1,6 @@
 import { useEffect, useReducer, useState } from 'react';
 import confetti from 'canvas-confetti';
-import { FlaskConical, History, BookOpen, RotateCcw, Settings, ChevronDown, TriangleAlert, Swords, ScrollText, RefreshCw, Hand, Bookmark, ShoppingCart } from 'lucide-react';
+import { FlaskConical, History, BookOpen, RotateCcw, Settings, ChevronDown, TriangleAlert, CircleCheck, Circle, Swords, ScrollText, RefreshCw, Hand, Bookmark, ShoppingCart } from 'lucide-react';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
@@ -45,6 +45,7 @@ function statusText(S) {
   }
   if (S.mode === 'priv') return `${p.name}: click any non-gold token to take it with your privilege.`;
   if (S.mode === 'priv2') return `${p.name}: counterfeiter bonus, click one more non-gold token.`;
+  if (S.goldSel != null) return `${p.name}: gold token chosen. Choose a card or deck to reserve, then press Complete move.`;
   return null;
 }
 
@@ -151,12 +152,14 @@ export default function App() {
   const idle = !S.main && !pd;
   const plans = (c) => !S.main && !pd && !!plan(S, p, c);
   const canBuy = idle && card && !!plan(S, p, card);
-  const canRes = idle && S.selCard && (S.selCard.src === 'pyr' || S.selCard.src === 'deck') && p.res.length < resCap(p) && S.board.includes('gold');
+  const reservableSel = !!S.selCard && (S.selCard.src === 'pyr' || S.selCard.src === 'deck') && p.res.length < resCap(p);
+  const goldChosen = S.goldSel != null;
+  const canRes = idle && goldChosen && reservableSel;
   const takeable = idle && validLine(S, S.sel);
   const payPlan = card ? plan(S, p, card) : null;
   const payList = payPlan ? [...Object.entries(payPlan.pay).filter(([k]) => k !== 'gold'), ['gold', payPlan.pay.gold], ['glass', payPlan.g]].reduce((m, [k, n]) => { if (n > 0) m.set(k, (m.get(k) || 0) + n); return m; }, new Map()) : new Map();
   const endOpts = pd?.type === 'endabil' ? endOptions(S) : [];
-  const selIdx = pd?.type === 'multi' ? pd.sel : S.sel;
+  const selIdx = pd?.type === 'multi' ? pd.sel : S.goldSel != null ? [...S.sel, S.goldSel] : S.sel;
   const shownAsk = ask || lastAsk;
 
   return (
@@ -300,7 +303,6 @@ export default function App() {
                   </div>
                   <ButtonRow>
                     <Button disabled={!canBuy} onClick={act({ type: 'buy' })}>Buy</Button>
-                    <Button variant="outline" disabled={!canRes} onClick={act({ type: 'reserve' })}>Reserve (+ gold)</Button>
                   </ButtonRow>
                 </>
               ) : (
@@ -309,12 +311,28 @@ export default function App() {
                   <p className="text-center text-sm text-muted-foreground">Select a card to see its cost, what you would pay, and to buy or reserve it.</p>
                   <ButtonRow>
                     <Button disabled>Buy</Button>
-                    <Button variant="outline" disabled>Reserve (+ gold)</Button>
                   </ButtonRow>
                 </>
               )}
-              {S.selCard?.src === 'deck' && (
-                <p className="text-center text-sm text-muted-foreground">Level {S.selCard.l + 1} deck selected. Reserve to take its top card.</p>
+              {(goldChosen || reservableSel) && (
+                <div className="w-full space-y-3 rounded-lg border p-3 text-sm">
+                  <SectionLabel>Reserve a card</SectionLabel>
+                  <ul className="space-y-1.5">
+                    <li className="flex items-center gap-2">
+                      {goldChosen ? <CircleCheck className="size-4 text-primary" /> : <Circle className="size-4 text-muted-foreground" />}
+                      Gold token on the board
+                    </li>
+                    <li className="flex items-center gap-2">
+                      {reservableSel ? <CircleCheck className="size-4 text-primary" /> : <Circle className="size-4 text-muted-foreground" />}
+                      {S.selCard?.src === 'deck' ? `Level ${S.selCard.l + 1} deck (top card)` : 'Card from the pyramid or a deck'}
+                    </li>
+                  </ul>
+                  <p className="text-xs text-muted-foreground">Choose them in any order, then complete the move.</p>
+                  <ButtonRow>
+                    <Button disabled={!canRes} onClick={act({ type: 'reserve' })}>Complete move</Button>
+                    <Button variant="outline" onClick={act({ type: 'cancelReserve' })}>Cancel</Button>
+                  </ButtonRow>
+                </div>
               )}
             </aside>
           </div>

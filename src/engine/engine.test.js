@@ -87,11 +87,9 @@ describe('taking tokens', () => {
     expect(after.players[0].tok.blue + after.players[0].tok.red).toBe(1);
   });
 
-  it('does not let gold be taken as a normal token', () => {
+  it('never takes gold with the take action', () => {
     const state = gameWithBoard({ 0: 'gold', 1: 'red' });
-    const picked = play(state, ...click(0));
-    expect(picked.toast).toBeTruthy();
-    const after = play(picked, { type: 'take' });
+    const after = play(state, ...click(0), { type: 'take' });
     expect(after.players[0].tok.gold).toBe(0);
     expect(after.board[0]).toBe('gold');
     expect(after.cur).toBe(0);
@@ -123,5 +121,96 @@ describe('taking tokens', () => {
     const after = play(state, ...click(0), { type: 'take' });
     expect(after.players[1].priv).toBe(opp(state).priv);
     expect(cur(after)).toBe(after.players[1]);
+  });
+});
+
+describe('the pyramid', () => {
+  it('shows 5 level-1 cards, 4 level-2 cards and 3 level-3 cards', () => {
+    const state = createGame(false, 3);
+    expect(state.pyr.map((row) => row.length)).toEqual([5, 4, 3]);
+  });
+});
+
+describe('reserving a card', () => {
+  const gold = (cell) => ({ type: 'tok', i: cell });
+  const pyramidCard = { type: 'card', src: 'pyr', l: 0, i: 0 };
+  const complete = { type: 'reserve' };
+  const twoGolds = () => gameWithBoard({ 3: 'gold', 7: 'gold', 0: 'blue' });
+
+  it('reserves the chosen card and takes the chosen gold token, gold first', () => {
+    const state = twoGolds();
+    const chosen = state.pyr[0][0].id;
+    const after = play(state, gold(7), pyramidCard, complete);
+    expect(after.players[0].res.map((c) => c.id)).toEqual([chosen]);
+    expect(after.players[0].tok.gold).toBe(1);
+    expect(after.cur).toBe(1);
+  });
+
+  it('gives the same result when the card is chosen before the gold token', () => {
+    const state = twoGolds();
+    const goldFirst = play(state, gold(7), pyramidCard, complete);
+    const cardFirst = play(state, pyramidCard, gold(7), complete);
+    expect(cardFirst).toEqual(goldFirst);
+  });
+
+  it('lets the player choose which gold token to take', () => {
+    const after = play(twoGolds(), gold(7), pyramidCard, complete);
+    expect(after.board[7]).toBeNull();
+    expect(after.board[3]).toBe('gold');
+  });
+
+  it('replaces the reserved card in the pyramid', () => {
+    const state = twoGolds();
+    const after = play(state, gold(3), pyramidCard, complete);
+    expect(after.pyr[0]).toHaveLength(5);
+    expect(after.pyr[0][0].id).not.toBe(state.pyr[0][0].id);
+  });
+
+  it('can reserve the top card of a deck without revealing it', () => {
+    const state = twoGolds();
+    const top = state.decks[2].at(-1).id;
+    const after = play(state, gold(3), { type: 'card', src: 'deck', l: 2 }, complete);
+    expect(after.players[0].res.map((c) => c.id)).toEqual([top]);
+  });
+
+  it('does nothing until both a gold token and a card are chosen', () => {
+    const state = twoGolds();
+    const onlyGold = play(state, gold(3), complete);
+    const onlyCard = play(state, pyramidCard, complete);
+    expect(onlyGold.players[0].res).toHaveLength(0);
+    expect(onlyGold.cur).toBe(0);
+    expect(onlyCard.players[0].res).toHaveLength(0);
+    expect(onlyCard.cur).toBe(0);
+    expect(onlyGold.toast).toBeTruthy();
+    expect(onlyCard.toast).toBeTruthy();
+  });
+
+  it('lets the player cancel without changing the game', () => {
+    const state = twoGolds();
+    const cancelled = play(state, gold(3), pyramidCard, { type: 'cancelReserve' }, complete);
+    expect(cancelled.players[0].res).toHaveLength(0);
+    expect(cancelled.board[3]).toBe('gold');
+    expect(cancelled.cur).toBe(0);
+  });
+
+  it('deselects the gold token when it is chosen again', () => {
+    const state = twoGolds();
+    const after = play(state, gold(3), gold(3), pyramidCard, complete);
+    expect(after.players[0].res).toHaveLength(0);
+  });
+
+  it('drops the gold choice when ordinary tokens are chosen instead', () => {
+    const state = twoGolds();
+    const after = play(state, gold(3), ...click(0), pyramidCard, complete);
+    expect(after.players[0].res).toHaveLength(0);
+  });
+
+  it('does not allow choosing gold once three cards are reserved', () => {
+    const state = twoGolds();
+    state.players[0].res = state.decks[0].splice(0, 3);
+    const after = play(state, gold(3), pyramidCard, complete);
+    expect(after.players[0].res).toHaveLength(3);
+    expect(after.players[0].tok.gold).toBe(0);
+    expect(after.toast).toBeTruthy();
   });
 });

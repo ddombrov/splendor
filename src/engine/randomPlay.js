@@ -58,6 +58,7 @@ export function playRandomGame(exp, seed) {
         S = reduce(S, { type: 'card', ...choose(buyable) });
         action = { type: 'buy' };
       } else if (roll < 7 && S.board.includes('gold') && p.res.length < 3) {
+        S = reduce(S, { type: 'tok', i: S.board.indexOf('gold') });
         S = reduce(S, { type: 'card', src: 'deck', l: 0 });
         action = { type: 'reserve' };
       } else if (!free.length) {
