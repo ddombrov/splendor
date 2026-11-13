@@ -129,6 +129,7 @@ export default function App() {
   const prompt = statusText(S);
   const extra = Math.max(0, w - MIN_W);
   const playersW = Math.round(Math.min(250 + extra * 0.2, 360));
+  const colW = Math.max(40, Math.floor((playersW - 24 - 2 - 4 * 4) / 5));
   const cardRows = S.exp ? 5 : 4;
   const zByHeight = (h - 20 - 24 - (cardRows - 1) * 8 - cardRows * 4) / (cardRows * 174);
   const cardsW = Math.round(Math.min(764 + extra * 0.5, 744 * Math.min(zByHeight, 1.2) + 70));
@@ -200,8 +201,8 @@ export default function App() {
             <div className="grid min-h-0 flex-1 gap-3" style={{ gridTemplateColumns: `${playersW}px minmax(0,1fr) ${cardsW}px` }}>
               {/* Left: both players */}
               <div className="flex min-h-0 flex-col gap-3">
-                <Player S={S} idx={0} dispatch={dispatch} />
-                <Player S={S} idx={1} dispatch={dispatch} />
+                <Player S={S} idx={0} dispatch={dispatch} colW={colW} />
+                <Player S={S} idx={1} dispatch={dispatch} colW={colW} />
               </div>
 
               {/* Middle: the board, with the selected card underneath */}

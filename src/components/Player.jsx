@@ -1,3 +1,4 @@
+import { Star } from 'lucide-react';
 import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { NumberTicker } from '@/components/ui/number-ticker';
@@ -11,14 +12,11 @@ import { bonuses, colorPts, crowns, kinds, plan, pts, resCap, roomLeft } from '.
 const Label = ({ children }) => (
   <div className="mt-2 mb-1 text-[10px] font-semibold uppercase tracking-widest text-muted-foreground">{children}</div>
 );
-const Stat = ({ label, children }) => (
-  <div className="flex flex-col items-center gap-0.5">
-    <div className="flex h-6 items-center gap-1 text-xl font-extrabold leading-none">{children}</div>
-    <span className="text-[10px] text-muted-foreground">{label}</span>
-  </div>
+const Stat = ({ title, children }) => (
+  <div title={title} className="flex h-7 items-center gap-1 text-xl font-extrabold leading-none">{children}</div>
 );
 
-export default function Player({ S, idx, dispatch }) {
+export default function Player({ S, idx, dispatch, colW = 52 }) {
   const p = S.players[idx];
   const active = idx === S.cur;
   const pd = S.pending;
@@ -36,14 +34,17 @@ export default function Player({ S, idx, dispatch }) {
           <h3 className="text-base font-bold">{p.name}</h3>
         </div>
         <div className="flex items-center gap-3">
-          <Stat label="Prestige"><NumberTicker value={pts(p)} className="tracking-normal text-foreground dark:text-foreground" /></Stat>
-          <Stat label="Crowns">
-            <NumberTicker value={crowns(p)} className="tracking-normal text-foreground dark:text-foreground" />
-            <Crown size={20} />
+          <Stat title="Prestige points">
+            <NumberTicker value={pts(p)} className="tracking-normal text-foreground dark:text-foreground" />
+            <Star className="size-5 fill-amber-400 text-amber-400" />
           </Stat>
-          <Stat label="Scrolls">
-            <Scroll size={22} />
+          <Stat title="Crowns">
+            <NumberTicker value={crowns(p)} className="tracking-normal text-foreground dark:text-foreground" />
+            <Crown size={22} />
+          </Stat>
+          <Stat title="Scrolls">
             <span>{p.priv}</span>
+            <Scroll size={24} />
           </Stat>
         </div>
       </div>
@@ -61,14 +62,22 @@ export default function Player({ S, idx, dispatch }) {
         })}
       </div>
 
-      <div className="mt-3 flex min-h-7 flex-wrap gap-1.5">
-        {COLORS.filter((c) => b[c]).map((c) => (
-          <Badge key={c} variant="outline" className="gap-1 px-1.5 py-0.5 text-xs">
-            <Gem kind={c} size={13} />
-            {b[c]}
-            {colorPts(p, c) ? <span className="text-muted-foreground">· {colorPts(p, c)}</span> : null}
-          </Badge>
-        ))}
+      <div className="mt-3 flex min-h-8 items-start gap-1" title="Purchased cards">
+        {COLORS.map((c) => {
+          const owned = p.cards.filter((x) => x.color === c);
+          if (!owned.length) return null;
+          const z = colW / 124;
+          const strip = Math.round(40 * z);
+          return (
+            <div key={c} className="compact-cards pointer-events-none relative shrink-0" style={{ width: colW, height: strip + (owned.length - 1) * strip, '--z': z }}>
+              {owned.map((card, i) => (
+                <div key={card.id} className="absolute left-0 overflow-hidden rounded-[6px]" style={{ top: i * strip, height: strip, width: colW }}>
+                  <JewelCard card={card} />
+                </div>
+              ))}
+            </div>
+          );
+        })}
       </div>
 
       {p.royals.length > 0 && (
