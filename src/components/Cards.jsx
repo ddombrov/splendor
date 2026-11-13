@@ -67,6 +67,8 @@ export function RoyalCard({ card, onClick, glow }) {
       <div className="pts">{card.pts}</div>
       <div className="royal-crown"><Crown size={40} /></div>
       <div className="note royaltext">{ROYAL_TEXT[card.ab]}</div>
+      <div className="rmark l" title="Claim a royal card at 3 crowns"><Crown size={34} /><b>3</b></div>
+      <div className="rmark r" title="Claim a royal card at 6 crowns"><Crown size={34} /><b>6</b></div>
     </div>
   );
 }

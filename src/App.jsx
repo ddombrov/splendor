@@ -13,7 +13,7 @@ import { createGame, reduce, cur, opp, plan, endOptions, validLine, selectedCard
 import { JewelCard, CfCard, RoyalCard, CardBack } from './components/Cards.jsx';
 import Player from './components/Player.jsx';
 import Rules from './components/Rules.jsx';
-import { TokenArt, Scroll, Gem, Crown, Mini } from './components/Art.jsx';
+import { TokenArt, Scroll, Gem, Mini } from './components/Art.jsx';
 
 // The engine is deterministic, so the screen supplies the seed for each new game.
 const newSeed = () => crypto.getRandomValues(new Uint32Array(1))[0];
@@ -47,13 +47,6 @@ function statusText(S) {
   if (S.goldSel != null) return `${p.name}: gold token chosen. Choose a card or deck to reserve, then press Complete move.`;
   return null;
 }
-
-const CrownMark = ({ n, title }) => (
-  <div className="crownmark" title={title}>
-    <Crown size={52} />
-    <b>{n}</b>
-  </div>
-);
 
 function TurnBar({ S, children }) {
   const p = cur(S);
@@ -150,7 +143,7 @@ export default function App() {
   const [lastAsk, setLastAsk] = useState(null);
   const [showOptions, setShowOptions] = useState(false);
   const p = cur(S), pd = S.pending;
-  const cardZoom = Math.max(0.5, Math.min(S.exp ? (h - 600) / 348 : (h - 572) / 348, (cardsW - 70) / 744, 1.2));
+  const cardZoom = Math.max(0.5, Math.min(S.exp ? (h - 470) / 522 : (h - 470) / 522, (cardsW - 70) / 744, 1.2));
   const card = selectedCard(S);
   const act = (a) => () => dispatch(a);
 
@@ -256,17 +249,11 @@ export default function App() {
 
               {/* Right: all the cards, with the selected card in the bottom right corner */}
               <Card className="compact-cards min-h-0 gap-2 overflow-hidden p-3" style={{ '--z': cardZoom }}>
-                <div className="flex items-center gap-2">
-                  <CrownMark n={3} title="Claim a royal card at 3 crowns" />
-                  <div className="compact-cards" style={{ '--z': 0.6 }}>
-                    <div className="rowline">
-                      {S.royals.map((r, i) => (
-                        <RoyalCard key={r.id} card={r} glow={pd?.type === 'royal'} onClick={() => dispatch({ type: 'royal', i })} />
-                      ))}
-                      {!S.royals.length && <span className="text-xs text-muted-foreground">All claimed</span>}
-                    </div>
-                  </div>
-                  <div className="ml-auto"><CrownMark n={6} title="Claim a royal card at 6 crowns" /></div>
+                <div className="rowline">
+                  {S.royals.map((r, i) => (
+                    <RoyalCard key={r.id} card={r} glow={pd?.type === 'royal'} onClick={() => dispatch({ type: 'royal', i })} />
+                  ))}
+                  {!S.royals.length && <span className="text-xs text-muted-foreground">All claimed</span>}
                 </div>
                 {[0, 1].map((l) => (
                   <div className="rowline" key={l}>
@@ -298,52 +285,54 @@ export default function App() {
                     )}
                   </div>
 
-                  <div className="ml-auto flex w-[200px] shrink-0 flex-col items-center gap-2 rounded-lg border bg-background/40 p-2.5">
-                    <div className="compact-cards pointer-events-none shrink-0" style={{ '--z': 0.7 }}>
-                      {card ? (card.kind === 'cf' ? <CfCard card={card} /> : <JewelCard card={card} />) : (
-                        <img src="/images/box-art-sm.jpg" alt="Splendor Duel box art" className="w-24 rounded-md border" />
-                      )}
-                    </div>
-                    <div className="flex w-full min-w-0 flex-col gap-2 text-xs">
-                      {card ? (
-                        <div className="flex flex-wrap items-center gap-1.5">
-                          {payPlan ? (
-                            <>
-                              <span className="text-muted-foreground">You pay</span>
-                              {payList.size === 0 && <span className="font-semibold">nothing</span>}
-                              {[...payList].map(([kind, n]) => (
-                                <span key={kind} className="costpill"><Mini kind={kind} size={14} /><b>{n}</b></span>
-                              ))}
-                            </>
-                          ) : (
-                            <span className="text-muted-foreground">Not enough tokens for this card yet.</span>
-                          )}
+                  {(card || goldChosen || reservableSel) && (
+                    <div className="ml-auto flex w-[200px] shrink-0 flex-col items-center gap-2 rounded-lg border bg-background/40 p-2.5">
+                      {card && (
+                        <div className="compact-cards pointer-events-none shrink-0" style={{ '--z': 0.7 }}>
+                          {card.kind === 'cf' ? <CfCard card={card} /> : <JewelCard card={card} />}
                         </div>
-                      ) : (
-                        <p className="text-muted-foreground">Select a card to see its cost, what you would pay, and to buy or reserve it.</p>
                       )}
-                      <div><Button size="sm" disabled={!canBuy} onClick={act({ type: 'buy' })}>Buy</Button></div>
-                      {(goldChosen || reservableSel) && (
-                        <div className="space-y-1.5 rounded-md border p-2">
-                          <SectionLabel>Reserve a card</SectionLabel>
-                          <ul className="space-y-1">
-                            <li className="flex items-center gap-1.5">
-                              {goldChosen ? <CircleCheck className="size-3.5 text-primary" /> : <Circle className="size-3.5 text-muted-foreground" />}
-                              Gold token on the board
-                            </li>
-                            <li className="flex items-center gap-1.5">
-                              {reservableSel ? <CircleCheck className="size-3.5 text-primary" /> : <Circle className="size-3.5 text-muted-foreground" />}
-                              {S.selCard?.src === 'deck' ? `Level ${S.selCard.l + 1} deck (top card)` : 'Card from the pyramid or a deck'}
-                            </li>
-                          </ul>
-                          <div className="flex gap-1.5">
-                            <Button size="sm" disabled={!canRes} onClick={act({ type: 'reserve' })}>Complete move</Button>
-                            <Button size="sm" variant="outline" onClick={act({ type: 'cancelReserve' })}>Cancel</Button>
+                      <div className="flex w-full min-w-0 flex-col gap-2 text-xs">
+                        {card && (
+                          <>
+                            <div className="flex flex-wrap items-center gap-1.5">
+                              {payPlan ? (
+                                <>
+                                  <span className="text-muted-foreground">You pay</span>
+                                  {payList.size === 0 && <span className="font-semibold">nothing</span>}
+                                  {[...payList].map(([kind, n]) => (
+                                    <span key={kind} className="costpill"><Mini kind={kind} size={14} /><b>{n}</b></span>
+                                  ))}
+                                </>
+                              ) : (
+                                <span className="text-muted-foreground">Not enough tokens for this card yet.</span>
+                              )}
+                            </div>
+                            <div><Button size="sm" disabled={!canBuy} onClick={act({ type: 'buy' })}>Buy</Button></div>
+                          </>
+                        )}
+                        {(goldChosen || reservableSel) && (
+                          <div className="space-y-1.5 rounded-md border p-2">
+                            <SectionLabel>Reserve a card</SectionLabel>
+                            <ul className="space-y-1">
+                              <li className="flex items-center gap-1.5">
+                                {goldChosen ? <CircleCheck className="size-3.5 text-primary" /> : <Circle className="size-3.5 text-muted-foreground" />}
+                                Gold token on the board
+                              </li>
+                              <li className="flex items-center gap-1.5">
+                                {reservableSel ? <CircleCheck className="size-3.5 text-primary" /> : <Circle className="size-3.5 text-muted-foreground" />}
+                                {S.selCard?.src === 'deck' ? `Level ${S.selCard.l + 1} deck (top card)` : 'Card from the pyramid or a deck'}
+                              </li>
+                            </ul>
+                            <div className="flex gap-1.5">
+                              <Button size="sm" disabled={!canRes} onClick={act({ type: 'reserve' })}>Complete move</Button>
+                              <Button size="sm" variant="outline" onClick={act({ type: 'cancelReserve' })}>Cancel</Button>
+                            </div>
                           </div>
-                        </div>
-                      )}
+                        )}
+                      </div>
                     </div>
-                  </div>
+                  )}
                 </div>
 
                 {pd?.type === 'wild' && (
