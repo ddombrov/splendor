@@ -354,3 +354,21 @@ describe('stealing at the ten token limit', () => {
     expect(after.cur).toBe(1);
   });
 });
+
+describe('cancelling a half-made action', () => {
+  it('clears chosen tokens, gold, card and privilege mode without changing the game', () => {
+    const state = gameWithBoard({ 0: 'red', 1: 'green', 3: 'gold' });
+    state.players[0].priv = 1;
+    const chosen = play(state, ...click(0, 1), { type: 'card', src: 'pyr', l: 0, i: 0 });
+    const after = reduce(chosen, { type: 'cancelAction' });
+    expect(after.sel).toEqual([]);
+    expect(after.goldSel).toBeNull();
+    expect(after.selCard).toBeNull();
+    expect(after.board).toEqual(state.board);
+    expect(after.cur).toBe(0);
+    const priv = play(state, { type: 'priv' });
+    expect(priv.mode).toBe('priv');
+    expect(reduce(priv, { type: 'cancelAction' }).mode).toBeNull();
+    expect(reduce(priv, { type: 'cancelAction' }).players[0].priv).toBe(1);
+  });
+});

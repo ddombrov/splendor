@@ -326,6 +326,11 @@ function doBuy(S, color) {
 
 /* ---------- action handlers ---------- */
 const handlers = {
+  // Drops whatever the player has half chosen: tokens, a gold token, a card, or privilege mode.
+  cancelAction(S) {
+    if (S.main || S.pending) return;
+    S.sel = []; S.goldSel = null; S.selCard = null; S.mode = null;
+  },
   // Before the main action, a player stuck at ten tokens may return one to the bag.
   giveBack(S, { c }) {
     const p = cur(S);

@@ -123,6 +123,7 @@ export default function App() {
   const [ask, setAsk] = useState(null);
   const [lastAsk, setLastAsk] = useState(null);
   const [showOptions, setShowOptions] = useState(false);
+  const [picked, setPicked] = useState(null);
   const p = cur(S), pd = S.pending;
   // Layout numbers. The cards get the size their rows allow, the board takes what is left, and any
   // spare width goes to the players, the cards and the board in that order of need.
@@ -163,8 +164,20 @@ export default function App() {
   const goldChosen = S.goldSel != null;
   const canRes = idle && goldChosen && reservableSel;
   const takeable = idle && validLine(S, S.sel);
-  const payPlan = card ? plan(S, p, card) : null;
-  const payList = payPlan ? [...Object.entries(payPlan.pay).filter(([k]) => k !== 'gold'), ['gold', payPlan.pay.gold], ['glass', payPlan.g]].reduce((m, [k, n]) => { if (n > 0) m.set(k, (m.get(k) || 0) + n); return m; }, new Map()) : new Map();
+  // The action in progress comes from what the player has chosen, or from the button they pressed.
+  const action = S.sel.length ? 'take' : S.goldSel != null ? 'reserve' : S.mode ? 'priv' : picked || (card ? 'buy' : null);
+  const canComplete = { take: takeable, buy: canBuy, reserve: canRes, refill: idle && !!S.bag.length, priv: false }[action];
+  const complete = () => {
+    const type = { take: 'take', buy: 'buy', reserve: 'reserve', refill: 'repl' }[action];
+    setPicked(null);
+    dispatch({ type });
+  };
+  const cancel = () => { setPicked(null); dispatch({ type: 'cancelAction' }); };
+  const choose = (what) => {
+    dispatch({ type: 'cancelAction' });
+    if (what === 'priv') dispatch({ type: 'priv' });
+    else setPicked(what);
+  };
   const endOpts = pd?.type === 'endabil' ? endOptions(S) : [];
   const selIdx = pd?.type === 'multi' ? pd.sel : S.goldSel != null ? [...S.sel, S.goldSel] : S.sel;
   const shownAsk = ask || lastAsk;
@@ -228,68 +241,33 @@ export default function App() {
                       {Array.from({ length: S.privBoard }, (_, i) => <Scroll key={i} size={28} />)}
                     </div>
                     <div className="flex flex-wrap justify-center gap-1.5">
-                      <Button size="sm" disabled={!takeable} onClick={act({ type: 'take' })}>Take {S.sel.length || ''} selected</Button>
-                      <Button size="sm" variant="outline" disabled={!(idle && (p.priv > 0 || S.mode === 'priv2'))} onClick={act({ type: 'priv' })}>
-                        {S.mode ? 'Cancel privilege' : 'Use privilege'}
-                      </Button>
-                      <Button size="sm" variant="outline" disabled={!(idle && S.bag.length)} onClick={act({ type: 'repl' })}>Refill board</Button>
+                      {action ? (
+                        <>
+                          {action !== 'priv' && (
+                            <Button size="sm" disabled={!canComplete} onClick={complete}>{canComplete && <CompleteIcon size={16} />}Complete move</Button>
+                          )}
+                          <Button size="sm" variant="outline" disabled={!idle} onClick={cancel}>Cancel</Button>
+                        </>
+                      ) : (
+                        <>
+                          <Button size="sm" variant="outline" disabled={!(idle && S.bag.length)} onClick={() => choose('refill')}>Refill board</Button>
+                          <Button size="sm" variant="outline" disabled={!idle} onClick={() => choose('buy')}>Buy</Button>
+                          <Button size="sm" variant="outline" disabled={!(idle && S.board.includes('gold') && p.res.length < resCap(p))} onClick={() => choose('reserve')}>Reserve</Button>
+                          <Button size="sm" variant="outline" disabled={!(idle && (p.priv > 0 || S.mode === 'priv2'))} onClick={() => choose('priv')}>Use privilege</Button>
+                        </>
+                      )}
                       {pd?.type === 'multi' && <Button size="sm" onClick={act({ type: 'confirmMulti' })}>Confirm {pd.sel.length} token{pd.sel.length === 1 ? '' : 's'}</Button>}
                       {(['freeReserve', 'freeCf'].includes(pd?.type) || (pd?.type === 'pick' && pd.plus)) && <Button size="sm" variant="outline" onClick={act({ type: 'skip' })}>Skip</Button>}
                     </div>
                   </div>
                 </Card>
 
-                {(card || goldChosen || reservableSel) && (
-                <Card className="min-h-0 flex-1 overflow-hidden p-3">
-                  {(
-                    <div className="flex min-h-0 gap-3">
-                      {card && (
-                        <div className="compact-cards pointer-events-none shrink-0" style={{ '--z': 0.7 }}>
-                          {card.kind === 'cf' ? <CfCard card={card} /> : <JewelCard card={card} />}
-                        </div>
-                      )}
-                      <div className="flex min-w-0 flex-1 flex-col gap-2 text-xs">
-                        {card && (
-                          <>
-                            <div className="flex flex-wrap items-center gap-1.5">
-                              {payPlan ? (
-                                <>
-                                  <span className="text-muted-foreground">You pay</span>
-                                  {payList.size === 0 && <span className="font-semibold">nothing</span>}
-                                  {[...payList].map(([kind, n]) => (
-                                    <span key={kind} className="costpill"><Mini kind={kind} size={14} /><b>{n}</b></span>
-                                  ))}
-                                </>
-                              ) : (
-                                <span className="text-muted-foreground">Not enough tokens for this card yet.</span>
-                              )}
-                            </div>
-                            <div><Button size="sm" disabled={!canBuy} onClick={act({ type: 'buy' })}>Buy</Button></div>
-                          </>
-                        )}
-                        {(goldChosen || reservableSel) && (
-                          <div className="space-y-1.5 rounded-md border p-2">
-                            <SectionLabel>Reserve a card</SectionLabel>
-                            <ul className="space-y-1">
-                              <li className="flex items-center gap-1.5">
-                                {goldChosen ? <CompleteIcon size={16} /> : <Circle className="size-3.5 shrink-0 text-muted-foreground" />}
-                                Gold token on the board
-                              </li>
-                              <li className="flex items-center gap-1.5">
-                                {reservableSel ? <CompleteIcon size={16} /> : <Circle className="size-3.5 shrink-0 text-muted-foreground" />}
-                                {S.selCard?.src === 'deck' ? `Level ${S.selCard.l + 1} deck (top card)` : 'Card from the pyramid or a deck'}
-                              </li>
-                            </ul>
-                            <div className="flex flex-wrap gap-1.5">
-                              <Button size="sm" disabled={!canRes} onClick={act({ type: 'reserve' })}>{canRes && <CompleteIcon size={16} />}Complete move</Button>
-                              <Button size="sm" variant="outline" onClick={act({ type: 'cancelReserve' })}>Cancel</Button>
-                            </div>
-                          </div>
-                        )}
-                      </div>
+                {card && (
+                  <Card className="min-h-0 flex-1 overflow-hidden p-3">
+                    <div className="compact-cards pointer-events-none" style={{ '--z': 0.7 }}>
+                      {card.kind === 'cf' ? <CfCard card={card} /> : <JewelCard card={card} />}
                     </div>
-                  )}
-                </Card>
+                  </Card>
                 )}
               </div>
 
