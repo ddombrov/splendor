@@ -1,4 +1,5 @@
-import { COLORS, shuffle, genJewels, genCounterfeiters, baseRoyals, expRoyals } from './data.js';
+import { COLORS, genJewels, genCounterfeiters, baseRoyals, expRoyals } from './data.js';
+import { nextRandom, shuffle } from './rng.js';
 
 function spiral() {
   const out = [[2, 2]];
@@ -144,18 +145,21 @@ const mkPlayer = (name) => ({
   cards: [], cf: [], res: [], priv: 0, royals: [], r3: false, r6: false,
 });
 
-export function createGame(exp = false) {
+export function createGame(exp = false, seed) {
+  if (!Number.isInteger(seed)) throw new Error('createGame needs an integer seed');
+  const gen = { rng: seed >>> 0 };
+  const rand = () => nextRandom(gen);
   const bag = shuffle([
     ...COLORS.flatMap((c) => Array(4).fill(c)),
     'pearl', 'pearl', 'gold', 'gold', 'gold',
     ...(exp ? Array(4).fill('glass') : []),
-  ]);
-  const royalPool = shuffle(exp ? [...baseRoyals(), ...expRoyals()] : baseRoyals());
+  ], rand);
+  const royalPool = shuffle(exp ? [...baseRoyals(), ...expRoyals()] : baseRoyals(), rand);
   const S = {
-    exp, board: Array(25).fill(null), bag,
+    exp, rng: 0, board: Array(25).fill(null), bag,
     players: [mkPlayer('Player 1'), mkPlayer('Player 2')], cur: 0,
-    decks: [genJewels(1), genJewels(2), genJewels(3)], pyr: [[], [], []],
-    cdeck: exp ? genCounterfeiters() : [], crow: [],
+    decks: [genJewels(1, rand), genJewels(2, rand), genJewels(3, rand)], pyr: [[], [], []],
+    cdeck: exp ? genCounterfeiters(rand) : [], crow: [],
     royals: royalPool.splice(0, 4), rdeck: royalPool,
     privBoard: 2, sel: [], selCard: null, mode: null, main: false, pending: null,
     queue: [], extra: false, over: null, log: [], used: {}, toast: null,
@@ -164,6 +168,7 @@ export function createGame(exp = false) {
   fillBoard(S);
   [3, 4, 5].forEach((n, l) => { for (let i = 0; i < n; i++) S.pyr[l].push(S.decks[l].pop()); });
   if (exp) for (let i = 0; i < 3; i++) S.crow.push(S.cdeck.pop());
+  S.rng = gen.rng;
   log(S, `Game started${exp ? ' with the Counterfeiters expansion' : ''}. Player 2 begins with one privilege.`);
   return S;
 }
@@ -217,7 +222,7 @@ function doStep(S, step) {
     }
     case 'rbag2':
       for (let i = 0; i < 2 && S.bag.length; i++) {
-        const k = S.bag.splice(Math.floor(Math.random() * S.bag.length), 1)[0];
+        const k = S.bag.splice(Math.floor(nextRandom(S) * S.bag.length), 1)[0];
         p.tok[k]++;
         log(S, `${p.name} draws a ${k} token from the bag.`);
       }
@@ -382,7 +387,7 @@ const handlers = {
   },
   repl(S) {
     if (S.main || S.pending || !S.bag.length) return;
-    shuffle(S.bag); fillBoard(S);
+    shuffle(S.bag, () => nextRandom(S)); fillBoard(S);
     givePriv(S, 1 - S.cur);
     log(S, `${cur(S).name} refills the board; ${opp(S).name} gains a privilege.`);
   },
@@ -504,7 +509,7 @@ const handlers = {
 };
 
 export function reduce(state, a) {
-  if (a.type === 'new') return createGame(a.exp);
+  if (a.type === 'new') return createGame(a.exp, a.seed);
   const S = structuredClone(state);
   S.toast = null;
   if (S.over) return state;

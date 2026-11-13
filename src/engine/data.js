@@ -1,13 +1,6 @@
-export const COLORS = ['blue', 'white', 'green', 'black', 'red'];
+import { randInt, shuffle as shuffleWith } from './rng.js';
 
-export const shuffle = (a) => {
-  for (let i = a.length - 1; i > 0; i--) {
-    const j = Math.floor(Math.random() * (i + 1));
-    [a[i], a[j]] = [a[j], a[i]];
-  }
-  return a;
-};
-export const rnd = (a, b) => a + Math.floor(Math.random() * (b - a + 1));
+export const COLORS = ['blue', 'white', 'green', 'black', 'red'];
 
 export const ABILITY_TEXT = {
   extra: 'Take another turn',
@@ -17,13 +10,15 @@ export const ABILITY_TEXT = {
   wild: 'Wild bonus',
 };
 
-export function genJewels(level) {
+export function genJewels(level, rand) {
+  const rnd = (a, b) => randInt(a, b, rand);
+  const shuffle = (a) => shuffleWith(a, rand);
   const count = [30, 24, 13][level - 1];
   const cards = [];
   for (let i = 0; i < count; i++) {
     const total = level === 1 ? rnd(2, 5) : level === 2 ? rnd(5, 8) : rnd(8, 11);
     const k = Math.min(total, level === 1 ? rnd(1, 3) : rnd(2, 3));
-    const pool = shuffle([...COLORS, ...(Math.random() < (level === 1 ? 0.25 : 0.5) ? ['pearl'] : [])]).slice(0, k);
+    const pool = shuffle([...COLORS, ...(rand() < (level === 1 ? 0.25 : 0.5) ? ['pearl'] : [])]).slice(0, k);
     const cost = {};
     pool.forEach((g) => (cost[g] = 1));
     for (let t = total - k; t > 0; t--) {
@@ -31,11 +26,11 @@ export function genJewels(level) {
       if (cost[g] < 6) cost[g]++;
       else t++;
     }
-    const pts = level === 1 ? (Math.random() < 0.35 ? 1 : 0) : level === 2 ? rnd(1, 3) : rnd(3, 6);
-    const crowns = level === 1 ? (Math.random() < 0.1 ? 1 : 0) : level === 2 ? (Math.random() < 0.4 ? 1 : 0) : rnd(1, 2);
-    const ability = Math.random() < [0.35, 0.4, 0.45][level - 1] ? ['extra', 'privilege', 'match', 'steal'][rnd(0, 3)] : null;
-    const wild = level >= 2 && Math.random() < 0.12;
-    const n = level === 3 && Math.random() < 0.3 ? 2 : level === 2 && Math.random() < 0.1 ? 2 : 1;
+    const pts = level === 1 ? (rand() < 0.35 ? 1 : 0) : level === 2 ? rnd(1, 3) : rnd(3, 6);
+    const crowns = level === 1 ? (rand() < 0.1 ? 1 : 0) : level === 2 ? (rand() < 0.4 ? 1 : 0) : rnd(1, 2);
+    const ability = rand() < [0.35, 0.4, 0.45][level - 1] ? ['extra', 'privilege', 'match', 'steal'][rnd(0, 3)] : null;
+    const wild = level >= 2 && rand() < 0.12;
+    const n = level === 3 && rand() < 0.3 ? 2 : level === 2 && rand() < 0.1 ? 2 : 1;
     cards.push({ id: `j${level}-${i}`, kind: 'jewel', level, cost, pts, crowns, ability, n, bonus: wild ? 'wild' : COLORS[i % 5], color: null });
   }
   return shuffle(cards);
@@ -57,7 +52,9 @@ export const CF_TEXT = {
   matchplus: () => 'Match ability: take 2 matching tokens, or any 1 token',
 };
 
-export function genCounterfeiters() {
+export function genCounterfeiters(rand) {
+  const rnd = (a, b) => randInt(a, b, rand);
+  const shuffle = (a) => shuffleWith(a, rand);
   const abs = ['red2', 'red2', 'red2', 'any1', 'any1', 'any3', 'any3', 'pearl1', 'priv2', 'xturn', 'xsteal', 'royalbuy', 'nolimit', 'crowns2', 'reserve5', 'peek', 'matchplus'];
   return shuffle(
     abs.map((ab, i) => {

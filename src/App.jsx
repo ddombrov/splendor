@@ -10,11 +10,14 @@ import { ScrollArea } from '@/components/ui/scroll-area';
 import { Separator } from '@/components/ui/separator';
 import { Switch } from '@/components/ui/switch';
 import { cn } from '@/lib/utils';
-import { createGame, reduce, cur, opp, plan, endOptions, validLine, selectedCard, resCap } from './engine.js';
+import { createGame, reduce, cur, opp, plan, endOptions, validLine, selectedCard, resCap } from './engine/engine.js';
 import { JewelCard, CfCard, RoyalCard, CardBack } from './components/Cards.jsx';
 import Player from './components/Player.jsx';
 import Rules from './components/Rules.jsx';
 import { TokenArt, Scroll, Gem, Crown, Mini } from './components/Art.jsx';
+
+// The engine is deterministic, so the screen supplies the seed for each new game.
+const newSeed = () => crypto.getRandomValues(new Uint32Array(1))[0];
 
 const readExp = () => {
   const q = new URLSearchParams(window.location.search).get('exp');
@@ -112,7 +115,7 @@ const ButtonRow = ({ children, className }) => (
 
 export default function App() {
   const [exp, setExp] = useState(readExp);
-  const [S, dispatch] = useReducer(reduce, exp, createGame);
+  const [S, dispatch] = useReducer(reduce, null, () => createGame(exp, newSeed()));
   const [showRules, setShowRules] = useState(false);
   const [showLog, setShowLog] = useState(false);
   const [ask, setAsk] = useState(null);
@@ -136,14 +139,14 @@ export default function App() {
   const applyExp = (v) => {
     setExp(v);
     try { localStorage.setItem('sd-exp', v ? '1' : '0'); } catch { /* ignore */ }
-    dispatch({ type: 'new', exp: v });
+    dispatch({ type: 'new', exp: v, seed: newSeed() });
   };
   const toggleExp = () => {
     const v = !exp;
     if (S.log.length <= 1) applyExp(v);
     else openAsk({ title: v ? 'Enable the expansion?' : 'Disable the expansion?', msg: 'Switching expansion mode starts a new game. The current game will be lost.', yes: v ? 'Enable and restart' : 'Disable and restart', onYes: () => applyExp(v) });
   };
-  const newGame = () => openAsk({ title: 'Start a new game?', msg: 'The current game will be lost.', yes: 'New game', onYes: () => dispatch({ type: 'new', exp }) });
+  const newGame = () => openAsk({ title: 'Start a new game?', msg: 'The current game will be lost.', yes: 'New game', onYes: () => dispatch({ type: 'new', exp, seed: newSeed() }) });
 
   const idle = !S.main && !pd;
   const plans = (c) => !S.main && !pd && !!plan(S, p, c);
@@ -344,7 +347,7 @@ export default function App() {
       <Dialog open={!!S.over} onOpenChange={() => {}}>
         <DialogContent className="sm:max-w-sm" showCloseButton={false}>
           <DialogHeader><DialogTitle>Game over</DialogTitle><DialogDescription>{S.over} wins!</DialogDescription></DialogHeader>
-          <DialogFooter><Button onClick={() => dispatch({ type: 'new', exp })}>Play again</Button></DialogFooter>
+          <DialogFooter><Button onClick={() => dispatch({ type: 'new', exp, seed: newSeed() })}>Play again</Button></DialogFooter>
         </DialogContent>
       </Dialog>
     </>

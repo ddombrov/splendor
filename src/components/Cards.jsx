@@ -1,4 +1,4 @@
-import { CF_TEXT, ROYAL_TEXT } from '../data.js';
+import { CF_TEXT, ROYAL_TEXT } from '../engine/data.js';
 import { PAL, Gem, Crown, AbilityIcon, Mini } from './Art.jsx';
 
 const COST_ORDER = ['blue', 'white', 'green', 'black', 'red', 'pearl', 'glass'];

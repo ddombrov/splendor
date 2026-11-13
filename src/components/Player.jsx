@@ -3,10 +3,10 @@ import { Badge } from '@/components/ui/badge';
 import { NumberTicker } from '@/components/ui/number-ticker';
 import { BorderBeam } from '@/components/ui/border-beam';
 import { cn } from '@/lib/utils';
-import { COLORS, CF_TEXT } from '../data.js';
+import { COLORS, CF_TEXT } from '../engine/data.js';
 import { JewelCard, CardBack } from './Cards.jsx';
 import { TokenArt, Gem, Scroll, Crown } from './Art.jsx';
-import { bonuses, colorPts, crowns, kinds, plan, pts, total } from '../engine.js';
+import { bonuses, colorPts, crowns, kinds, plan, pts, total } from '../engine/engine.js';
 
 const Label = ({ children }) => (
   <div className="mt-3 mb-1 text-[11px] font-semibold uppercase tracking-widest text-muted-foreground">{children}</div>
