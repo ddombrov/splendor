@@ -1,7 +1,6 @@
 import { useEffect, useReducer, useState } from 'react';
 import confetti from 'canvas-confetti';
-import { FlaskConical, History, BookOpen, RotateCcw, Settings, ChevronDown, TriangleAlert, CircleCheck, Circle, Swords, ScrollText, RefreshCw, Hand, Bookmark, ShoppingCart } from 'lucide-react';
-import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
+import { ListChecks, FlaskConical, History, BookOpen, RotateCcw, Settings, ChevronDown, TriangleAlert, CircleCheck, Circle, Swords, ScrollText, RefreshCw, Hand, Bookmark, ShoppingCart } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
@@ -56,53 +55,58 @@ const CrownMark = ({ n, title }) => (
   </div>
 );
 
-function TurnBar({ S, open, setOpen }) {
+function TurnBar({ S, children }) {
   const p = cur(S);
   const prompt = statusText(S);
+  return (
+    <div className={cn('flex h-11 shrink-0 items-center gap-2.5 rounded-lg border bg-card px-3', S.toast && 'border-amber-500/50')}>
+      {S.toast ? <TriangleAlert className="size-4 text-amber-400" /> : <Swords className="size-4 text-primary" />}
+      <div className="flex min-w-0 flex-1 items-baseline gap-3">
+        <span className="text-sm font-semibold">{p.name}'s turn</span>
+        {prompt && <span className={cn('truncate text-xs', S.toast ? 'text-amber-300' : 'text-muted-foreground')}>{prompt}</span>}
+      </div>
+      {children}
+    </div>
+  );
+}
+
+function TurnOptionsDialog({ open, onOpenChange }) {
   const Item = ({ icon: Icon, children }) => (
     <li className="flex items-start gap-2"><Icon className="mt-0.5 size-4 shrink-0 text-primary" />{children}</li>
   );
   return (
-    <Collapsible open={open} onOpenChange={setOpen} className="relative z-20 shrink-0">
-      <div className={cn('flex h-10 items-center gap-2.5 rounded-lg border bg-card px-3', S.toast && 'border-amber-500/50')}>
-        {S.toast ? <TriangleAlert className="size-4 text-amber-400" /> : <Swords className="size-4 text-primary" />}
-        <div className="flex min-w-0 flex-1 items-baseline gap-3">
-          <span className="text-sm font-semibold">{p.name}'s turn</span>
-          {prompt && <span className={cn('truncate text-xs', S.toast ? 'text-amber-300' : 'text-muted-foreground')}>{prompt}</span>}
-        </div>
-        <CollapsibleTrigger asChild>
-          <Button variant="ghost" size="sm" className="h-7 text-xs text-muted-foreground">
-            Turn options <ChevronDown className={cn('size-3.5 transition-transform', open && 'rotate-180')} />
-          </Button>
-        </CollapsibleTrigger>
-      </div>
-      <CollapsibleContent className="absolute inset-x-0 top-full mt-1 rounded-lg border bg-card shadow-2xl">
-        <div className="grid gap-4 px-4 py-3 text-sm sm:grid-cols-2">
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogContent className="sm:max-w-2xl">
+        <DialogHeader>
+          <DialogTitle>Turn options</DialogTitle>
+          <DialogDescription>What you can do on your turn.</DialogDescription>
+        </DialogHeader>
+        <div className="grid gap-6 text-sm sm:grid-cols-2">
           <div>
             <div className="mb-2 text-[11px] font-semibold uppercase tracking-widest text-muted-foreground">Optional, before your action</div>
-            <ul className="space-y-1.5">
+            <ul className="space-y-2">
               <Item icon={ScrollText}>Use a privilege to take any one non-gold token.</Item>
               <Item icon={RefreshCw}>Refill the board from the bag. Your opponent gets a privilege.</Item>
             </ul>
           </div>
           <div>
             <div className="mb-2 text-[11px] font-semibold uppercase tracking-widest text-muted-foreground">Then choose one</div>
-            <ul className="space-y-1.5">
+            <ul className="space-y-2">
               <Item icon={Hand}>Take up to 3 tokens in a straight line.</Item>
               <Item icon={Bookmark}>Reserve a card and take a gold token.</Item>
               <Item icon={ShoppingCart}>Buy a card from the pyramid or your reserve.</Item>
             </ul>
           </div>
         </div>
-      </CollapsibleContent>
-    </Collapsible>
+      </DialogContent>
+    </Dialog>
   );
 }
 
 function Token({ kind, cls, onClick }) {
   return (
     <div className={`tok ${cls || ''}`} onClick={onClick}>
-      <TokenArt kind={kind} size={64} />
+      <TokenArt kind={kind} size={78} />
     </div>
   );
 }
@@ -136,13 +140,7 @@ export default function App() {
   const [showLog, setShowLog] = useState(false);
   const [ask, setAsk] = useState(null);
   const [lastAsk, setLastAsk] = useState(null);
-  const [helpOpen, setHelpOpen] = useState(() => {
-    try { return localStorage.getItem('sd-help') === '1'; } catch { return false; }
-  });
-  const setHelp = (v) => {
-    setHelpOpen(v);
-    try { localStorage.setItem('sd-help', v ? '1' : '0'); } catch { /* ignore */ }
-  };
+  const [showOptions, setShowOptions] = useState(false);
   const p = cur(S), pd = S.pending;
   const card = selectedCard(S);
   const act = (a) => () => dispatch(a);
@@ -182,16 +180,14 @@ export default function App() {
       <div className="fixed inset-0 flex items-center justify-center overflow-hidden bg-background">
         <div style={{ width: STAGE_W * k, height: STAGE_H * k }}>
           <div className="stage flex flex-col gap-2 p-2.5" style={{ width: STAGE_W, height: STAGE_H, transform: `scale(${k})`, transformOrigin: '0 0' }}>
-            <header className="relative flex h-12 shrink-0 items-center justify-end gap-2 overflow-hidden rounded-lg border px-3">
-              <img src="/images/banner.png" alt="" aria-hidden className="absolute inset-0 -z-20 h-full w-full scale-110 object-cover opacity-60 blur-xl" />
-              <img src="/images/banner.png" alt="Splendor Duel" className="absolute inset-y-0 left-1/2 -z-10 h-full -translate-x-1/2" />
-              <div className="absolute inset-0 -z-10 bg-gradient-to-r from-background/70 via-transparent to-background/70" />
-              <Button variant="secondary" size="sm" className="bg-background/70 backdrop-blur" onClick={() => setShowLog(true)}><History /> Log</Button>
+            <TurnBar S={S}>
+              <Button variant="ghost" size="sm" onClick={() => setShowLog(true)}><History /> Log</Button>
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
-                  <Button variant="secondary" size="sm" className="bg-background/70 backdrop-blur"><Settings /> Settings <ChevronDown className="opacity-60" /></Button>
+                  <Button variant="outline" size="sm"><Settings /> Settings <ChevronDown className="opacity-60" /></Button>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="end" className="w-72">
+                  <DropdownMenuItem onSelect={() => setShowOptions(true)} className="gap-2 py-2.5"><ListChecks /> Turn options</DropdownMenuItem>
                   <DropdownMenuItem onSelect={toggleExp} className="gap-2 py-2.5">
                     <FlaskConical />
                     <span>Counterfeiters expansion</span>
@@ -202,59 +198,55 @@ export default function App() {
                   <DropdownMenuItem onSelect={newGame} className="gap-2 py-2.5"><RotateCcw /> New game</DropdownMenuItem>
                 </DropdownMenuContent>
               </DropdownMenu>
-            </header>
+            </TurnBar>
 
-            <TurnBar S={S} open={helpOpen} setOpen={setHelp} />
-
-            <div className="grid min-h-0 flex-1 grid-cols-[700px_minmax(0,1fr)] gap-3">
-              {/* Left: the board, with both players underneath */}
+            <div className="grid min-h-0 flex-1 grid-cols-[250px_minmax(0,1fr)_780px] gap-3">
+              {/* Left: both players */}
               <div className="flex min-h-0 flex-col gap-3">
-                <Card className="shrink-0 p-3">
-                  <div className="flex items-center gap-4">
-                    <div className="board-wrap shrink-0">
-                      <div className="board">
-                        {S.board.map((c, i) => {
-                          let cls = selIdx.includes(i) ? 'sel' : '';
-                          if (pd?.type === 'pick') cls += c === pd.color || (pd.plus && c !== 'gold' && pd.left === 2) ? ' hl' : ' dim';
-                          else if (pd?.type === 'multi') cls += c === 'gold' ? ' dim' : '';
-                          else if (pd) cls += ' dim';
-                          return (
-                            <div className="cell" key={i}>
-                              {c && <Token kind={c} cls={cls} onClick={() => dispatch({ type: 'tok', i })} />}
-                            </div>
-                          );
-                        })}
-                      </div>
-                    </div>
-                    <div className="flex flex-1 flex-col items-center gap-3">
-                      <div className="flex flex-col items-center gap-1 text-xs text-muted-foreground">
-                        <span className="flex items-center gap-1.5">
-                          Scrolls on the table
-                          {Array.from({ length: S.privBoard }, (_, i) => <Scroll key={i} size={15} />)}
-                          {S.privBoard === 0 && 'none'}
-                        </span>
-                        <span>Bag: {S.bag.length}</span>
-                      </div>
-                      <div className="flex w-full max-w-[190px] flex-col gap-1.5">
-                        <Button size="sm" disabled={!takeable} onClick={act({ type: 'take' })}>Take {S.sel.length || ''} selected</Button>
-                        <Button size="sm" variant="outline" disabled={!(idle && (p.priv > 0 || S.mode === 'priv2'))} onClick={act({ type: 'priv' })}>
-                          {S.mode ? 'Cancel privilege' : `Use privilege (${p.priv})`}
-                        </Button>
-                        <Button size="sm" variant="outline" disabled={!(idle && S.bag.length)} onClick={act({ type: 'repl' })}>Refill board</Button>
-                        {pd?.type === 'multi' && <Button size="sm" onClick={act({ type: 'confirmMulti' })}>Confirm {pd.sel.length} token{pd.sel.length === 1 ? '' : 's'}</Button>}
-                        {(['freeReserve', 'freeCf'].includes(pd?.type) || (pd?.type === 'pick' && pd.plus)) && <Button size="sm" variant="outline" onClick={act({ type: 'skip' })}>Skip</Button>}
-                      </div>
-                    </div>
-                  </div>
-                </Card>
-                <div className="grid min-h-0 flex-1 grid-cols-2 gap-3">
-                  <Player S={S} idx={0} dispatch={dispatch} />
-                  <Player S={S} idx={1} dispatch={dispatch} />
-                </div>
+                <Player S={S} idx={0} dispatch={dispatch} />
+                <Player S={S} idx={1} dispatch={dispatch} />
               </div>
 
+              {/* Middle: the board, as wide as it can go */}
+              <Card className="min-h-0 justify-center gap-3 p-3">
+                <div className="board-wrap mx-auto">
+                  <div className="board">
+                    {S.board.map((c, i) => {
+                      let cls = selIdx.includes(i) ? 'sel' : '';
+                      if (pd?.type === 'pick') cls += c === pd.color || (pd.plus && c !== 'gold' && pd.left === 2) ? ' hl' : ' dim';
+                      else if (pd?.type === 'multi') cls += c === 'gold' ? ' dim' : '';
+                      else if (pd) cls += ' dim';
+                      return (
+                        <div className="cell" key={i}>
+                          {c && <Token kind={c} cls={cls} onClick={() => dispatch({ type: 'tok', i })} />}
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
+                <div className="flex flex-col items-center gap-2">
+                  <div className="flex items-center gap-5 text-xs text-muted-foreground">
+                    <span className="flex items-center gap-1.5">
+                      Scrolls on the table
+                      {Array.from({ length: S.privBoard }, (_, i) => <Scroll key={i} size={15} />)}
+                      {S.privBoard === 0 && 'none'}
+                    </span>
+                    <span>Bag: {S.bag.length}</span>
+                  </div>
+                  <div className="flex flex-wrap justify-center gap-1.5">
+                    <Button size="sm" disabled={!takeable} onClick={act({ type: 'take' })}>Take {S.sel.length || ''} selected</Button>
+                    <Button size="sm" variant="outline" disabled={!(idle && (p.priv > 0 || S.mode === 'priv2'))} onClick={act({ type: 'priv' })}>
+                      {S.mode ? 'Cancel privilege' : `Use privilege (${p.priv})`}
+                    </Button>
+                    <Button size="sm" variant="outline" disabled={!(idle && S.bag.length)} onClick={act({ type: 'repl' })}>Refill board</Button>
+                    {pd?.type === 'multi' && <Button size="sm" onClick={act({ type: 'confirmMulti' })}>Confirm {pd.sel.length} token{pd.sel.length === 1 ? '' : 's'}</Button>}
+                    {(['freeReserve', 'freeCf'].includes(pd?.type) || (pd?.type === 'pick' && pd.plus)) && <Button size="sm" variant="outline" onClick={act({ type: 'skip' })}>Skip</Button>}
+                  </div>
+                </div>
+              </Card>
+
               {/* Right: all the cards, with the selected card in the bottom right corner */}
-              <Card className="compact-cards min-h-0 gap-2 overflow-hidden p-3" style={{ '--z': S.exp ? 0.84 : 1.06 }}>
+              <Card className="compact-cards min-h-0 gap-2 overflow-hidden p-3" style={{ '--z': S.exp ? 0.84 : 0.9 }}>
                 <div className="flex items-center gap-2">
                   <CrownMark n={3} title="Claim a royal card at 3 crowns" />
                   <div className="compact-cards" style={{ '--z': 0.6 }}>
@@ -277,7 +269,7 @@ export default function App() {
                   </div>
                 ))}
 
-                <div className="flex items-end gap-3">
+                <div className="flex items-start gap-3">
                   <div className="flex min-w-0 flex-col gap-2">
                     <div className="rowline">
                       <CardBack level={3} label="L3" count={S.decks[2].length} onClick={() => dispatch({ type: 'card', src: 'deck', l: 2 })} />
@@ -297,13 +289,13 @@ export default function App() {
                     )}
                   </div>
 
-                  <div className="ml-auto flex w-[300px] shrink-0 gap-2.5 rounded-lg border bg-background/40 p-2.5">
-                    <div className="compact-cards pointer-events-none shrink-0" style={{ '--z': 0.78 }}>
+                  <div className="ml-auto flex w-[200px] shrink-0 flex-col items-center gap-2 rounded-lg border bg-background/40 p-2.5">
+                    <div className="compact-cards pointer-events-none shrink-0" style={{ '--z': 0.7 }}>
                       {card ? (card.kind === 'cf' ? <CfCard card={card} /> : <JewelCard card={card} />) : (
                         <img src="/images/box-art-sm.jpg" alt="Splendor Duel box art" className="w-24 rounded-md border" />
                       )}
                     </div>
-                    <div className="flex min-w-0 flex-1 flex-col gap-2 text-xs">
+                    <div className="flex w-full min-w-0 flex-col gap-2 text-xs">
                       {card ? (
                         <div className="flex flex-wrap items-center gap-1.5">
                           {payPlan ? (
@@ -368,6 +360,7 @@ export default function App() {
       </div>
 
       {showRules && <Rules exp={exp} onClose={() => setShowRules(false)} />}
+      <TurnOptionsDialog open={showOptions} onOpenChange={setShowOptions} />
 
       <Dialog open={showLog} onOpenChange={setShowLog}>
         <DialogContent className="sm:max-w-lg">

@@ -30,7 +30,7 @@ export default function Player({ S, idx, dispatch }) {
   return (
     <Card className={cn('relative min-h-0 flex-1 gap-0 overflow-hidden p-3', active && 'border-primary/50')}>
       {active && <BorderBeam size={120} duration={9} borderWidth={2} colorFrom="#d9b15a" colorTo="#d9b15a00" />}
-      <div className="flex items-center justify-between gap-2">
+      <div className="flex flex-wrap items-center justify-between gap-x-2 gap-y-1">
         <div className="flex items-center gap-2">
           <h3 className="text-base font-bold">{p.name}</h3>
           {active && <Badge className="px-1.5 py-0 text-[10px]">Your turn</Badge>}
