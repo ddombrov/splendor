@@ -32,7 +32,7 @@
   --tint: 120, 130, 160; --lvl: #4b5563;
   position: relative; isolation: isolate; flex: 0 0 auto; width: 124px; aspect-ratio: 5 / 7; border-radius: 10px; cursor: pointer; overflow: hidden; color: #eef0f6;
   background: linear-gradient(180deg, rgba(var(--tint), 0.2) 0%, rgba(var(--tint), 0.06) 55%), #1a1f2b;
-  border: 1px solid var(--line); border-top: 4px solid var(--lvl);
+  border: 2px solid var(--edge, var(--line));
   transition: transform 0.12s;
 }
 .card:hover { transform: translateY(-3px); }
@@ -119,3 +119,12 @@
 .card.jewel.k-black { background-image: url(/cards/front-black.svg); }
 .card.jewel.k-red { background-image: url(/cards/front-red.svg); }
 .card.jewel.k-green { background-image: url(/cards/front-green.svg); }
+
+/* every card gets a border in its own colour; the level is shown by its row */
+.card.k-red { --edge: #c4384a; } .card.k-blue { --edge: #3a73d6; } .card.k-green { --edge: #2ea263; }
+.card.k-black { --edge: #7d8599; } .card.k-white { --edge: #c3d0e0; } .card.k-wild { --edge: #b78bf0; }
+.card.cfcard { --edge: #9b6bd6; } .card.royal { --edge: #d9b15a; }
+.card.jewel.k-wild { background: url(/cards/front-rainbow.svg) center / 100% 100% no-repeat; }
+.card.cfcard { background: url(/cards/front-purple.svg) center / 100% 100% no-repeat; }
+.back.lvhidden { background: url(/cards/back-rainbow.svg) center / 100% 100% no-repeat; border-color: transparent; }
+.iconcount { position: absolute; right: -6px; bottom: -4px; min-width: 20px; height: 20px; padding: 0 4px; border-radius: 10px; background: #12151c; color: #fff; font-size: 13px; font-weight: 800; line-height: 20px; text-align: center; }

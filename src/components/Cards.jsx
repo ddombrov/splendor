@@ -2,7 +2,9 @@ import { CF_TEXT, ROYAL_TEXT } from '../engine/data.js';
 import { PAL, Gem, Crown, AbilityIcon, Mini } from './Art.jsx';
 
 // Royal abilities that have a picture; the first three need no words, the rest keep their text.
-const ICON_ONLY = ['privilege', 'extra', 'steal', 'take1'];
+const ICON_ONLY = ['privilege', 'extra', 'steal', 'take1', 'rtake3', 'rtake4'];
+// A number drawn on the picture, for powers that take several tokens.
+const ICON_COUNT = { rtake3: 3, rtake4: 4 };
 const ROYAL_ICON = { privilege: 'privilege', extra: 'extra', steal: 'steal', take1: 'match', rtake3: 'match', rtake4: 'match' };
 
 const COST_ORDER = ['blue', 'white', 'green', 'black', 'red', 'pearl', 'glass'];
@@ -71,7 +73,12 @@ export function RoyalCard({ card, onClick, glow }) {
       <div className="ptsrow"><div className="pts">{card.pts}</div></div>
       <div className="royal-crown"><Crown size={42} /></div>
       <div className={`note royaltext ${ICON_ONLY.includes(card.ab) ? 'iconly' : ''}`}>
-        {ROYAL_ICON[card.ab] && <AbilityIcon ab={ROYAL_ICON[card.ab]} size={ICON_ONLY.includes(card.ab) ? 40 : 24} />}
+        {ROYAL_ICON[card.ab] && (
+          <span className="relative inline-flex">
+            <AbilityIcon ab={ROYAL_ICON[card.ab]} size={ICON_ONLY.includes(card.ab) ? 44 : 24} />
+            {ICON_COUNT[card.ab] && <b className="iconcount">{ICON_COUNT[card.ab]}</b>}
+          </span>
+        )}
         {!ICON_ONLY.includes(card.ab) && ROYAL_TEXT[card.ab]}
       </div>
       <div className="rmark l" title="Claim a royal card at 3 crowns"><Crown size={34} /><b>3</b></div>

@@ -115,7 +115,7 @@ export default function Player({ S, idx, dispatch, colW = 52 }) {
                 onClick={() => dispatch({ type: 'card', src: 'res', i })}
               />
             ) : (
-              <CardBack key={c.id} level={c.level} label="?" count="" />
+              <CardBack key={c.id} level="hidden" />
             );
           })}
         </div>
