@@ -323,7 +323,7 @@ function Board({ session, onExit, init }) {
                 </Card>
 
                 {card && (
-                  <Card className="min-h-0 flex-1 overflow-hidden p-3">
+                  <Card className="min-h-0 flex-1 overflow-hidden p-3 border-0 bg-transparent shadow-none">
                     <div className="compact-cards pointer-events-none" style={{ '--z': 0.7 }}>
                       {card.kind === 'cf' ? <CfCard card={card} /> : <JewelCard card={card} />}
                     </div>
@@ -332,7 +332,7 @@ function Board({ session, onExit, init }) {
               </div>
 
               {/* Right: all the cards */}
-              <Card className="compact-cards min-h-0 gap-2 overflow-hidden p-3" style={{ '--z': cardZoom }}>
+              <Card className="compact-cards min-h-0 gap-2 overflow-hidden p-3 border-0 bg-transparent shadow-none" style={{ '--z': cardZoom }}>
                 <div className="rowline">
                   {S.royals.map((r, i) => (
                     <RoyalCard key={r.id} card={r} glow={pd?.type === 'royal'} onClick={() => dispatch({ type: 'royal', i })} />

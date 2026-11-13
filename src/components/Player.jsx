@@ -28,7 +28,7 @@ export default function Player({ S, idx, dispatch, colW = 52, viewer = null }) {
   const tokens = [...kinds(S), 'gold'].filter((k) => p.tok[k] > 0);
 
   return (
-    <Card className={cn('relative min-h-0 flex-1 gap-0 overflow-hidden p-3', active && 'border-primary/50')}>
+    <Card className={cn('relative min-h-0 flex-1 gap-0 overflow-hidden border-transparent bg-transparent p-3 shadow-none', active && 'border-primary/50')}>
       {active && <BorderBeam size={120} duration={9} borderWidth={2} colorFrom="#d9b15a" colorTo="#d9b15a00" />}
       <div className="flex flex-wrap items-center justify-between gap-x-2 gap-y-1">
         <div className="flex items-center gap-2">
