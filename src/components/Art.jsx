@@ -43,7 +43,7 @@ export function Mini({ kind, size = 16 }) {
   return <Gem kind={kind} size={size} />;
 }
 
-const ABILITY_ICON = { extra: 'go-again', privilege: 'scroll', match: 'take-from-board', steal: 'steal', wild: 'any-color-gem', bag: 'bag', takecard: 'take-card' };
+const ABILITY_ICON = { extra: 'go-again', privilege: 'scroll', match: 'take-from-board', steal: 'steal', wild: 'any-color-gem', bag: 'bag', takecard: 'take-card', xmark: 'x-mark', eye: 'eyeball' };
 
 /** The picture for a card ability: go again, privilege scroll, take from the board, steal, any colour. */
 export function AbilityIcon({ ab, size = 24 }) {

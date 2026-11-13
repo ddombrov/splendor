@@ -16,6 +16,8 @@ const CF_ICON = {
   crowns2: () => ['crown', '2'],
   reserve5: () => ['takecard', '5'],
   matchplus: () => ['match', '2'],
+  nolimit: () => ['gem:glass', '', 'xmark'],
+  peek: () => ['takecard', '3', 'eye'],
 };
 // A number drawn on the picture, for powers that take several tokens.
 const ICON_COUNT = { rtake3: 3, rtake4: 4, rbag2: 2, w9c: '−1', w9k: '−1' };
@@ -80,7 +82,7 @@ export function CfCard({ card, onClick, selected, afford }) {
           <span className="relative inline-flex">
             <AbilityIcon ab={pic} size={44} />
             {num && <b className="iconcount">{num}</b>}
-            {sub && <span className="iconsub"><AbilityIcon ab={sub} size={24} /></span>}
+            {sub && <span className={`iconsub ${sub}`}><AbilityIcon ab={sub} size={sub === 'eye' ? 30 : sub === 'xmark' ? 30 : 24} /></span>}
           </span>
         </div>
       ); })() : (
