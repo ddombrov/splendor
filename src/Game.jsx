@@ -406,14 +406,14 @@ function Board({ session, onExit, init }) {
                 </div>
 
                 {(prompt || card) && (
-                  <div className="flex w-full items-start gap-4">
+                  <div className="flex min-h-0 w-full flex-1 items-stretch gap-4">
                     {card && (
                       <div className="compact-cards pointer-events-none shrink-0" style={{ '--z': 0.7 }}>
                         {card.kind === 'cf' ? <CfCard card={card} /> : <JewelCard card={card} />}
                       </div>
                     )}
                     {prompt && (
-                      <div className={cn('hintbox min-w-0 flex-1 px-6 py-4 text-sm', S.toast ? 'text-amber-300' : 'text-white')}>
+                      <div className={cn('hintbox flex min-w-0 flex-1 items-center px-8 py-6 text-xl font-extrabold leading-snug', S.toast ? 'text-amber-300' : 'text-white')}>
                         {prompt}
                       </div>
                     )}
