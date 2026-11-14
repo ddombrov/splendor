@@ -78,13 +78,23 @@ const ButtonRow = ({ children, className }) => (
 
 // The window size, kept up to date. src/layout.js turns it into the layout.
 function useViewport() {
-  const read = () => ({ vw: window.innerWidth, vh: window.innerHeight });
+  // clientWidth/Height follow the visible area exactly, including while a browser's device mode is being dragged smaller
+  const read = () => ({ vw: document.documentElement.clientWidth || window.innerWidth, vh: document.documentElement.clientHeight || window.innerHeight });
   const [vp, setVp] = useState(read);
   useEffect(() => {
-    const onResize = () => setVp(read());
+    const onResize = () => setVp((old) => { const n = read(); return n.vw === old.vw && n.vh === old.vh ? old : n; });
     window.addEventListener('resize', onResize);
     window.addEventListener('orientationchange', onResize);
-    return () => { window.removeEventListener('resize', onResize); window.removeEventListener('orientationchange', onResize); };
+    window.visualViewport?.addEventListener('resize', onResize);
+    const ro = typeof ResizeObserver === 'function' ? new ResizeObserver(onResize) : null;
+    ro?.observe(document.documentElement);
+    onResize();
+    return () => {
+      window.removeEventListener('resize', onResize);
+      window.removeEventListener('orientationchange', onResize);
+      window.visualViewport?.removeEventListener('resize', onResize);
+      ro?.disconnect();
+    };
   }, []);
   return vp;
 }
