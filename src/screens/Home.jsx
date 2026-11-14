@@ -12,7 +12,7 @@ const MODES = [
   { key: 'device', pic: 'friends', title: 'Play on this device' },
   { key: 'ai', pic: 'ai', title: 'Play the computer' },
   { key: 'online', pic: 'online', title: 'Play with friends' },
-  { key: 'quick', pic: 'quick_play', title: 'Quick match' },
+  { key: 'quick', pic: 'quick-play', title: 'Quick match' },
 ];
 
 const DIFFICULTIES = [{ value: 'easy', label: 'Easy' }, { value: 'medium', label: 'Medium' }, { value: 'hard', label: 'Hard' }];

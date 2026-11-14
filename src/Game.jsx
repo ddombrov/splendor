@@ -380,7 +380,7 @@ function Board({ session, onExit, init }) {
                   <DropdownMenuSeparator />
                   {!online && <DropdownMenuItem onSelect={restart} className="gap-2 py-2.5"><Pic name="go-again" size={20} /> Start over</DropdownMenuItem>}
                   <DropdownMenuItem onSelect={resign} className="gap-2 py-2.5"><Pic name="resign" size={20} /> Resign</DropdownMenuItem>
-                  <DropdownMenuItem onSelect={leave} className="gap-2 py-2.5"><Pic name="leave_game" size={20} /> Leave game</DropdownMenuItem>
+                  <DropdownMenuItem onSelect={leave} className="gap-2 py-2.5"><Pic name="leave-game" size={20} /> Leave game</DropdownMenuItem>
                 </DropdownMenuContent>
               </DropdownMenu>
             </div>

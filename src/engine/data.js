@@ -100,19 +100,50 @@ export const expRoyals = () => [
 ];
 
 const JEWEL_PERK = {
-  extra: 'Take another turn after this move.',
-  privilege: 'Take a privilege scroll.',
-  match: 'Take 1 token from the board of the colour this card gives you.',
-  steal: 'Steal 1 token (not gold) from your opponent.',
+  extra: 'Extra turn: take another turn immediately after this one ends.',
+  privilege: 'Privilege: take 1 privilege scroll from the table. If none are left, take 1 from your opponent.',
+  match: 'Match: take 1 token of the colour of this card from the board. If none are left, ignore it.',
+  steal: 'Steal: take 1 gem or pearl token from your opponent (never gold). If they have none, ignore it.',
+};
+
+const ROYAL_DETAIL = {
+  privilege: 'Take 1 privilege scroll from the table. If none are left, take 1 from your opponent.',
+  extra: 'Take another turn immediately after this one ends.',
+  steal: 'Take 1 gem or pearl token from your opponent (never gold). If they have none, ignore it.',
+  take1: 'Take 1 gem or pearl token of your choice from the board (not gold).',
+  rreserve: 'Reserve any card from any level or deck, even if no gold is on the board, and take no gold. Skip it if your reserve is full.',
+  rgold: 'Take 1 gold token from the board if one is available. Do not reserve a card.',
+  w9c: 'Victory condition: 9 or more prestige points on cards of one colour wins the game.',
+  w9k: 'Victory condition: 9 or more crowns wins the game.',
+  rcounter: 'Take 1 face-up counterfeiter card of your choice for free, or reveal the top card of the counterfeiter deck and take it for free.',
+  rtake4: 'Take up to 4 tokens from the board: all one gem colour, all glassware, or all pearls (not gold).',
+  rbag2: 'Take up to 2 tokens at random from the bag. They can be any kind, including gold.',
+  rtake3: 'Take up to 3 tokens of your choice from the board (not gold).',
+};
+
+const CF_DETAIL = {
+  red2: (c) => `When you buy a card, spend up to 2 glassware: each one cuts the ${c.rc} cost by 2. Once per turn.`,
+  any1: () => 'When you buy a card, spend up to 2 glassware: each one cuts the cost of any colour by 1 (same or different colours). Once per turn.',
+  any3: () => 'When you buy a card, spend 2 glassware to cut the cost of one colour by 3. Once per turn.',
+  pearl1: () => 'When you buy a card, spend 1 glassware to cut the pearl cost by 1. Once per turn.',
+  priv2: () => 'When you use a privilege, take 2 tokens from the board instead of 1 (gems, pearls or glassware). Only the first privilege each turn gets this.',
+  xturn: () => 'At the end of your turn, spend 1 glassware and return a privilege to take another turn immediately.',
+  xsteal: () => 'At the end of your turn, spend 1 glassware and return a privilege to take 1 gem, pearl or glassware token from your opponent.',
+  royalbuy: () => 'At the end of your turn, spend 1 glassware plus 1 for each royal you already own to take an available royal card.',
+  nolimit: () => 'Your glassware tokens no longer count toward the 10-token limit.',
+  crowns2: () => 'Counts as 2 crowns for you right away, which may earn a royal card or win the game.',
+  reserve5: () => 'You can reserve up to 5 cards, and when you take gold and reserve you may reserve up to 2 cards, from any level or deck.',
+  peek: () => 'At the end of your turn, spend 2 glassware: look at the top 3 cards of a deck, reserve 1, and put the other 2 at the bottom. Needs a free reserve slot.',
+  matchplus: () => 'When a jewel card with a Match ability is bought, you may take 2 tokens of its colour, or any 1 gem, pearl or glassware token, from the board.',
 };
 
 /** What a card's perk does, in words, or null for a card with no perk. */
 export function perkText(card) {
   if (!card) return null;
-  if (card.kind === 'cf') return CF_TEXT[card.ab]?.(card) ?? null;
-  if (card.kind === 'royal') return ROYAL_TEXT[card.ab] ? `Royal card: ${ROYAL_TEXT[card.ab]}.` : null;
+  if (card.kind === 'cf') return CF_DETAIL[card.ab]?.(card) ?? null;
+  if (card.kind === 'royal') return ROYAL_DETAIL[card.ab] ?? null;
   const parts = [];
-  if (card.bonus === 'wild') parts.push('Wild bonus: counts as any colour you already have.');
+  if (card.bonus === 'wild') parts.push('Wild bonus: place it on one of your coloured cards and it counts as that colour. You need a card with a bonus to buy it.');
   if (card.ability) parts.push(JEWEL_PERK[card.ability]);
   return parts.length ? parts.join(' ') : null;
 }

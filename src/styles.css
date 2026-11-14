@@ -134,7 +134,7 @@
 .card.royal { background: url(/cards/front-yellow.svg) center / 100% 100% no-repeat; }
 
 /* the board is the supplied wooden picture: its 5 by 5 sockets line up with the token cells */
-.stage .board-wrap { position: relative; padding: calc(var(--cell) * 0.327) calc(var(--cell) * 0.327) calc(var(--cell) * 1.0385); border: 0; border-radius: 0; background: url(/boards/wooden-board-actions.svg) center / 100% 100% no-repeat; }
+.stage .board-wrap { position: relative; padding: calc(var(--cell) * 0.327) calc(var(--cell) * 0.327) calc(var(--cell) * 1.0385); border: 0; border-radius: 0; background: url(/boards/board-4-buttons.svg) center / 100% 100% no-repeat; }
 .stage .board { gap: calc(var(--cell) * 0.0769); }
 .stage .cell { background: transparent; box-shadow: none; }
 
@@ -159,7 +159,7 @@
 @keyframes dealflip { from { transform: perspective(800px) rotateY(180deg); } to { transform: perspective(800px) rotateY(0deg); } }
 
 /* the felt tray a hand is shown on when it is hovered or opened */
-.handboard { background-image: url(/boards/player-hand-board.svg); background-size: 100% 100%; background-repeat: no-repeat; background-position: center; border: 0; box-shadow: none; }
+.handboard { background-image: url(/boards/felt-hand.svg); background-size: 100% 100%; background-repeat: no-repeat; background-position: center; border: 0; box-shadow: none; }
 
 /* buttons and scrolls sit in the slots carved into the bottom of the board */
 .boardbtns { position: absolute; left: calc(var(--cell) * 0.327); top: calc(var(--cell) * 5.846); width: calc(var(--cell) * 3.173); height: calc(var(--cell) * 0.5); display: grid; grid-template-columns: repeat(4, 1fr); gap: calc(var(--cell) * 0.0865); }
@@ -168,13 +168,13 @@
 .woodbtn:hover:not(:disabled) { background: rgba(94, 50, 28, 0.16); }
 .woodbtn:disabled { opacity: 0.35; cursor: default; }
 .woodbtn.go { background: #e0b64a; color: #2a1706; }
-.stage .board-wrap.two { background-image: url(/boards/wooden-board-two-buttons.svg); }
+.stage .board-wrap.two { background-image: url(/boards/board-2-buttons.svg); }
 .boardbtns.two { grid-template-columns: repeat(2, 1fr); gap: calc(var(--cell) * 0.0962); }
-.stage .board-wrap.three { background-image: url(/boards/wooden-board-3slots.svg); }
+.stage .board-wrap.three { background-image: url(/boards/board-3-buttons.svg); }
 .boardbtns.three { grid-template-columns: repeat(3, 1fr); gap: calc(var(--cell) * 0.0962); }
 
 /* the felt box the hints are written on */
-.hintbox { background-image: url(/boards/hint-box.svg); background-size: 100% 100%; background-repeat: no-repeat; }
+.hintbox { background-image: url(/boards/felt-hint.svg); background-size: 100% 100%; background-repeat: no-repeat; }
 
 /* the flipped coin is the coin picture itself */
 .coinbox .coin { width: 150px; height: 150px; }
