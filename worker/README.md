@@ -20,8 +20,17 @@ npm run dev           # starts the game on http://localhost:8765, which forwards
 
 Nothing here touches Cloudflare. Local data lives in the git-ignored `.wrangler` folder.
 
-## Putting it online
+## Online
 
-This is not done yet. It needs the real database created (`wrangler d1 create splendor-duel`), its id
-put in `wrangler.toml`, the schema applied with `--remote`, and a deploy. The weekly cleanup is the
-`crons` line in `wrangler.toml`.
+It is deployed at https://splendor-duel.danieldombrovsky9.workers.dev. The Worker serves both the game and
+the `/api` routes from that one address, and the weekly cleanup runs on Mondays at 04:00 UTC.
+
+To publish a new version, from the project folder with Node 22:
+
+```
+npx vite build
+# then remove dist/docs and dist/images, which hold copyrighted rulebooks and box art, before uploading
+npx wrangler deploy --config worker/wrangler.toml
+```
+
+The public build hides the two rulebook PDF tabs in Rules, since those files are not uploaded.
