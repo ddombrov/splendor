@@ -51,7 +51,7 @@ describe('screen layout', () => {
     for (const exp of [false, true]) {
       for (const [vw, vh] of SIZES) {
         const L = computeLayout({ vw, vh, exp });
-        expect(L.cardsW).toBeGreaterThanOrEqual(Math.floor(744 * L.cardZoom) + 40);
+        expect(L.cardsW).toBeGreaterThanOrEqual(Math.floor(744 * L.cardZoom) + 36);
       }
     }
   });

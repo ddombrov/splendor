@@ -14,7 +14,7 @@ const Stat = ({ title, big, children }) => (
   <div title={title} className={cn('flex items-center gap-1 font-extrabold leading-none', big ? 'h-12 gap-2 text-5xl' : 'h-7 text-xl')}>{children}</div>
 );
 
-export default function Player({ S, idx, dispatch, colW = 52, viewer = null, onOpen = null, zoomed = false, wide = false, summary = false, expanded = false, horizontal = false }) {
+export default function Player({ S, idx, dispatch, colW = 52, viewer = null, onOpen = null, zoomed = false, wide = false, summary = false, expanded = false, horizontal = false, compact = false }) {
   const p = S.players[idx];
   const active = idx === S.cur && !S.awaitingFirst;
   const pd = S.pending;
@@ -29,6 +29,19 @@ export default function Player({ S, idx, dispatch, colW = 52, viewer = null, onO
   if (summary && horizontal) {
     const cw = 34;
     const ch = 48;
+    const slots = (
+      <div data-zone="res" className="compact-cards flex shrink-0 items-center gap-1.5" style={{ '--z': 0.26 }}>
+          {Array.from({ length: resCap(p) }, (_, i) => {
+            const c = p.res[i];
+            if (!c) return <div key={`slot${i}`} className="slot" />;
+            return showReserved ? (
+              <JewelCard key={c.id} card={c} selected={S.selCard?.src === 'res' && S.selCard.i === i} afford={!S.main && !!plan(S, p, c)} onClick={() => dispatch({ type: 'card', src: 'res', i })} />
+            ) : (
+              <CardBack key={c.id} level="hidden" />
+            );
+          })}
+        </div>
+    );
     return (
       <Card data-dest-tokens={idx} data-dest-cards={idx} data-dest-res={idx} className={cn('handboard min-h-0 flex-1 flex-row items-stretch gap-4 overflow-hidden px-4 py-2', active && 'outline outline-2 -outline-offset-4 outline-primary/70')}>
         <div className="flex shrink-0 flex-col justify-center gap-1">
@@ -38,6 +51,7 @@ export default function Player({ S, idx, dispatch, colW = 52, viewer = null, onO
             <Stat title="Crowns"><span>{crowns(p)}</span><Crown size={20} /></Stat>
             <Stat title="Scrolls"><span>{p.priv}</span><Scroll size={22} /></Stat>
           </div>
+          {compact && <div className="mt-1">{slots}</div>}
         </div>
         <div className="flex min-w-0 flex-1 items-start justify-center gap-2 pt-1">
           {[...new Set([...kinds(S), 'gold', ...COLORS])].filter((k) => p.tok[k] > 0 || p.cards.some((x) => x.color === k)).map((k) => {
@@ -60,17 +74,7 @@ export default function Player({ S, idx, dispatch, colW = 52, viewer = null, onO
             );
           })}
         </div>
-        <div data-zone="res" className="compact-cards flex shrink-0 items-center gap-1.5" style={{ '--z': 0.26 }}>
-          {Array.from({ length: resCap(p) }, (_, i) => {
-            const c = p.res[i];
-            if (!c) return <div key={`slot${i}`} className="slot" />;
-            return showReserved ? (
-              <JewelCard key={c.id} card={c} selected={S.selCard?.src === 'res' && S.selCard.i === i} afford={!S.main && !!plan(S, p, c)} onClick={() => dispatch({ type: 'card', src: 'res', i })} />
-            ) : (
-              <CardBack key={c.id} level="hidden" />
-            );
-          })}
-        </div>
+        {!compact && slots}
       </Card>
     );
   }

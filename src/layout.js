@@ -21,9 +21,10 @@ const BASE_H = 900;
 const BOARD_W = 5.9615; // the board is this many squares wide...
 const BOARD_H = 6.692; // ...and this many tall, including its button strip
 const CARDS_W = 744; // a row of a deck and five cards is this wide at full size
-const CARDS_PAD = 44; // room the cards column needs around those rows
-const HINT_ROOM = 130; // height kept free under the board so a hint always fits
+const CARDS_PAD = 38; // room the cards column needs around those rows
+const HINT_ROOM = 84; // height kept free under the board so a hint always fits
 const CARD_ROW_H = 174;
+const ROW_EXTRA = 10; // padding and borders each row of cards adds on top of the card height
 const GAP = 12;
 const STRIP_H = 150; // height of the players strip in the bottom arrangement
 const SIDE_MIN = 210;
@@ -56,7 +57,7 @@ function side({ k, w, h, s }, rows) {
   const sideW = Math.round(SIDE_MIN * s);
   const width = w - 20 - 2 * GAP - sideW - CARDS_PAD;
   const cmax = (h - 20 - HINT_ROOM - 12) / BOARD_H;
-  const zmax = (h - 24 - (rows - 1) * GAP) / (rows * CARD_ROW_H);
+  const zmax = (h - 24 - (rows - 1) * GAP - rows * ROW_EXTRA) / (rows * CARD_ROW_H);
   const { cell, cardZoom } = fit(width, cmax, zmax);
   const cardsW = Math.round(CARDS_W * cardZoom + CARDS_PAD);
   const spare = Math.max(0, w - 20 - 2 * GAP - sideW - cardsW - Math.ceil(cell * BOARD_W));
@@ -68,8 +69,8 @@ function side({ k, w, h, s }, rows) {
 function bottom({ k, w, h }, rows) {
   const width = w - 20 - 3 * GAP - CARDS_PAD;
   const main = h - 20 - STRIP_H - GAP;
-  const cmax = (main - HINT_ROOM + 30) / BOARD_H;
-  const zmax = (main - (rows - 1) * GAP) / (rows * CARD_ROW_H);
+  const cmax = (main - HINT_ROOM + 20) / BOARD_H;
+  const zmax = (main - (rows - 1) * GAP - rows * ROW_EXTRA) / (rows * CARD_ROW_H);
   const { cell, cardZoom } = fit(width, cmax, zmax);
   const cardsW = Math.round(CARDS_W * cardZoom + CARDS_PAD);
   const boardColW = Math.ceil(cell * BOARD_W);

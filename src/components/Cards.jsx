@@ -73,10 +73,6 @@ export function JewelCard({ card, onClick, selected, afford }) {
 export function CfCard({ card, onClick, selected, afford }) {
   return (
     <div data-card-id={card.id} className={`card cfcard k-cf ${selected ? 'sel' : ''} ${afford ? 'afford' : ''}`} onClick={onClick}>
-      <div className="cfhead">
-        <Mini kind="glass" size={16} />
-        <span>Counterfeiter</span>
-      </div>
       {card.crowns > 0 && <div className="crownrow cfcrowns"><Crown size={20} /><Crown size={20} /></div>}
       {CF_ICON[card.ab] ? (() => { const [pic, num, sub] = CF_ICON[card.ab](card); return (
         <div className="note iconly">

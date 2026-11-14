@@ -262,7 +262,25 @@ function Board({ session, onExit, init }) {
   const strip = players === 'bottom';
   const place = (col) => (strip ? { gridRow: 1, gridColumn: col } : undefined);
   const tall = mode === 'tall';
+  const stacked = tall && w < 760; // narrow screens put one player above the other, each across the full width
   const colW = 64;
+  // The card rows are fitted to their box by measuring them: they shrink rather than get cut off, and grow to use the room.
+  const cardsRef = useRef(null);
+  const zKey = `${cardZoom}|${cardsW}|${S.exp}|${mode}|${Math.round(h)}|${Math.round(w)}|${S.royals.length}|${S.crow.length}`;
+  const [zFix, setZFix] = useState({ key: zKey, s: 1 });
+  const zs = zFix.key === zKey ? zFix.s : 1;
+  useLayoutEffect(() => {
+    const el = cardsRef.current;
+    if (!el || mode === 'tall' || !el.lastElementChild) return;
+    const box = el.getBoundingClientRect();
+    const used = el.lastElementChild.getBoundingClientRect().bottom - box.top;
+    if (!box.height || !used) return;
+    const widest = Math.max(...[...el.querySelectorAll('.rowline')].map((r) => r.scrollWidth * (box.width / el.clientWidth)));
+    const byWidth = widest ? (box.width / widest) : 1;
+    const next = Math.min(zs * ((box.height - 2) / used), zs * byWidth * 0.995, 1.35 / Math.max(cardZoom, 0.01) * cardZoom);
+    const clamped = Math.max(0.45, Math.min(next, 1.5));
+    if (Math.abs(clamped - zs) / zs > 0.008) setZFix({ key: zKey, s: clamped });
+  }, [zKey, zs, S.pyr, S.royals.length, S.crow.length, mode, vp.vw, vp.vh]);
   const card = selectedCard(S);
   const act = (a) => () => dispatch(a);
 
@@ -271,10 +289,10 @@ function Board({ session, onExit, init }) {
   // While you must steal a token, the opponent's hand stays open so you can pick from it.
   const shownHand = pd?.type === 'steal' && myTurn ? 1 - S.cur : hovered;
   const playersColumn = (
-    <div className={cn('relative min-h-0', tall ? 'order-2 grid grid-cols-2 gap-3' : strip ? 'grid grid-cols-2 gap-3' : 'flex flex-col gap-3')} style={strip ? { gridColumn: '1 / -1', gridRow: 2, height: stripH } : undefined} onMouseLeave={() => setHovered(null)}>
+    <div className={cn('relative min-h-0', tall ? (stacked ? 'order-2 flex flex-col gap-3' : 'order-2 grid grid-cols-2 gap-3') : strip ? 'grid grid-cols-2 gap-3' : 'flex flex-col gap-3')} style={strip ? { gridColumn: '1 / -1', gridRow: 2, height: stripH } : undefined} onMouseLeave={() => setHovered(null)}>
       {[0, 1].map((i) => (
-        <div key={i} className="flex min-h-0 flex-1 flex-col" onMouseEnter={() => setHovered(i)}>
-          <Player S={S} idx={i} dispatch={dispatch} colW={colW} viewer={seat} summary horizontal={strip} />
+        <div key={i} className="flex min-h-0 flex-1 flex-col" style={stacked ? { height: 150, flex: 'none' } : undefined} onMouseEnter={() => setHovered(i)}>
+          <Player S={S} idx={i} dispatch={dispatch} colW={colW} viewer={seat} summary horizontal={strip || stacked} compact={stacked} />
         </div>
       ))}
       {shownHand != null && (
@@ -420,14 +438,14 @@ function Board({ session, onExit, init }) {
                 </div>
 
                 {(perk || prompt) && (
-                  <div className={cn('hintbox flex min-h-[110px] flex-1 items-center px-8 py-6 text-base font-bold leading-snug', S.toast && !perk ? 'text-amber-300' : 'text-white')} style={{ width: cell * 5.9615 }}>
+                  <div className={cn('hintbox flex min-h-[76px] flex-1 items-center px-8 py-4 text-base font-bold leading-snug', S.toast && !perk ? 'text-amber-300' : 'text-white')} style={{ width: cell * 5.9615 }}>
                     {perk ?? prompt}
                   </div>
                 )}
               </div>
 
               {/* Right: all the cards */}
-              <Card data-zone="pyr" className={cn('compact-cards min-h-0 gap-3 overflow-hidden p-0 border-0 bg-transparent shadow-none', tall ? 'order-3' : '-mt-0.5')} style={{ '--z': cardZoom, ...place(3) }}>
+              <div data-zone="pyr" className={cn('compact-cards flex min-h-0 flex-col gap-3 overflow-hidden', tall ? 'order-3' : '-mt-0.5')} ref={cardsRef} style={{ '--z': cardZoom * zs, ...place(3) }}>
                 <div className="rowline">
                   {S.royals.map((r, i) => (
                     <RoyalCard key={r.id} card={r} glow={pd?.type === 'royal'} onClick={look(r, () => dispatch({ type: 'royal', i }))} />
@@ -470,7 +488,7 @@ function Board({ session, onExit, init }) {
                     {pd.cards.map((c, i) => <JewelCard key={c.id} card={c} afford onClick={() => dispatch({ type: 'peekPick', i })} />)}
                   </div>
                 )}
-              </Card>
+              </div>
             </div>
           </div>
         </div>
