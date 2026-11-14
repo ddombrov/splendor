@@ -374,9 +374,9 @@ function Board({ session, onExit, init }) {
                   </div>
                 </div>
 
-                <div className="grid min-h-0 flex-1 items-start gap-3" style={{ gridTemplateColumns: lower === 0 ? '3fr 2fr' : '2fr 3fr' }}>
+                <div className="grid min-h-0 flex-1 items-start gap-3" style={{ gridTemplateColumns: lower === 0 ? '7fr 3fr' : '3fr 7fr' }}>
                   {[0, 1].map((i) => (
-                    <div key={i} className={cn('flex min-w-0 flex-col transition-opacity', i !== lower && 'opacity-60 hover:opacity-100')} style={{ zoom: i === lower ? 0.6 : 0.4 }}>{hands[i]}</div>
+                    <div key={i} className={cn('flex min-w-0 flex-col transition-opacity', i !== lower && 'opacity-60 hover:opacity-100')} style={{ zoom: i === lower ? 0.66 : 0.28 }}>{hands[i]}</div>
                   ))}
                 </div>
               </div>
