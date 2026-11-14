@@ -277,9 +277,9 @@ function Board({ session, onExit, init }) {
         </div>
       ))}
       {shownHand != null && (
-        <div className="handboard absolute left-0 top-0 z-30 h-full p-4" style={{ width: sideW + 12 + boardColW }}>
-          <div className="flex h-full flex-col" style={{ width: sideW + 12 + boardColW - 32 }}>
-            <Player S={S} idx={shownHand} dispatch={dispatch} colW={Math.floor((sideW + 12 + boardColW - 32 - 6 * 12) / 7)} viewer={seat} zoomed wide />
+        <div className="handboard absolute z-30 p-4" style={{ left: -10, top: -10, height: 'calc(100% + 20px)', width: sideW + 12 + boardColW + 20, backgroundColor: '#17403a' }}>
+          <div className="flex h-full flex-col" style={{ width: sideW + 12 + boardColW - 12 }}>
+            <Player S={S} idx={shownHand} dispatch={dispatch} colW={Math.floor((sideW + 12 + boardColW - 12 - 6 * 12) / 7)} viewer={seat} zoomed wide />
           </div>
         </div>
       )}
@@ -413,7 +413,7 @@ function Board({ session, onExit, init }) {
                       </div>
                     )}
                     {prompt && (
-                      <div className={cn('min-w-0 flex-1 rounded-xl border bg-card/95 px-4 py-2 text-sm', S.toast ? 'border-amber-500/50 text-amber-300' : 'text-foreground')}>
+                      <div className={cn('hintbox min-w-0 flex-1 px-6 py-4 text-sm', S.toast ? 'text-amber-300' : 'text-white')}>
                         {prompt}
                       </div>
                     )}
