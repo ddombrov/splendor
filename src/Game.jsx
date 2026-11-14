@@ -241,6 +241,14 @@ function Board({ session, onExit, init }) {
   // A turn starts with the optional actions (replenish, use a privilege) and moves on to the main action when skipped.
   const [skipped, setSkipped] = useState(false);
   useEffect(() => { setSkipped(false); }, [S.cur, S.over, S.awaitingFirst]);
+  const privCount = S.players[S.cur].priv;
+  const lastPriv = useRef({ cur: S.cur, n: privCount });
+  useEffect(() => {
+    if (lastPriv.current.cur === S.cur && privCount < lastPriv.current.n) setSkipped(true); // a privilege was just used
+    lastPriv.current = { cur: S.cur, n: privCount };
+  }, [S.cur, privCount]);
+  const locked = !skipped && !S.mode && !S.pending && !S.awaitingFirst;
+  const guard = (fn) => (locked ? undefined : fn);
   const p = cur(S), pd = S.pending;
   // Layout numbers. The cards get the size their rows allow, the board takes what is left, and any
   // spare width goes to the players, the cards and the board in that order of need.
@@ -294,7 +302,7 @@ function Board({ session, onExit, init }) {
   const opponentActive = remote ? ago(remote.active[1 - seat]) : '';
 
   const idle = !S.main && !pd && myTurn;
-  const plans = (c) => idle && !!plan(S, p, c);
+  const plans = (c) => idle && !locked && !!plan(S, p, c);
   const canBuy = idle && card && !!plan(S, p, card);
   const reservableSel = !!S.selCard && (S.selCard.src === 'pyr' || S.selCard.src === 'deck') && p.res.length < resCap(p);
   const goldChosen = S.goldSel != null;
@@ -306,6 +314,7 @@ function Board({ session, onExit, init }) {
   const complete = () => {
     const type = { take: 'take', buy: 'buy', reserve: 'reserve', refill: 'repl' }[action];
     setPicked(null);
+    if (action === 'refill') setSkipped(true);
     dispatch({ type });
   };
   const cancel = () => { setPicked(null); dispatch({ type: 'cancelAction' }); };
@@ -379,7 +388,7 @@ function Board({ session, onExit, init }) {
                       else if (pd) cls += ' dim';
                       return (
                         <div className={cn('cell', selIdx.includes(i) && 'picked')} data-cell={i} key={i}>
-                          {c && <div className={hiding.includes(i) ? 'invisible' : undefined}><Token kind={c} cls={cls} size={Math.round(cell * 0.85)} onClick={() => dispatch({ type: 'tok', i })} /></div>}
+                          {c && <div className={hiding.includes(i) ? 'invisible' : undefined}><Token kind={c} cls={cls} size={Math.round(cell * 0.85)} onClick={guard(() => dispatch({ type: 'tok', i }))} /></div>}
                         </div>
                       );
                     })}
@@ -410,28 +419,6 @@ function Board({ session, onExit, init }) {
                     )}
                   </div>
                 )}
-                <div className="flex w-full gap-8 self-start">
-                  {[0, 1].map((i) => {
-                    const pl = S.players[i];
-                    const visible = seat == null ? !S.awaitingFirst && i === S.cur : i === seat;
-                    return (
-                      <div key={i} className="flex flex-col gap-1">
-                        <span className="text-xs font-semibold uppercase tracking-widest text-white/70">{pl.name}</span>
-                        <div data-dest-res={i} data-zone="res" className="compact-cards flex gap-2" style={{ '--z': 0.62 }}>
-                          {Array.from({ length: resCap(pl) }, (_, k) => {
-                            const c = pl.res[k];
-                            if (!c) return <div key={`slot${k}`} className="slot" />;
-                            return visible ? (
-                              <JewelCard key={c.id} card={c} selected={S.selCard?.src === 'res' && S.selCard.i === k && S.cur === i} afford={i === S.cur && !S.main && !!plan(S, pl, c)} onClick={() => dispatch({ type: 'card', src: 'res', i: k })} />
-                            ) : (
-                              <CardBack key={c.id} level="hidden" />
-                            );
-                          })}
-                        </div>
-                      </div>
-                    );
-                  })}
-                </div>
               </div>
 
               {/* Right: all the cards */}
@@ -444,20 +431,20 @@ function Board({ session, onExit, init }) {
                 </div>
                 {S.exp && (
                   <div className="rowline">
-                    <CardBack level="cf" label="CF" count={S.cdeck.length} onClick={() => dispatch({ type: 'card', src: 'cdeck' })} />
+                    <CardBack level="cf" label="CF" count={S.cdeck.length} onClick={guard(() => dispatch({ type: 'card', src: 'cdeck' }))} />
                     {S.crow.map((c, i) => (
                       <CfCard key={c.id} card={c} selected={S.selCard?.src === 'cf' && S.selCard.i === i}
-                        afford={plans(c) || pd?.type === 'freeCf'} onClick={() => dispatch({ type: 'card', src: 'cf', i })} />
+                        afford={plans(c) || pd?.type === 'freeCf'} onClick={guard(() => dispatch({ type: 'card', src: 'cf', i }))} />
                     ))}
                   </div>
                 )}
                 {[2, 1, 0].map((l) => (
                   <div className="rowline" key={l}>
-                    <CardBack level={l + 1} label={`L${l + 1}`} count={S.decks[l].length} onClick={() => dispatch({ type: 'card', src: 'deck', l })} />
+                    <CardBack level={l + 1} label={`L${l + 1}`} count={S.decks[l].length} onClick={guard(() => dispatch({ type: 'card', src: 'deck', l }))} />
                     {S.pyr[l].map((c, i) => (
                       <Dealt key={c.id} fresh={dealt.includes(c.id)} level={l + 1}>
                         <JewelCard card={c} selected={S.selCard?.src === 'pyr' && S.selCard.l === l && S.selCard.i === i}
-                          afford={plans(c)} onClick={() => dispatch({ type: 'card', src: 'pyr', l, i })} />
+                          afford={plans(c)} onClick={guard(() => dispatch({ type: 'card', src: 'pyr', l, i }))} />
                       </Dealt>
                     ))}
                   </div>

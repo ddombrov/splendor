@@ -31,7 +31,7 @@ export default function Player({ S, idx, dispatch, colW = 52, viewer = null, onO
     const cw = Math.round(124 * z);
     const ch = Math.round(174 * z);
     return (
-      <Card data-dest-tokens={idx} data-dest-cards={idx} className={cn('handboard min-h-0 flex-1 gap-0 overflow-hidden p-3', active && 'outline outline-2 -outline-offset-4 outline-primary/70')}>
+      <Card data-dest-tokens={idx} data-dest-cards={idx} data-dest-res={idx} className={cn('handboard min-h-0 flex-1 gap-0 overflow-hidden p-3', active && 'outline outline-2 -outline-offset-4 outline-primary/70')}>
         <h3 className="text-base font-bold">{p.name}</h3>
         <div className="mt-1 flex items-center gap-3">
           <Stat title="Prestige points"><span>{pts(p)}</span></Stat>
@@ -56,6 +56,17 @@ export default function Player({ S, idx, dispatch, colW = 52, viewer = null, onO
                   </div>
                 )}
               </div>
+            );
+          })}
+        </div>
+        <div data-zone="res" className="compact-cards mt-3 flex gap-1.5" style={{ '--z': 0.24 }}>
+          {Array.from({ length: resCap(p) }, (_, i) => {
+            const c = p.res[i];
+            if (!c) return <div key={`slot${i}`} className="slot" />;
+            return showReserved ? (
+              <JewelCard key={c.id} card={c} selected={S.selCard?.src === 'res' && S.selCard.i === i} afford={!S.main && !!plan(S, p, c)} onClick={() => dispatch({ type: 'card', src: 'res', i })} />
+            ) : (
+              <CardBack key={c.id} level="hidden" />
             );
           })}
         </div>
