@@ -138,10 +138,9 @@
 .stage .board { gap: calc(var(--cell) * 0.0769); }
 .stage .cell { background: transparent; box-shadow: none; }
 
-/* tokens about to be taken: a solid gold frame on the square, a pulsing ring, and the order they were picked in */
-.stage .cell.picked { position: relative; background: rgba(250, 204, 21, 0.5); outline: 4px solid #facc15; outline-offset: -3px; border-radius: 10px; }
-.stage .cell.picked .tok.sel { outline: 4px solid #fff; outline-offset: 1px; transform: scale(1.1); animation: pickpulse 0.9s ease-in-out infinite; }
-@keyframes pickpulse { 50% { transform: scale(1.18); outline-offset: 3px; } }
+/* tokens about to be taken: a solid gold frame on the square, and the order they were picked in */
+.stage .cell.picked { position: relative; background: rgba(250, 204, 21, 0.5); outline: 4px solid #facc15; outline-offset: -3px; border-radius: 10px; box-shadow: 0 0 10px 2px rgba(250, 204, 21, 0.5); }
+.stage .cell.picked .tok.sel { outline: none; transform: none; filter: drop-shadow(0 0 6px #facc15); }
 .pickno { position: absolute; left: 4px; top: 4px; z-index: 3; width: 22px; height: 22px; border-radius: 50%; background: #facc15; color: #1a1300; font: 800 13px/22px 'Inter', sans-serif; text-align: center; }
 
 /* the coin that decides who goes first */
@@ -153,6 +152,9 @@
 .coinface.back { transform: rotateY(180deg); background: #e7e9ee; border-color: #8e95a5; color: #3b4252; }
 @keyframes coinflip { from { transform: rotateY(0deg); } to { transform: rotateY(var(--end)); } }
 
-/* a glow around the tokens about to be taken */
-.stage .cell.picked { box-shadow: 0 0 18px 6px rgba(250, 204, 21, 0.85), inset 0 0 14px rgba(250, 204, 21, 0.6); }
-.stage .cell.picked .tok.sel { filter: drop-shadow(0 0 10px #facc15) drop-shadow(0 0 18px #facc15); }
+
+/* a card dealt from the deck turns over to show its face */
+.dealt { position: relative; transform-style: preserve-3d; animation: dealflip 0.9s 0.3s ease-in-out both; }
+.dealt > .card { backface-visibility: hidden; }
+.dealtback { position: absolute; inset: 0; transform: rotateY(180deg); backface-visibility: hidden; }
+@keyframes dealflip { from { transform: perspective(800px) rotateY(180deg); } to { transform: perspective(800px) rotateY(0deg); } }

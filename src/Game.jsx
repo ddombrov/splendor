@@ -23,6 +23,17 @@ import CoinFlip from './components/CoinFlip.jsx';
 // The engine is deterministic, so the screen supplies the seed for each new game.
 const newSeed = () => crypto.getRandomValues(new Uint32Array(1))[0];
 
+// A card just dealt from the deck shows its back and turns over to its face.
+function Dealt({ fresh, level, children }) {
+  if (!fresh) return children;
+  return (
+    <div className="dealt">
+      {children}
+      <div className="dealtback"><CardBack level={level} /></div>
+    </div>
+  );
+}
+
 function statusText(S) {
   const p = cur(S), pd = S.pending;
   if (S.toast) return S.toast;
@@ -189,11 +200,16 @@ function Board({ session, onExit, init }) {
   const snapshot = useRef({ cells: {}, cards: {} });
   const nextFlight = useRef(1);
   const [flights, setFlights] = useState([]);
+  const [dealt, setDealt] = useState([]);
   useLayoutEffect(() => {
     const before = prevS.current;
     if (before && before !== S && S.log.length >= before.log.length) {
       const found = diffFlights(before, S, snapshot.current);
       if (found.length) setFlights((list) => [...list, ...found.map((f) => ({ ...f, id: nextFlight.current++ }))]);
+    }
+    if (before && before !== S && S.log.length >= before.log.length) {
+      const old = new Set(before.pyr.flat().map((c) => c?.id));
+      setDealt(S.pyr.flat().filter((c) => c && !old.has(c.id)).map((c) => c.id));
     }
     prevS.current = S;
     snapshot.current = takeSnapshot();
@@ -287,7 +303,7 @@ function Board({ session, onExit, init }) {
                   <Button variant="secondary" size="sm"><Pic name="settings" size={20} /> Settings <ChevronDown className="opacity-60" /></Button>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="end" className="w-72">
-                  <DropdownMenuItem onSelect={() => setShowLog(true)} className="gap-2 py-2.5"><History /> Log</DropdownMenuItem>
+                  <DropdownMenuItem onSelect={() => setShowLog(true)} className="gap-2 py-2.5"><Pic name="log" size={20} /> Log</DropdownMenuItem>
                   <DropdownMenuItem onSelect={() => setShowRules(true)} className="gap-2 py-2.5"><Pic name="rules" size={20} /> Rules</DropdownMenuItem>
                   <DropdownMenuSeparator />
                   {!online && <DropdownMenuItem onSelect={restart} className="gap-2 py-2.5"><Pic name="go-again" size={20} /> Start over</DropdownMenuItem>}
@@ -304,8 +320,17 @@ function Board({ session, onExit, init }) {
             <div className="grid min-h-0 flex-1 gap-3" style={{ gridTemplateColumns: `${playersW}px minmax(0,1fr) ${cardsW}px` }}>
               {/* Left: both players */}
               <div className="flex min-h-0 flex-col gap-3">
-                <Player S={S} idx={0} dispatch={dispatch} colW={colW} viewer={seat} onOpen={handIdx === 0 ? () => setHand(true) : null} />
-                <Player S={S} idx={1} dispatch={dispatch} colW={colW} viewer={seat} onOpen={handIdx === 1 ? () => setHand(true) : null} />
+                {[0, 1].map((i) => {
+                  const idle = !S.awaitingFirst && !S.over && S.cur !== i;
+                  const player = <Player S={S} idx={i} dispatch={dispatch} colW={colW} viewer={seat} onOpen={handIdx === i ? () => setHand(true) : null} />;
+                  return idle ? (
+                    <div key={i} className="relative h-16 shrink-0">
+                      <div className={cn('group absolute inset-x-0 z-20 flex h-16 flex-col overflow-hidden rounded-xl hover:h-[640px] hover:border hover:bg-card', i === 0 ? 'top-0' : 'bottom-0')}>{player}</div>
+                    </div>
+                  ) : (
+                    <div key={i} className="flex min-h-0 flex-1 flex-col">{player}</div>
+                  );
+                })}
               </div>
 
               {/* Middle: the board, with the selected card underneath */}
@@ -383,8 +408,10 @@ function Board({ session, onExit, init }) {
                   <div className="rowline" key={l}>
                     <CardBack level={l + 1} label={`L${l + 1}`} count={S.decks[l].length} onClick={() => dispatch({ type: 'card', src: 'deck', l })} />
                     {S.pyr[l].map((c, i) => (
-                      <JewelCard key={c.id} card={c} selected={S.selCard?.src === 'pyr' && S.selCard.l === l && S.selCard.i === i}
-                        afford={plans(c)} onClick={() => dispatch({ type: 'card', src: 'pyr', l, i })} />
+                      <Dealt key={c.id} fresh={dealt.includes(c.id)} level={l + 1}>
+                        <JewelCard card={c} selected={S.selCard?.src === 'pyr' && S.selCard.l === l && S.selCard.i === i}
+                          afford={plans(c)} onClick={() => dispatch({ type: 'card', src: 'pyr', l, i })} />
+                      </Dealt>
                     ))}
                   </div>
                 ))}
