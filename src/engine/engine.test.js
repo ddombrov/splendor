@@ -474,6 +474,24 @@ describe('picking tokens in a line', () => {
     expect(S.sel).toEqual([0, 10]);
   });
 
+  it('drops the oldest pick when a new one makes an L shape, keeping the last two that fit', () => {
+    let S = setup();
+    S = reduce(S, { type: 'tok', i: 0 });
+    S = reduce(S, { type: 'tok', i: 1 });
+    S = reduce(S, { type: 'tok', i: 6 });
+    expect(S.sel).toEqual([1, 6]);
+  });
+
+  it('drops older picks one at a time until the rest fit', () => {
+    let S = setup();
+    for (const i of [0, 1, 2]) S = reduce(S, { type: 'tok', i });
+    expect(S.sel).toEqual([0, 1, 2]);
+    S = reduce(S, { type: 'tok', i: 3 });
+    expect(S.sel).toEqual([1, 2, 3]);
+    S = reduce(S, { type: 'tok', i: 20 });
+    expect(S.sel).toEqual([20]);
+  });
+
   it('starts over when the second token is too far away or the middle is gold', () => {
     let S = setup();
     S = reduce(S, { type: 'tok', i: 0 });

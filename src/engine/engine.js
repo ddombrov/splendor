@@ -401,7 +401,10 @@ const handlers = {
       if (roomLeft(p) < 1) { S.toast = 'You already hold 10 tokens.'; return; }
       const next = [...S.sel, i];
       if (next.length > roomLeft(p) && validLine(S, next)) { S.toast = `You can only take ${roomLeft(p)} more token${roomLeft(p) === 1 ? '' : 's'} (10 token limit).`; return; }
-      S.sel = validLine(S, next) || (roomLeft(p) >= 3 && gapPair(S, next)) ? next : [i];
+      // If the new pick does not fit, let go of the oldest picks until what is left still can: an L shape keeps its last two.
+      const fits = (c) => validLine(S, c) || (roomLeft(p) >= 3 && gapPair(S, c));
+      while (next.length > 1 && !fits(next)) next.shift();
+      S.sel = next;
     }
   },
   take(S) {
