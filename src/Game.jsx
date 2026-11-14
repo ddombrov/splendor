@@ -405,14 +405,14 @@ function Board({ session, onExit, init }) {
                   </div>
                 </div>
 
-                {(prompt || card) && (
+                {(
                   <div className="flex min-h-0 w-full flex-1 items-stretch gap-4">
                     {card && (
                       <div className="compact-cards pointer-events-none shrink-0" style={{ '--z': 0.7 }}>
                         {card.kind === 'cf' ? <CfCard card={card} /> : <JewelCard card={card} />}
                       </div>
                     )}
-                    {prompt && (
+                    {(
                       <div className={cn('hintbox flex min-w-0 flex-1 items-center px-8 py-6 text-xl font-extrabold leading-snug', S.toast ? 'text-amber-300' : 'text-white')}>
                         {prompt}
                       </div>
@@ -422,7 +422,7 @@ function Board({ session, onExit, init }) {
               </div>
 
               {/* Right: all the cards */}
-              <Card data-zone="pyr" className="compact-cards min-h-0 gap-2 overflow-hidden p-3 border-0 bg-transparent shadow-none" style={{ '--z': cardZoom }}>
+              <Card data-zone="pyr" className="compact-cards min-h-0 -my-0.5 justify-between gap-2 overflow-hidden p-0 border-0 bg-transparent shadow-none" style={{ '--z': cardZoom }}>
                 <div className="rowline">
                   {S.royals.map((r, i) => (
                     <RoyalCard key={r.id} card={r} glow={pd?.type === 'royal'} onClick={() => dispatch({ type: 'royal', i })} />
