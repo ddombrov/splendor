@@ -118,9 +118,8 @@ export default function Player({ S, idx, dispatch, colW = 52, viewer = null, onO
               {owned.length > 0 && (
                 <div className="compact-cards pointer-events-none relative shrink-0" style={{ width: colW, height: (owned.length - 1) * strip + full, '--z': z }}>
                   {owned.map((card, i) => {
-                    const last = i === owned.length - 1;
                     return (
-                      <div key={card.id} className="absolute left-0 overflow-hidden rounded-[6px]" style={{ top: i * strip, height: last ? full : strip, width: colW, zIndex: i }}>
+                      <div key={card.id} className="absolute left-0" style={{ top: i * strip, width: colW, zIndex: i }}>
                         <JewelCard card={card} />
                       </div>
                     );
