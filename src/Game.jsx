@@ -264,8 +264,8 @@ function Board({ session, onExit, init }) {
       ))}
       {hovered != null && (
         <div className="handboard absolute left-0 top-0 z-30 h-full p-4" style={{ width: sideW + 12 + boardColW }}>
-          <div className="flex flex-col" style={{ width: 938, zoom: (sideW + 12 + boardColW - 32) / 938 }}>
-            <Player S={S} idx={hovered} dispatch={dispatch} colW={96} viewer={seat} zoomed wide />
+          <div className="flex flex-col" style={{ width: sideW + 12 + boardColW - 32 }}>
+            <Player S={S} idx={hovered} dispatch={dispatch} colW={Math.floor((sideW + 12 + boardColW - 32 - 6 * 12) / 7)} viewer={seat} zoomed wide />
           </div>
         </div>
       )}

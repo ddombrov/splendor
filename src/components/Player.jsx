@@ -11,8 +11,8 @@ import { bonuses, colorPts, crowns, kinds, plan, pts, resCap, roomLeft } from '.
 const Label = ({ children }) => (
   <div className="mt-2 mb-1 text-[10px] font-semibold uppercase tracking-widest text-muted-foreground">{children}</div>
 );
-const Stat = ({ title, children }) => (
-  <div title={title} className="flex h-7 items-center gap-1 text-xl font-extrabold leading-none">{children}</div>
+const Stat = ({ title, big, children }) => (
+  <div title={title} className={cn('flex items-center gap-1 font-extrabold leading-none', big ? 'h-12 gap-2 text-5xl' : 'h-7 text-xl')}>{children}</div>
 );
 
 export default function Player({ S, idx, dispatch, colW = 52, viewer = null, onOpen = null, zoomed = false, wide = false, summary = false, expanded = false }) {
@@ -83,19 +83,19 @@ export default function Player({ S, idx, dispatch, colW = 52, viewer = null, onO
       {active && !zoomed && <BorderBeam size={120} duration={9} borderWidth={2} colorFrom="#d9b15a" colorTo="#d9b15a00" />}
       <div className="flex flex-wrap items-center justify-between gap-x-2 gap-y-1">
         <div className="flex items-center gap-2">
-          <h3 className="text-base font-bold">{p.name}</h3>
+          <h3 className={cn('font-bold', zoomed ? 'text-3xl' : 'text-base')}>{p.name}</h3>
         </div>
-        <div className="flex items-center gap-3">
-          <Stat title="Prestige points">
+        <div className={cn('flex items-center', zoomed ? 'gap-8' : 'gap-3')}>
+          <Stat big={zoomed} title="Prestige points">
             <NumberTicker value={pts(p)} className="tracking-normal text-foreground dark:text-foreground" />
           </Stat>
-          <Stat title="Crowns">
+          <Stat big={zoomed} title="Crowns">
             <NumberTicker value={crowns(p)} className="tracking-normal text-foreground dark:text-foreground" />
-            <Crown size={22} />
+            <Crown size={zoomed ? 46 : 22} />
           </Stat>
-          <Stat title="Scrolls">
+          <Stat big={zoomed} title="Scrolls">
             <span>{p.priv}</span>
-            <Scroll size={24} />
+            <Scroll size={zoomed ? 50 : 24} />
           </Stat>
         </div>
       </div>
@@ -108,12 +108,12 @@ export default function Player({ S, idx, dispatch, colW = 52, viewer = null, onO
           const z = colW / 124;
           const strip = Math.round((zoomed ? 62 : 40) * z);
           const full = Math.round(colW * 1.4);
-          const tok = zoomed ? 56 : 32;
+          const tok = zoomed ? Math.min(colW - 6, 80) : 32;
           return (
             <div key={k} className="flex shrink-0 flex-col items-center gap-2" style={{ width: colW }}>
               <div title={canReturn ? `Return a ${k} token to the bag` : `${k}: ${p.tok[k]}`} onClick={click} className={cn('flex flex-col-reverse items-center', click && 'pile click')} style={{ minHeight: tok }}>
                 {Array.from({ length: p.tok[k] }, (_, i) => (
-                  <div key={i} className="leading-none" style={{ marginBottom: i ? (zoomed ? -32 : -18) : 0 }}><TokenArt kind={k} size={tok} /></div>
+                  <div key={i} className="leading-none" style={{ marginBottom: i ? (zoomed ? -Math.round(tok * 0.57) : -18) : 0 }}><TokenArt kind={k} size={tok} /></div>
                 ))}
               </div>
               {owned.length > 0 && (
