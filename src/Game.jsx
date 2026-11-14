@@ -316,9 +316,9 @@ function Board({ session, onExit, init }) {
         <div
           className="handboard absolute z-30 p-4"
           style={tall
-            ? { left: -10, right: -10, bottom: -10, height: `calc(100% + ${Math.round(cell * 6.692) + 32}px)`, backgroundColor: '#17403a' }
+            ? { left: -10, right: -10, bottom: -10, height: `calc(100% + ${Math.round(cell * 6.692) + 96}px)`, backgroundColor: '#17403a' }
             : strip
-              ? { left: -10, bottom: -10, height: stripH + 12 + Math.round(cell * 6.692) + 52, width: padX + boardColW + 22, backgroundColor: '#17403a' }
+              ? { left: -10, bottom: -10, height: h, width: padX + boardColW + 22, backgroundColor: '#17403a' }
               : { left: -10, top: -10, height: 'calc(100% + 20px)', width: sideW + 12 + boardColW + 20, backgroundColor: '#17403a' }}
         >
           <div className="flex h-full flex-col" style={{ width: tall ? '100%' : strip ? padX + boardColW : sideW + 12 + boardColW - 12 }}>
