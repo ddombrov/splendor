@@ -88,8 +88,17 @@ function useViewport() {
     window.visualViewport?.addEventListener('resize', onResize);
     const ro = typeof ResizeObserver === 'function' ? new ResizeObserver(onResize) : null;
     ro?.observe(document.documentElement);
+    // Phones report the new size a moment after the rotation event, so read again once it has settled.
+    const onRotate = () => { onResize(); [100, 300, 700].forEach((ms) => setTimeout(onResize, ms)); };
+    window.addEventListener('orientationchange', onRotate);
+    const mq = window.matchMedia?.('(orientation: portrait)');
+    mq?.addEventListener?.('change', onRotate);
+    window.screen?.orientation?.addEventListener?.('change', onRotate);
     onResize();
     return () => {
+      window.removeEventListener('orientationchange', onRotate);
+      mq?.removeEventListener?.('change', onRotate);
+      window.screen?.orientation?.removeEventListener?.('change', onRotate);
       window.removeEventListener('resize', onResize);
       window.removeEventListener('orientationchange', onResize);
       window.visualViewport?.removeEventListener('resize', onResize);
