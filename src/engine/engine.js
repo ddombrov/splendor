@@ -121,6 +121,8 @@ export function endOptions(S) {
 }
 
 /* ---------- state setup ---------- */
+/** Replenishing needs tokens in the bag and an empty square to put them on. */
+export const canReplenish = (S) => S.bag.length > 0 && S.board.some((c) => c == null);
 function fillBoard(S) {
   for (const i of SPIRAL) if (S.board[i] == null && S.bag.length) S.board[i] = S.bag.pop();
 }
@@ -418,7 +420,7 @@ const handlers = {
     S.sel = [];
   },
   repl(S) {
-    if (S.main || S.pending || !S.bag.length) return;
+    if (S.main || S.pending || !canReplenish(S)) return;
     shuffle(S.bag, () => nextRandom(S)); fillBoard(S);
     givePriv(S, 1 - S.cur);
     log(S, `${cur(S).name} replenishes the board; ${opp(S).name} gains a privilege.`);

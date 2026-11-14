@@ -1,4 +1,4 @@
-import { cur, endOptions, limitCount, opp, plan, resCap, roomLeft, validLine } from './engine.js';
+import { canReplenish, cur, endOptions, limitCount, opp, plan, resCap, roomLeft, validLine } from './engine.js';
 
 /*
  * A basic computer player: it plays a random legal move for whoever's turn it is. It is deliberately
@@ -62,6 +62,6 @@ export function botActions(S) {
     return [...sel.map((i) => ({ type: 'tok', i })), { type: 'take' }];
   }
   if (limitCount(p) >= 10) return [{ type: 'giveBack', c: choose(held(p, true)) }];
-  if (S.bag.length) return [{ type: 'repl' }];
+  if (canReplenish(S)) return [{ type: 'repl' }];
   return [];
 }

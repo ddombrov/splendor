@@ -12,7 +12,7 @@ import { Switch } from '@/components/ui/switch';
 import { cn } from '@/lib/utils';
 import { api } from './net/api.js';
 import { botActions } from './engine/bot.js';
-import { createGame, reduce, cur, opp, plan, endOptions, validLine, selectedCard, resCap } from './engine/engine.js';
+import { createGame, reduce, cur, opp, plan, canReplenish, endOptions, validLine, selectedCard, resCap } from './engine/engine.js';
 import { JewelCard, CfCard, RoyalCard, CardBack } from './components/Cards.jsx';
 import Player from './components/Player.jsx';
 import Rules from './components/Rules.jsx';
@@ -310,7 +310,7 @@ function Board({ session, onExit, init }) {
   const takeable = idle && validLine(S, S.sel);
   // The action in progress comes from what the player has chosen, or from the button they pressed.
   const action = S.sel.length ? 'take' : S.goldSel != null ? 'reserve' : S.mode ? 'priv' : picked || (card ? 'buy' : null);
-  const canComplete = { take: takeable, buy: canBuy, reserve: canRes, refill: idle && !!S.bag.length, priv: false }[action];
+  const canComplete = { take: takeable, buy: canBuy, reserve: canRes, refill: idle && canReplenish(S), priv: false }[action];
   const complete = () => {
     const type = { take: 'take', buy: 'buy', reserve: 'reserve', refill: 'repl' }[action];
     setPicked(null);
@@ -339,7 +339,7 @@ function Board({ session, onExit, init }) {
     { label: 'Take', disabled: !idle, onClick: () => choose('take') },
     { label: 'Reserve', disabled: !(idle && S.board.includes('gold') && p.res.length < resCap(p)), onClick: () => choose('reserve') },
   ] : [
-    { label: 'Replenish', disabled: !(idle && S.bag.length), onClick: () => choose('refill') },
+    { label: 'Replenish', disabled: !(idle && canReplenish(S)), onClick: () => choose('refill') },
     { label: 'Use privilege', disabled: !(idle && (p.priv > 0 || S.mode === 'priv2')), onClick: () => choose('priv') },
     { label: 'Skip', disabled: !idle, onClick: () => setSkipped(true) },
   ];

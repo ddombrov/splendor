@@ -435,3 +435,14 @@ describe('random cards', () => {
     }
   });
 });
+
+describe('replenishing', () => {
+  it('does nothing while the board is full, even with tokens in the bag', () => {
+    const S = createGame(true, 5, 0);
+    expect(S.bag.length).toBeGreaterThan(0);
+    expect(S.board.every((c) => c)).toBe(true);
+    const next = reduce(S, { type: 'repl' });
+    expect(next.players[1].priv).toBe(S.players[1].priv);
+    expect(next.log.length).toBe(S.log.length);
+  });
+});
