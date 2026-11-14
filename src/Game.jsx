@@ -388,16 +388,7 @@ function Board({ session, onExit, init }) {
 
                 <div className="grid min-h-0 flex-1 items-start gap-3" style={{ gridTemplateColumns: lower === 0 ? '6fr 4fr' : '4fr 6fr' }}>
                   {[0, 1].map((i) => (
-                    i === lower ? (
-                      <div key={i} className="flex min-w-0 flex-col" style={{ zoom: 0.6 }}>{handOf(i, false)}</div>
-                    ) : (
-                      <div key={i} className="group relative flex min-w-0 flex-col opacity-60 transition-opacity hover:opacity-100">
-                        {handOf(i, true)}
-                        <div className={cn('absolute bottom-0 z-30 hidden w-[600px] handboard p-3.5 group-hover:block', i === 0 ? 'left-0' : 'right-0')}>
-                          <div className="flex w-[938px] flex-col" style={{ zoom: 0.6 }}>{handOf(i, false)}</div>
-                        </div>
-                      </div>
-                    )
+                    <div key={i} className={cn('handboard flex min-w-0 flex-col p-3', i !== lower && 'opacity-70')} style={i === lower ? { zoom: 0.6 } : undefined}>{handOf(i, i !== lower)}</div>
                   ))}
                 </div>
               </div>

@@ -54,7 +54,7 @@ export default function Player({ S, idx, dispatch, colW = 52, viewer = null, onO
   return (
     <Card
       onClick={onOpen ? (e) => { if (!e.target.closest('[data-card-id], .pile')) onOpen(); } : undefined}
-      className={cn('relative min-h-0 flex-1 gap-0 overflow-hidden border-transparent bg-transparent p-3 shadow-none', active && !zoomed && 'border-primary/50', onOpen && 'cursor-zoom-in hover:bg-white/5')}
+      className={cn('relative min-h-0 flex-1 gap-0 overflow-hidden border-transparent bg-transparent p-3 shadow-none', active && !zoomed && 'border-primary/50', onOpen && 'cursor-zoom-in')}
     >
       {active && !zoomed && <BorderBeam size={120} duration={9} borderWidth={2} colorFrom="#d9b15a" colorTo="#d9b15a00" />}
       <div className="flex flex-wrap items-center justify-between gap-x-2 gap-y-1">
@@ -77,36 +77,33 @@ export default function Player({ S, idx, dispatch, colW = 52, viewer = null, onO
       </div>
 
       <div className={wide ? cn('flex items-start gap-6', zoomed && 'flex-wrap') : 'contents'}>
-      <div data-dest-tokens={idx} className="mt-3 flex min-h-10 items-end gap-2.5">
-        {tokens.map((k) => {
+      <div data-dest-tokens={idx} data-dest-cards={idx} className="mt-3 flex items-start gap-3" title="Tokens, with the cards of each colour under them">
+        {[...new Set([...kinds(S), 'gold', ...COLORS])].filter((k) => p.tok[k] > 0 || p.cards.some((x) => x.color === k)).map((k) => {
           const click = canReturn ? () => dispatch({ type: 'giveBack', c: k }) : canDisc ? () => dispatch({ type: 'disc', c: k }) : canSteal && k !== 'gold' ? () => dispatch({ type: 'steal', c: k }) : null;
-          return (
-            <div key={k} title={canReturn ? `Return a ${k} token to the bag` : `${k}: ${p.tok[k]}`} onClick={click} className={cn('flex flex-col-reverse items-center', click && 'pile click')}>
-              {Array.from({ length: p.tok[k] }, (_, i) => (
-                <div key={i} className="leading-none" style={{ marginBottom: i ? (zoomed ? -32 : -18) : 0 }}><TokenArt kind={k} size={zoomed ? 56 : 32} /></div>
-              ))}
-            </div>
-          );
-        })}
-      </div>
-
-      <div data-dest-cards={idx} className="mt-3 flex min-h-8 items-start gap-1" title="Purchased cards">
-        {COLORS.map((c) => {
-          const owned = p.cards.filter((x) => x.color === c);
-          if (!owned.length) return null;
+          const owned = p.cards.filter((x) => x.color === k);
           const z = colW / 124;
           const strip = Math.round((zoomed ? 62 : 40) * z);
           const full = Math.round(colW * 1.4);
+          const tok = zoomed ? 56 : 32;
           return (
-            <div key={c} className="compact-cards pointer-events-none relative shrink-0" style={{ width: colW, height: (owned.length - 1) * strip + full, '--z': z }}>
-              {owned.map((card, i) => {
-                const last = i === owned.length - 1;
-                return (
-                  <div key={card.id} className="absolute left-0 overflow-hidden rounded-[6px]" style={{ top: i * strip, height: last ? full : strip, width: colW, zIndex: i }}>
-                    <JewelCard card={card} />
-                  </div>
-                );
-              })}
+            <div key={k} className="flex shrink-0 flex-col items-center gap-2" style={{ width: colW }}>
+              <div title={canReturn ? `Return a ${k} token to the bag` : `${k}: ${p.tok[k]}`} onClick={click} className={cn('flex flex-col-reverse items-center', click && 'pile click')} style={{ minHeight: tok }}>
+                {Array.from({ length: p.tok[k] }, (_, i) => (
+                  <div key={i} className="leading-none" style={{ marginBottom: i ? (zoomed ? -32 : -18) : 0 }}><TokenArt kind={k} size={tok} /></div>
+                ))}
+              </div>
+              {owned.length > 0 && (
+                <div className="compact-cards pointer-events-none relative shrink-0" style={{ width: colW, height: (owned.length - 1) * strip + full, '--z': z }}>
+                  {owned.map((card, i) => {
+                    const last = i === owned.length - 1;
+                    return (
+                      <div key={card.id} className="absolute left-0 overflow-hidden rounded-[6px]" style={{ top: i * strip, height: last ? full : strip, width: colW, zIndex: i }}>
+                        <JewelCard card={card} />
+                      </div>
+                    );
+                  })}
+                </div>
+              )}
             </div>
           );
         })}
