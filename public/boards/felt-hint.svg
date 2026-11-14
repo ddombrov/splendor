@@ -22,11 +22,8 @@
     </linearGradient>
   </defs>
 
-  <!-- Dark rim -->
-  <rect x="1" y="1" width="598" height="218" rx="20" fill="url(#rim)" stroke="#0b0c10" stroke-width="2"/>
-  <rect x="5" y="5" width="590" height="210" rx="17" fill="none" stroke="#ffffff" stroke-opacity="0.06" stroke-width="1.5"/>
 
   <!-- Muted felt surface -->
-  <rect x="16" y="16" width="568" height="188" rx="12" fill="url(#cloth)" filter="url(#felt)"/>
-  <rect x="16" y="16" width="568" height="188" rx="12" fill="url(#inset)"/>
+  <rect x="0" y="0" width="600" height="220" rx="18" fill="url(#cloth)" filter="url(#felt)"/>
+  <rect x="0" y="0" width="600" height="220" rx="18" fill="url(#inset)"/>
 </svg>
