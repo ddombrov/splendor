@@ -255,6 +255,8 @@ function Board({ session, onExit, init }) {
 
   // Both players sit in one column left of the board, equal in height. Hovering one lets it take over the whole column.
   const [hovered, setHovered] = useState(null);
+  // While you must steal a token, the opponent's hand stays open so you can pick from it.
+  const shownHand = pd?.type === 'steal' && myTurn ? 1 - S.cur : hovered;
   const playersColumn = (
     <div className="relative flex min-h-0 flex-col gap-3" onMouseLeave={() => setHovered(null)}>
       {[0, 1].map((i) => (
@@ -262,10 +264,10 @@ function Board({ session, onExit, init }) {
           <Player S={S} idx={i} dispatch={dispatch} colW={64} viewer={seat} summary />
         </div>
       ))}
-      {hovered != null && (
+      {shownHand != null && (
         <div className="handboard absolute left-0 top-0 z-30 h-full p-4" style={{ width: sideW + 12 + boardColW }}>
           <div className="flex flex-col" style={{ width: sideW + 12 + boardColW - 32 }}>
-            <Player S={S} idx={hovered} dispatch={dispatch} colW={Math.floor((sideW + 12 + boardColW - 32 - 6 * 12) / 7)} viewer={seat} zoomed wide />
+            <Player S={S} idx={shownHand} dispatch={dispatch} colW={Math.floor((sideW + 12 + boardColW - 32 - 6 * 12) / 7)} viewer={seat} zoomed wide />
           </div>
         </div>
       )}
@@ -346,7 +348,7 @@ function Board({ session, onExit, init }) {
               )}
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
-                  <Button variant="secondary" size="sm"><Pic name="settings" size={20} /> Settings <ChevronDown className="opacity-60" /></Button>
+                  <Button variant="secondary" className="h-11 gap-2.5 px-5 text-base"><Pic name="settings" size={26} /> Settings <ChevronDown className="size-5 opacity-60" /></Button>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="end" className="w-72">
                   <DropdownMenuItem onSelect={() => setShowLog(true)} className="gap-2 py-2.5"><Pic name="log" size={20} /> Log</DropdownMenuItem>
