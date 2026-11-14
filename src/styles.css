@@ -157,3 +157,6 @@
 .dealt > .card { backface-visibility: hidden; }
 .dealtback { position: absolute; inset: 0; transform: rotateY(180deg); backface-visibility: hidden; }
 @keyframes dealflip { from { transform: perspective(800px) rotateY(180deg); } to { transform: perspective(800px) rotateY(0deg); } }
+
+/* the felt tray a hand is shown on when it is hovered or opened */
+.handboard { background-image: url(/boards/player-hand-board.svg); background-size: 100% 100%; background-repeat: no-repeat; background-position: center; border: 0; box-shadow: none; }

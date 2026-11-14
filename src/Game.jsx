@@ -393,8 +393,8 @@ function Board({ session, onExit, init }) {
                     ) : (
                       <div key={i} className="group relative flex min-w-0 flex-col opacity-60 transition-opacity hover:opacity-100">
                         {handOf(i, true)}
-                        <div className={cn('absolute bottom-0 z-30 hidden w-[938px] rounded-xl border bg-card group-hover:flex', i === 0 ? 'left-0' : 'right-0')} style={{ zoom: 0.6 }}>
-                          <div className="flex min-w-0 flex-1 flex-col">{handOf(i, false)}</div>
+                        <div className={cn('absolute bottom-0 z-30 hidden w-[600px] handboard p-3.5 group-hover:block', i === 0 ? 'left-0' : 'right-0')}>
+                          <div className="flex w-[938px] flex-col" style={{ zoom: 0.6 }}>{handOf(i, false)}</div>
                         </div>
                       </div>
                     )
@@ -455,7 +455,7 @@ function Board({ session, onExit, init }) {
       {createPortal(<Flights flights={flights} onLanded={landed} />, document.body)}
       {hand != null && (
         <Dialog open onOpenChange={(o) => !o && setHand(null)}>
-          <DialogContent className="flex h-[88vh] flex-col gap-2 sm:max-w-5xl">
+          <DialogContent className="handboard flex h-[88vh] flex-col gap-2 p-10 sm:max-w-5xl">
             <DialogHeader>
               <DialogTitle>{S.players[hand].name}</DialogTitle>
               <DialogDescription className="sr-only">Hand</DialogDescription>
