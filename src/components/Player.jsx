@@ -15,7 +15,7 @@ const Stat = ({ title, children }) => (
   <div title={title} className="flex h-7 items-center gap-1 text-xl font-extrabold leading-none">{children}</div>
 );
 
-export default function Player({ S, idx, dispatch, colW = 52, viewer = null, onOpen = null, zoomed = false, wide = false }) {
+export default function Player({ S, idx, dispatch, colW = 52, viewer = null, onOpen = null, zoomed = false, wide = false, summary = false }) {
   const p = S.players[idx];
   const active = idx === S.cur && !S.awaitingFirst;
   const pd = S.pending;
@@ -26,6 +26,30 @@ export default function Player({ S, idx, dispatch, colW = 52, viewer = null, onO
   const canReturn = active && mine && !S.main && !pd && roomLeft(p) === 0;
   const b = bonuses(p);
   const tokens = [...kinds(S), 'gold'].filter((k) => p.tok[k] > 0);
+
+  if (summary) {
+    return (
+      <Card data-dest-tokens={idx} data-dest-cards={idx} data-dest-res={idx} className="min-h-0 flex-1 gap-0 overflow-hidden border-transparent bg-transparent p-3 shadow-none">
+        <div className="flex items-center justify-between gap-2">
+          <h3 className="text-base font-bold">{p.name}</h3>
+          <div className="flex items-center gap-2.5">
+            <Stat title="Prestige points"><span>{pts(p)}</span></Stat>
+            <Stat title="Crowns"><span>{crowns(p)}</span><Crown size={20} /></Stat>
+            <Stat title="Scrolls"><span>{p.priv}</span><Scroll size={22} /></Stat>
+          </div>
+        </div>
+        <div className="mt-2 flex items-start justify-between gap-1">
+          {[...kinds(S), 'gold'].map((k) => (
+            <div key={k} title={`${k}: ${p.tok[k]} tokens${b[k] ? `, ${b[k]} cards` : ''}`} className="flex flex-col items-center gap-0.5">
+              <TokenArt kind={k} size={26} />
+              <span className="text-base font-extrabold leading-none">{p.tok[k]}</span>
+              <span className="h-3 text-[11px] leading-3 text-muted-foreground">{b[k] ? `+${b[k]}` : ''}</span>
+            </div>
+          ))}
+        </div>
+      </Card>
+    );
+  }
 
   return (
     <Card

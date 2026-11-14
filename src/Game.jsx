@@ -244,7 +244,7 @@ function Board({ session, onExit, init }) {
   // The hand shown under the board is the one being played: yours online or against the computer, otherwise whoever's turn it is.
   const lower = seat ?? S.cur;
   const hands = [0, 1].map((i) => (
-    <Player key={i} S={S} idx={i} dispatch={dispatch} colW={colW} viewer={seat} wide onOpen={i === lower && !S.awaitingFirst ? () => setHand(true) : null} />
+    <Player key={i} S={S} idx={i} dispatch={dispatch} colW={colW} viewer={seat} wide summary={i !== lower} onOpen={i === lower && !S.awaitingFirst ? () => setHand(true) : null} />
   ));
 
   useEffect(() => {
@@ -374,9 +374,9 @@ function Board({ session, onExit, init }) {
                   </div>
                 </div>
 
-                <div className="grid min-h-0 flex-1 items-start gap-3" style={{ gridTemplateColumns: lower === 0 ? '7fr 3fr' : '3fr 7fr' }}>
+                <div className="grid min-h-0 flex-1 items-start gap-3" style={{ gridTemplateColumns: lower === 0 ? '6fr 4fr' : '4fr 6fr' }}>
                   {[0, 1].map((i) => (
-                    <div key={i} className={cn('flex min-w-0 flex-col transition-opacity', i !== lower && 'opacity-60 hover:opacity-100')} style={{ zoom: i === lower ? 0.66 : 0.28 }}>{hands[i]}</div>
+                    <div key={i} className={cn('flex min-w-0 flex-col transition-opacity', i !== lower && 'opacity-60 hover:opacity-100')} style={{ zoom: i === lower ? 0.6 : 1 }}>{hands[i]}</div>
                   ))}
                 </div>
               </div>
