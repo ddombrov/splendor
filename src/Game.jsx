@@ -231,13 +231,10 @@ function Board({ session, onExit, init }) {
   }, [S]);
   const landed = useCallback((id) => setFlights((list) => list.filter((f) => f.id !== id)), []);
 
-  // Only the hand of whoever is looking can be opened: the player to move on a shared screen, otherwise your own seat.
-  const handIdx = S.awaitingFirst ? -1 : seat == null ? S.cur : seat;
-
   const myTurn = seat == null || (S.awaitingFirst ? seat === 0 : S.cur === seat);
   const [showRules, setShowRules] = useState(false);
   const [showLog, setShowLog] = useState(false);
-  const [hand, setHand] = useState(false);
+  const [hand, setHand] = useState(null); // index of the player whose hand is open full screen
   const [ask, setAsk] = useState(null);
   const [lastAsk, setLastAsk] = useState(null);
   const [picked, setPicked] = useState(null);
@@ -258,9 +255,9 @@ function Board({ session, onExit, init }) {
 
   // The hand shown under the board is the one being played: yours online or against the computer, otherwise whoever's turn it is.
   const lower = seat ?? S.cur;
-  const hands = [0, 1].map((i) => (
-    <Player key={i} S={S} idx={i} dispatch={dispatch} colW={colW} viewer={seat} wide summary={i !== lower} onOpen={i === lower && !S.awaitingFirst ? () => setHand(true) : null} />
-  ));
+  const handOf = (i, summary) => (
+    <Player S={S} idx={i} dispatch={dispatch} colW={colW} viewer={seat} wide summary={summary} onOpen={S.awaitingFirst ? null : () => setHand(i)} />
+  );
 
   useEffect(() => {
     if (S.over) confetti({ particleCount: 160, spread: 85, origin: { y: 0.6 }, colors: ['#d9b15a', '#5b8bd6', '#4aa174', '#d8283a', '#ffffff'] });
@@ -391,7 +388,16 @@ function Board({ session, onExit, init }) {
 
                 <div className="grid min-h-0 flex-1 items-start gap-3" style={{ gridTemplateColumns: lower === 0 ? '6fr 4fr' : '4fr 6fr' }}>
                   {[0, 1].map((i) => (
-                    <div key={i} className={cn('flex min-w-0 flex-col transition-opacity', i !== lower && 'opacity-60 hover:opacity-100')} style={{ zoom: i === lower ? 0.6 : 1 }}>{hands[i]}</div>
+                    i === lower ? (
+                      <div key={i} className="flex min-w-0 flex-col" style={{ zoom: 0.6 }}>{handOf(i, false)}</div>
+                    ) : (
+                      <div key={i} className="group relative flex min-w-0 flex-col opacity-60 transition-opacity hover:opacity-100">
+                        {handOf(i, true)}
+                        <div className={cn('absolute bottom-0 z-30 hidden w-[938px] rounded-xl border bg-card group-hover:flex', i === 0 ? 'left-0' : 'right-0')} style={{ zoom: 0.6 }}>
+                          <div className="flex min-w-0 flex-1 flex-col">{handOf(i, false)}</div>
+                        </div>
+                      </div>
+                    )
                   ))}
                 </div>
               </div>
@@ -447,15 +453,15 @@ function Board({ session, onExit, init }) {
       </div>
 
       {createPortal(<Flights flights={flights} onLanded={landed} />, document.body)}
-      {hand && handIdx >= 0 && (
-        <Dialog open onOpenChange={(o) => !o && setHand(false)}>
+      {hand != null && (
+        <Dialog open onOpenChange={(o) => !o && setHand(null)}>
           <DialogContent className="flex h-[88vh] flex-col gap-2 sm:max-w-5xl">
             <DialogHeader>
-              <DialogTitle>{S.players[handIdx].name}</DialogTitle>
-              <DialogDescription className="sr-only">Your hand</DialogDescription>
+              <DialogTitle>{S.players[hand].name}</DialogTitle>
+              <DialogDescription className="sr-only">Hand</DialogDescription>
             </DialogHeader>
             <div className="flex min-h-0 flex-1 flex-col">
-              <Player S={S} idx={handIdx} dispatch={dispatch} colW={110} viewer={seat} zoomed />
+              <Player S={S} idx={hand} dispatch={dispatch} colW={110} viewer={seat} zoomed />
             </div>
           </DialogContent>
         </Dialog>

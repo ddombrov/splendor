@@ -29,7 +29,7 @@ export default function Player({ S, idx, dispatch, colW = 52, viewer = null, onO
 
   if (summary) {
     return (
-      <Card data-dest-tokens={idx} data-dest-cards={idx} data-dest-res={idx} className="min-h-0 flex-1 gap-0 overflow-hidden border-transparent bg-transparent p-3 shadow-none">
+      <Card data-dest-tokens={idx} data-dest-cards={idx} data-dest-res={idx} onClick={onOpen ?? undefined} className={cn('min-h-0 flex-1 gap-0 overflow-hidden border-transparent bg-transparent p-3 shadow-none', onOpen && 'cursor-zoom-in')}>
         <div className="flex items-center justify-between gap-2">
           <h3 className="text-base font-bold">{p.name}</h3>
           <div className="flex items-center gap-2.5">
