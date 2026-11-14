@@ -237,7 +237,7 @@ function Board({ session, onExit, init }) {
   const cardsW = Math.round(Math.min(764 + extra * 0.5, 744 * Math.min(zByHeight, 1.2) + 70));
   const cardZoom = Math.max(0.5, Math.min(zByHeight, (cardsW - 64) / 744, 1.2));
   const boardColW = w - 20 - cardsW - 12;
-  const cell = Math.max(56, Math.min(Math.floor((boardColW - 100) / 5.96), Math.floor((h - 420) / 5.96)));
+  const cell = Math.max(56, Math.min(Math.floor((boardColW - 100) / 5.96), Math.floor((h - 330) / 5.96)));
   const card = selectedCard(S);
   const act = (a) => () => dispatch(a);
 
@@ -374,8 +374,11 @@ function Board({ session, onExit, init }) {
                   </div>
                 </div>
 
-                <div className="flex shrink-0 flex-col opacity-75 transition-opacity hover:opacity-100" style={{ zoom: 0.55 }}>{hands[1 - lower]}</div>
-                <div className="flex min-h-0 flex-1 flex-col">{hands[lower]}</div>
+                <div className="grid min-h-0 flex-1 items-start gap-3" style={{ gridTemplateColumns: lower === 0 ? '3fr 2fr' : '2fr 3fr' }}>
+                  {[0, 1].map((i) => (
+                    <div key={i} className={cn('flex min-w-0 flex-col transition-opacity', i !== lower && 'opacity-60 hover:opacity-100')} style={{ zoom: i === lower ? 0.6 : 0.4 }}>{hands[i]}</div>
+                  ))}
+                </div>
               </div>
 
               {/* Right: all the cards */}
