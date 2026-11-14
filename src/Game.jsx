@@ -363,21 +363,24 @@ function Board({ session, onExit, init }) {
         <div>
           <div className="stage relative flex flex-col gap-2 p-2.5" onClick={(e) => { if (!e.target.closest('[data-card-id]')) setInspect(null); }} style={{ width: w, height: h, transform: `scale(${k})`, transformOrigin: '0 0', '--cell': `${cell}px` }}>
             <div className="absolute right-3 top-3 z-30 flex items-center gap-1.5">
-              {online && (
-                <div className="flex items-center gap-2 rounded-md border bg-card px-2.5 py-1 text-xs">
-                  <span className="text-muted-foreground">Code</span>
-                  <span className="font-bold tracking-[0.2em]">{session.code}</span>
-                  <button type="button" onClick={copyCode} className="text-muted-foreground hover:text-foreground" title="Copy the code">
-                    {copied ? <Check className="size-3.5" /> : <Copy className="size-3.5" />}
-                  </button>
-                  <span className="border-l pl-2 text-muted-foreground">{remote && !remote.seated ? 'Waiting for opponent' : `Opponent ${opponentActive}`}</span>
-                </div>
-              )}
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
                   <Button variant="secondary" className="h-11 gap-2.5 px-5 text-base"><Pic name="settings" size={26} /> Settings <ChevronDown className="size-5 opacity-60" /></Button>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="end" className="w-72">
+                  {online && (
+                    <>
+                      <div className="flex items-center justify-between gap-3 px-2 py-2 text-sm">
+                        <span className="text-muted-foreground">Code</span>
+                        <span className="font-bold tracking-[0.2em]">{session.code}</span>
+                        <button type="button" onClick={(e) => { e.preventDefault(); copyCode(); }} className="text-muted-foreground hover:text-foreground" title="Copy the code">
+                          {copied ? <Check className="size-4" /> : <Copy className="size-4" />}
+                        </button>
+                      </div>
+                      <div className="px-2 pb-2 text-xs text-muted-foreground">{remote && !remote.seated ? 'Waiting for opponent' : `Opponent ${opponentActive}`}</div>
+                      <DropdownMenuSeparator />
+                    </>
+                  )}
                   <DropdownMenuItem onSelect={() => setShowLog(true)} className="gap-2 py-2.5"><Pic name="log" size={20} /> Log</DropdownMenuItem>
                   <DropdownMenuItem onSelect={() => setShowRules(true)} className="gap-2 py-2.5"><Pic name="rules" size={20} /> Rules</DropdownMenuItem>
                   <DropdownMenuSeparator />
