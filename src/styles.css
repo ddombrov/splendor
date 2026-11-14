@@ -180,3 +180,10 @@
 .coinbox .coin { width: 150px; height: 150px; }
 .coinface { background: none; border: 0; border-radius: 0; object-fit: contain; width: 100%; height: 100%; }
 .coinface.back { background: none; border: 0; transform: rotateY(180deg) scaleX(-1); }
+
+/* gold is player 1, silver is player 2; the number is printed on the face */
+.coinface { position: absolute; inset: 0; }
+.coinface img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: contain; }
+.coinface b { position: relative; font-size: 56px; font-weight: 800; line-height: 1; color: #4a3100; text-shadow: 0 1px 0 rgba(255, 255, 255, 0.5); }
+.coinface.back b { color: #2f3947; }
+.coinface.back { transform: rotateY(180deg); }
