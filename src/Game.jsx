@@ -345,7 +345,6 @@ function Board({ session, onExit, init }) {
                         else if (pd) cls += ' dim';
                         return (
                           <div className={cn('cell', selIdx.includes(i) && 'picked')} data-cell={i} key={i}>
-                            {selIdx.includes(i) && selIdx.length > 1 && <span className="pickno">{selIdx.indexOf(i) + 1}</span>}
                             {c && <Token kind={c} cls={cls} size={Math.round(cell * 0.85)} onClick={() => dispatch({ type: 'tok', i })} />}
                           </div>
                         );

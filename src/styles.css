@@ -138,10 +138,9 @@
 .stage .board { gap: calc(var(--cell) * 0.0769); }
 .stage .cell { background: transparent; box-shadow: none; }
 
-/* tokens about to be taken: a solid gold frame on the square, and the order they were picked in */
+/* tokens about to be taken: a solid gold frame on the square */
 .stage .cell.picked { position: relative; background: rgba(250, 204, 21, 0.5); outline: 4px solid #facc15; outline-offset: -3px; border-radius: 10px; box-shadow: 0 0 10px 2px rgba(250, 204, 21, 0.5); }
 .stage .cell.picked .tok.sel { outline: none; transform: none; filter: drop-shadow(0 0 6px #facc15); }
-.pickno { position: absolute; left: 4px; top: 4px; z-index: 3; width: 22px; height: 22px; border-radius: 50%; background: #facc15; color: #1a1300; font: 800 13px/22px 'Inter', sans-serif; text-align: center; }
 
 /* the coin that decides who goes first */
 .coinbox { perspective: 700px; display: flex; justify-content: center; padding: 8px 0; }
