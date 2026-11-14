@@ -29,8 +29,8 @@ To publish a new version, from the project folder with Node 22:
 
 ```
 npx vite build
-# then remove dist/docs and dist/images, which hold copyrighted rulebooks and box art, before uploading
+# then remove dist/images, which holds box art, before uploading; dist/docs (the rulebook PDFs) is uploaded on purpose
 npx wrangler deploy --config worker/wrangler.toml
 ```
 
-The rulebook PDF tabs in Rules only appear where /docs/rules.pdf and /docs/expansion.pdf are served, so the public build, which leaves them out, hides them.
+The rulebook PDF tabs in Rules appear when /docs/rules.pdf and /docs/expansion.pdf are served, which they are in the current deploy.
