@@ -406,7 +406,7 @@ function Board({ session, onExit, init }) {
                 </div>
 
                 {prompt && (
-                  <div className={cn('hintbox flex min-h-[110px] w-full flex-1 items-center px-8 py-6 text-xl font-extrabold leading-snug', S.toast ? 'text-amber-300' : 'text-white')}>
+                  <div className={cn('hintbox flex min-h-[110px] flex-1 items-center px-8 py-6 text-xl font-extrabold leading-snug', S.toast ? 'text-amber-300' : 'text-white')} style={{ width: cell * 5.9615 }}>
                     {prompt}
                   </div>
                 )}

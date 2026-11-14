@@ -30,7 +30,8 @@ export function genJewels(level, rand) {
     const crowns = level === 1 ? (rand() < 0.1 ? 1 : 0) : level === 2 ? (rand() < 0.4 ? 1 : 0) : rnd(1, 2);
     const ability = rand() < [0.35, 0.4, 0.45][level - 1] ? ['extra', 'privilege', 'match', 'steal'][rnd(0, 3)] : null;
     const wild = level >= 2 && rand() < 0.12;
-    const n = level === 3 && rand() < 0.3 ? 2 : level === 2 && rand() < 0.1 ? 2 : 1;
+    let n = level === 3 && rand() < 0.3 ? 2 : level === 2 && rand() < 0.1 ? 2 : 1;
+    if (crowns === 2) n = 1; // a card never has both 2 crowns and a bonus worth 2 gems
     cards.push({ id: `j${level}-${i}`, kind: 'jewel', level, cost, pts, crowns, ability, n, bonus: wild ? 'wild' : COLORS[i % 5], color: null });
   }
   return shuffle(cards);

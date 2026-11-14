@@ -425,3 +425,13 @@ describe('replenishing follows the arrows printed on the board', () => {
     expect(state.board.every(Boolean)).toBe(true);
   });
 });
+
+describe('random cards', () => {
+  it('never give a card both 2 crowns and a bonus worth 2 gems', () => {
+    for (let seed = 1; seed <= 200; seed++) {
+      const S = createGame(false, seed, 0);
+      const all = [...S.pyr.flat(), ...S.decks.flat()];
+      for (const c of all) expect(c.crowns === 2 && c.n === 2).toBe(false);
+    }
+  });
+});
