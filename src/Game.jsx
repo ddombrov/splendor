@@ -238,6 +238,9 @@ function Board({ session, onExit, init }) {
   const [ask, setAsk] = useState(null);
   const [lastAsk, setLastAsk] = useState(null);
   const [picked, setPicked] = useState(null);
+  // A turn starts with the optional actions (replenish, use a privilege) and moves on to the main action when skipped.
+  const [skipped, setSkipped] = useState(false);
+  useEffect(() => { setSkipped(false); }, [S.cur, S.over, S.awaitingFirst]);
   const p = cur(S), pd = S.pending;
   // Layout numbers. The cards get the size their rows allow, the board takes what is left, and any
   // spare width goes to the players, the cards and the board in that order of need.
@@ -320,16 +323,18 @@ function Board({ session, onExit, init }) {
     pd?.type === 'multi' && { label: `Confirm ${pd.sel.length} token${pd.sel.length === 1 ? '' : 's'}`, onClick: act({ type: 'confirmMulti' }), go: true },
     (['freeReserve', 'freeCf'].includes(pd?.type) || (pd?.type === 'pick' && pd.plus)) && { label: 'Skip', onClick: act({ type: 'skip' }) },
   ].filter(Boolean);
-  const twoUp = !!(extras.length || action);
   const buttons = extras.length ? extras : action ? [
     ...(action !== 'priv' ? [{ label: { take: 'Take tokens', buy: 'Buy card', reserve: 'Reserve card', refill: 'Replenish' }[action], disabled: !canComplete, onClick: complete, go: true }] : []),
     { label: 'Cancel', disabled: !idle, onClick: cancel, col: action !== 'priv' ? undefined : 2 },
+  ] : skipped ? [
+    { label: 'Take', disabled: !idle, onClick: () => choose('take') },
+    { label: 'Reserve', disabled: !(idle && S.board.includes('gold') && p.res.length < resCap(p)), onClick: () => choose('reserve') },
   ] : [
     { label: 'Replenish', disabled: !(idle && S.bag.length), onClick: () => choose('refill') },
-    { label: 'Buy', disabled: !idle, onClick: () => choose('buy') },
-    { label: 'Reserve', disabled: !(idle && S.board.includes('gold') && p.res.length < resCap(p)), onClick: () => choose('reserve') },
     { label: 'Use privilege', disabled: !(idle && (p.priv > 0 || S.mode === 'priv2')), onClick: () => choose('priv') },
+    { label: 'Skip', disabled: !idle, onClick: () => setSkipped(true) },
   ];
+  const slots = !extras.length && !action && !skipped ? 'three' : 'two';
 
   return (
     <>
@@ -365,7 +370,7 @@ function Board({ session, onExit, init }) {
               {playersColumn}
               {/* Middle: the board, with the selected card underneath */}
               <div className="flex min-h-0 flex-col items-center gap-3">
-                <div className={cn('board-wrap', twoUp && 'two')}>
+                <div className={cn('board-wrap', slots)}>
                   <div className="board">
                     {S.board.map((c, i) => {
                       let cls = selIdx.includes(i) ? 'sel' : '';
@@ -379,7 +384,7 @@ function Board({ session, onExit, init }) {
                       );
                     })}
                   </div>
-                  <div className={cn('boardbtns', twoUp && 'two')} style={{ fontSize: cell * 0.125 }}>
+                  <div className={cn('boardbtns', slots)} style={{ fontSize: cell * 0.125 }}>
                     {buttons.map((b) => (
                       <button key={b.label} type="button" disabled={b.disabled} onClick={b.onClick} className={cn('woodbtn', b.go && 'go')} style={b.col ? { gridColumn: b.col } : undefined}>
                         {b.go && !b.disabled && <CompleteIcon size={cell * 0.18} />}{b.label}

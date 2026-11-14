@@ -37,15 +37,13 @@ export function diffFlights(prev, next, snap) {
     out.push({ type: 'token', kind, to: `[data-dest-tokens="${taker}"]`, from: { left: c.left + (c.width - size) / 2, top: c.top + (c.height - size) / 2, width: size, height: size } });
   });
 
-  // replenish: new tokens pour out of the middle of the board into their squares, in spiral order
+  // replenish: new tokens pop into their squares one after another, following the arrows on the board
   const poured = SPIRAL.filter((i) => !prev.board[i] && next.board[i] && snap.cells[i]);
-  const mid = snap.cells[SPIRAL[0]];
-  if (poured.length && mid) {
-    const size = mid.width * 0.85;
-    poured.forEach((i, rank) => {
-      out.push({ type: 'refill', cell: i, kind: next.board[i], to: `[data-cell="${i}"]`, delay: rank * 80, from: { left: mid.left + (mid.width - size) / 2, top: mid.top + (mid.height - size) / 2, width: size, height: size } });
-    });
-  }
+  poured.forEach((i, rank) => {
+    const c = snap.cells[i];
+    const size = c.width * 0.85;
+    out.push({ type: 'refill', cell: i, kind: next.board[i], to: `[data-cell="${i}"]`, delay: rank * 130, from: { left: c.left + (c.width - size) / 2, top: c.top + (c.height - size) / 2, width: size, height: size } });
+  });
 
   // cards: anything face up that is no longer where it was
   const faceUp = [
@@ -86,11 +84,11 @@ function Flight({ f, onLanded }) {
     const end = refill ? 1 : f.type === 'token' ? 0.7 : 0.32;
     const anim = refill ? el.animate(
       [
-        { transform: 'translate(0px, 0px) scale(0.4)', opacity: 0 },
-        { transform: 'translate(0px, 0px) scale(0.9)', opacity: 1, offset: 0.12 },
-        { transform: `translate(${dx}px, ${dy}px) scale(1)`, opacity: 1 },
+        { transform: 'scale(0.2)', opacity: 0 },
+        { transform: 'scale(1.2)', opacity: 1, offset: 0.6 },
+        { transform: 'scale(1)', opacity: 1 },
       ],
-      { duration: 520, delay: f.delay, easing: 'cubic-bezier(0.25, 0.8, 0.3, 1)', fill: 'both' },
+      { duration: 420, delay: f.delay, easing: 'ease-out', fill: 'both' },
     ) : el.animate(
       [
         { transform: 'translate(0px, 0px) scale(1)', opacity: 1 },

@@ -96,12 +96,12 @@ describe('what flies when the game changes', () => {
     expect(diffFlights(prev, next, { cells: {}, cards: {} })).toEqual([]);
   });
 
-  it('pours new tokens from the middle of the board into the empty squares, in spiral order', () => {
+  it('pops new tokens into the empty squares one after another, in the order of the arrows on the board', () => {
     const { prev, next, snap } = states();
     prev.board[12] = null; prev.board[7] = null; prev.board[0] = null;
     const out = diffFlights(prev, next, snap).filter((f) => f.type === 'refill');
     expect(out.map((f) => f.cell)).toEqual([12, 7, 0]);
-    expect(out.map((f) => f.delay)).toEqual([0, 80, 160]);
+    expect(out.map((f) => f.delay)).toEqual([0, 130, 260]);
     expect(out[1].to).toBe('[data-cell="7"]');
   });
 

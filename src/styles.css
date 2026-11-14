@@ -170,3 +170,5 @@
 .woodbtn.go { background: #e0b64a; color: #2a1706; }
 .stage .board-wrap.two { background-image: url(/boards/wooden-board-two-buttons.svg); }
 .boardbtns.two { grid-template-columns: repeat(2, 1fr); gap: calc(var(--cell) * 0.0962); }
+.stage .board-wrap.three { background-image: url(/boards/wooden-board-3slots.svg); }
+.boardbtns.three { grid-template-columns: repeat(3, 1fr); gap: calc(var(--cell) * 0.0962); }
