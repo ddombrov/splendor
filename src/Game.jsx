@@ -229,6 +229,7 @@ function Board({ session, onExit, init }) {
     prevS.current = S;
     snapshot.current = takeSnapshot();
   }, [S]);
+  const hiding = flights.filter((f) => f.type === 'refill').map((f) => f.cell);
   const landed = useCallback((id) => setFlights((list) => list.filter((f) => f.id !== id)), []);
 
   const myTurn = seat == null || (S.awaitingFirst ? seat === 0 : S.cur === seat);
@@ -373,7 +374,7 @@ function Board({ session, onExit, init }) {
                       else if (pd) cls += ' dim';
                       return (
                         <div className={cn('cell', selIdx.includes(i) && 'picked')} data-cell={i} key={i}>
-                          {c && <Token kind={c} cls={cls} size={Math.round(cell * 0.85)} onClick={() => dispatch({ type: 'tok', i })} />}
+                          {c && <div className={hiding.includes(i) ? 'invisible' : undefined}><Token kind={c} cls={cls} size={Math.round(cell * 0.85)} onClick={() => dispatch({ type: 'tok', i })} /></div>}
                         </div>
                       );
                     })}
@@ -404,6 +405,28 @@ function Board({ session, onExit, init }) {
                     )}
                   </div>
                 )}
+                <div className="flex w-full gap-8 self-start">
+                  {[0, 1].map((i) => {
+                    const pl = S.players[i];
+                    const visible = seat == null ? !S.awaitingFirst && i === S.cur : i === seat;
+                    return (
+                      <div key={i} className="flex flex-col gap-1">
+                        <span className="text-xs font-semibold uppercase tracking-widest text-white/70">{pl.name}</span>
+                        <div data-dest-res={i} data-zone="res" className="compact-cards flex gap-2" style={{ '--z': 0.62 }}>
+                          {Array.from({ length: resCap(pl) }, (_, k) => {
+                            const c = pl.res[k];
+                            if (!c) return <div key={`slot${k}`} className="slot" />;
+                            return visible ? (
+                              <JewelCard key={c.id} card={c} selected={S.selCard?.src === 'res' && S.selCard.i === k && S.cur === i} afford={i === S.cur && !S.main && !!plan(S, pl, c)} onClick={() => dispatch({ type: 'card', src: 'res', i: k })} />
+                            ) : (
+                              <CardBack key={c.id} level="hidden" />
+                            );
+                          })}
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
               </div>
 
               {/* Right: all the cards */}

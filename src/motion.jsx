@@ -1,6 +1,7 @@
 import { useEffect, useRef } from 'react';
 import { JewelCard, CfCard, RoyalCard } from './components/Cards.jsx';
 import { TokenArt } from './components/Art.jsx';
+import { SPIRAL } from './engine/engine.js';
 
 /*
  * Flying things. When a new game state arrives, anything that left the board or the pyramid and
@@ -36,6 +37,16 @@ export function diffFlights(prev, next, snap) {
     out.push({ type: 'token', kind, to: `[data-dest-tokens="${taker}"]`, from: { left: c.left + (c.width - size) / 2, top: c.top + (c.height - size) / 2, width: size, height: size } });
   });
 
+  // replenish: new tokens pour out of the middle of the board into their squares, in spiral order
+  const poured = SPIRAL.filter((i) => !prev.board[i] && next.board[i] && snap.cells[i]);
+  const mid = snap.cells[SPIRAL[0]];
+  if (poured.length && mid) {
+    const size = mid.width * 0.85;
+    poured.forEach((i, rank) => {
+      out.push({ type: 'refill', cell: i, kind: next.board[i], to: `[data-cell="${i}"]`, delay: rank * 80, from: { left: mid.left + (mid.width - size) / 2, top: mid.top + (mid.height - size) / 2, width: size, height: size } });
+    });
+  }
+
   // cards: anything face up that is no longer where it was
   const faceUp = [
     ...prev.pyr.flat().map((card) => ({ card, kind: 'jewel' })),
@@ -70,9 +81,17 @@ function Flight({ f, onLanded }) {
     if (!el || !target) { onLanded(f.id); return undefined; }
     const t = target.getBoundingClientRect();
     const dx = t.left + t.width / 2 - (f.from.left + f.from.width / 2);
-    const dy = t.top + Math.min(t.height / 2, 30) - (f.from.top + f.from.height / 2);
-    const end = f.type === 'token' ? 0.7 : 0.32;
-    const anim = el.animate(
+    const refill = f.type === 'refill';
+    const dy = (refill ? t.top + t.height / 2 : t.top + Math.min(t.height / 2, 30)) - (f.from.top + f.from.height / 2);
+    const end = refill ? 1 : f.type === 'token' ? 0.7 : 0.32;
+    const anim = refill ? el.animate(
+      [
+        { transform: 'translate(0px, 0px) scale(0.4)', opacity: 0 },
+        { transform: 'translate(0px, 0px) scale(0.9)', opacity: 1, offset: 0.12 },
+        { transform: `translate(${dx}px, ${dy}px) scale(1)`, opacity: 1 },
+      ],
+      { duration: 520, delay: f.delay, easing: 'cubic-bezier(0.25, 0.8, 0.3, 1)', fill: 'both' },
+    ) : el.animate(
       [
         { transform: 'translate(0px, 0px) scale(1)', opacity: 1 },
         { transform: 'translate(0px, -28px) scale(1.4)', opacity: 1, offset: 0.25 },
@@ -87,7 +106,7 @@ function Flight({ f, onLanded }) {
   }, []);
 
   const box = { position: 'fixed', left: f.from.left, top: f.from.top, width: f.from.width, height: f.from.height, zIndex: 80, pointerEvents: 'none' };
-  if (f.type === 'token') {
+  if (f.type === 'token' || f.type === 'refill') {
     return <div ref={ref} style={{ ...box, lineHeight: 0 }}><TokenArt kind={f.kind} size={f.from.width} /></div>;
   }
   const Card = f.type === 'cf' ? CfCard : f.type === 'royal' ? RoyalCard : JewelCard;
