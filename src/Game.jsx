@@ -184,13 +184,28 @@ function Board({ session, onExit, init }) {
     return () => clearInterval(id);
   }, [online, session.code, adopt]);
 
-  // Against the computer: it plays seat 1 after a short pause.
+  // Against the computer: it plays seat 1 after a short pause. It first shows what it has picked
+  // (tokens or a card highlighted), then confirms the move a moment later.
+  const botWaiting = useRef(false);
   useEffect(() => {
-    if (!vsAi || S.over || S.awaitingFirst || S.cur !== 1) return undefined;
+    if (!vsAi || S.over || S.awaitingFirst || S.cur !== 1 || botWaiting.current) return undefined;
     const t = setTimeout(() => {
+      const acts = botActions(Sref.current);
+      if (!acts.length) return;
       let next = Sref.current;
-      for (const a of botActions(next)) next = reduce(next, a);
-      if (next !== Sref.current) { Sref.current = next; setS(next); }
+      for (const a of acts.slice(0, -1)) next = reduce(next, a);
+      const last = acts.at(-1);
+      if (next === Sref.current) { next = reduce(next, last); Sref.current = next; setS(next); return; }
+      Sref.current = next;
+      setS(next);
+      botWaiting.current = true;
+      setTimeout(() => {
+        botWaiting.current = false;
+        if (Sref.current !== next) return; // the game was restarted or left in the meantime
+        const done = reduce(next, last);
+        Sref.current = done;
+        setS(done);
+      }, 1000);
     }, 700);
     return () => clearTimeout(t);
   }, [S, vsAi]);
