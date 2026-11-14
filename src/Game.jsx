@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useLayoutEffect, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 import confetti from 'canvas-confetti';
-import { Check, Copy, DoorOpen, Flag, Loader2, ListChecks, History, BookOpen, RotateCcw, Settings, ChevronDown, TriangleAlert, CircleCheck, Circle, Swords, ScrollText, RefreshCw, Hand, Bookmark, ShoppingCart } from 'lucide-react';
+import { Check, Copy, Loader2, ListChecks, History, ChevronDown, TriangleAlert, CircleCheck, Circle, Swords, ScrollText, RefreshCw, Hand, Bookmark, ShoppingCart } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
@@ -16,7 +16,7 @@ import { createGame, reduce, cur, opp, plan, endOptions, validLine, selectedCard
 import { JewelCard, CfCard, RoyalCard, CardBack } from './components/Cards.jsx';
 import Player from './components/Player.jsx';
 import Rules from './components/Rules.jsx';
-import { TokenArt, Scroll, Gem, Mini, CompleteIcon } from './components/Art.jsx';
+import { TokenArt, Scroll, Gem, Mini, CompleteIcon, Pic } from './components/Art.jsx';
 import { Flights, diffFlights, takeSnapshot } from './motion.jsx';
 import CoinFlip from './components/CoinFlip.jsx';
 
@@ -191,8 +191,7 @@ function Board({ session, onExit, init }) {
   const [flights, setFlights] = useState([]);
   useLayoutEffect(() => {
     const before = prevS.current;
-    const calm = window.matchMedia?.('(prefers-reduced-motion: reduce)').matches;
-    if (before && before !== S && S.log.length >= before.log.length && !calm) {
+    if (before && before !== S && S.log.length >= before.log.length) {
       const found = diffFlights(before, S, snapshot.current);
       if (found.length) setFlights((list) => [...list, ...found.map((f) => ({ ...f, id: nextFlight.current++ }))]);
     }
@@ -201,9 +200,13 @@ function Board({ session, onExit, init }) {
   }, [S]);
   const landed = useCallback((id) => setFlights((list) => list.filter((f) => f.id !== id)), []);
 
+  // Only the hand of whoever is looking can be opened: the player to move on a shared screen, otherwise your own seat.
+  const handIdx = S.awaitingFirst ? -1 : seat == null ? S.cur : seat;
+
   const myTurn = seat == null || (S.awaitingFirst ? seat === 0 : S.cur === seat);
   const [showRules, setShowRules] = useState(false);
   const [showLog, setShowLog] = useState(false);
+  const [hand, setHand] = useState(false);
   const [ask, setAsk] = useState(null);
   const [lastAsk, setLastAsk] = useState(null);
   const [picked, setPicked] = useState(null);
@@ -281,15 +284,15 @@ function Board({ session, onExit, init }) {
               )}
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
-                  <Button variant="secondary" size="sm"><Settings /> Settings <ChevronDown className="opacity-60" /></Button>
+                  <Button variant="secondary" size="sm"><Pic name="settings" size={20} /> Settings <ChevronDown className="opacity-60" /></Button>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="end" className="w-72">
                   <DropdownMenuItem onSelect={() => setShowLog(true)} className="gap-2 py-2.5"><History /> Log</DropdownMenuItem>
-                  <DropdownMenuItem onSelect={() => setShowRules(true)} className="gap-2 py-2.5"><BookOpen /> Rules</DropdownMenuItem>
+                  <DropdownMenuItem onSelect={() => setShowRules(true)} className="gap-2 py-2.5"><Pic name="rules" size={20} /> Rules</DropdownMenuItem>
                   <DropdownMenuSeparator />
-                  {!online && <DropdownMenuItem onSelect={restart} className="gap-2 py-2.5"><RotateCcw /> Start over</DropdownMenuItem>}
-                  <DropdownMenuItem onSelect={resign} className="gap-2 py-2.5"><Flag /> Resign</DropdownMenuItem>
-                  <DropdownMenuItem onSelect={leave} className="gap-2 py-2.5"><DoorOpen /> Leave game</DropdownMenuItem>
+                  {!online && <DropdownMenuItem onSelect={restart} className="gap-2 py-2.5"><Pic name="go-again" size={20} /> Start over</DropdownMenuItem>}
+                  <DropdownMenuItem onSelect={resign} className="gap-2 py-2.5"><Pic name="resign" size={20} /> Resign</DropdownMenuItem>
+                  <DropdownMenuItem onSelect={leave} className="gap-2 py-2.5"><Pic name="leave_game" size={20} /> Leave game</DropdownMenuItem>
                 </DropdownMenuContent>
               </DropdownMenu>
             </div>
@@ -301,8 +304,8 @@ function Board({ session, onExit, init }) {
             <div className="grid min-h-0 flex-1 gap-3" style={{ gridTemplateColumns: `${playersW}px minmax(0,1fr) ${cardsW}px` }}>
               {/* Left: both players */}
               <div className="flex min-h-0 flex-col gap-3">
-                <Player S={S} idx={0} dispatch={dispatch} colW={colW} viewer={seat} />
-                <Player S={S} idx={1} dispatch={dispatch} colW={colW} viewer={seat} />
+                <Player S={S} idx={0} dispatch={dispatch} colW={colW} viewer={seat} onOpen={handIdx === 0 ? () => setHand(true) : null} />
+                <Player S={S} idx={1} dispatch={dispatch} colW={colW} viewer={seat} onOpen={handIdx === 1 ? () => setHand(true) : null} />
               </div>
 
               {/* Middle: the board, with the selected card underneath */}
@@ -408,6 +411,19 @@ function Board({ session, onExit, init }) {
       </div>
 
       {createPortal(<Flights flights={flights} onLanded={landed} />, document.body)}
+      {hand && handIdx >= 0 && (
+        <Dialog open onOpenChange={(o) => !o && setHand(false)}>
+          <DialogContent className="flex h-[88vh] flex-col gap-2 sm:max-w-5xl">
+            <DialogHeader>
+              <DialogTitle>{S.players[handIdx].name}</DialogTitle>
+              <DialogDescription className="sr-only">Your hand</DialogDescription>
+            </DialogHeader>
+            <div className="flex min-h-0 flex-1 flex-col">
+              <Player S={S} idx={handIdx} dispatch={dispatch} colW={110} viewer={seat} zoomed />
+            </div>
+          </DialogContent>
+        </Dialog>
+      )}
       {showRules && <Rules exp={exp} onClose={() => setShowRules(false)} />}
 
       <Dialog open={showLog} onOpenChange={setShowLog}>

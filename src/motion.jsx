@@ -75,10 +75,10 @@ function Flight({ f, onLanded }) {
     const anim = el.animate(
       [
         { transform: 'translate(0px, 0px) scale(1)', opacity: 1 },
-        { transform: 'translate(0px, -14px) scale(1.18)', opacity: 1, offset: 0.22 },
-        { transform: `translate(${dx}px, ${dy}px) scale(${end})`, opacity: 0.95 },
+        { transform: 'translate(0px, -28px) scale(1.4)', opacity: 1, offset: 0.25 },
+        { transform: `translate(${dx}px, ${dy}px) scale(${end})`, opacity: 1 },
       ],
-      { duration: f.type === 'token' ? 650 : 800, easing: 'cubic-bezier(0.35, 0.1, 0.3, 1)', fill: 'forwards' },
+      { duration: f.type === 'token' ? 1000 : 1200, easing: 'cubic-bezier(0.35, 0.1, 0.3, 1)', fill: 'forwards' },
     );
     anim.onfinish = () => onLanded(f.id);
     return () => anim.cancel();

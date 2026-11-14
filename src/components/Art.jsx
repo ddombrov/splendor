@@ -62,3 +62,8 @@ export function AbilityIcon({ ab, size = 24 }) {
 export function CompleteIcon({ size = 16 }) {
   return <img src="/icons/complete.png" alt="" draggable={false} className="shrink-0 object-contain" style={{ width: size, height: size }} />;
 }
+
+/** One of the picture icons in /icons, drawn at any size. */
+export function Pic({ name, size = 24, className = '' }) {
+  return <img src={`/icons/${name}.png`} width={size} height={size} alt="" draggable={false} className={`shrink-0 ${className}`} />;
+}

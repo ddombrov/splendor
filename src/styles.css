@@ -152,3 +152,7 @@
 .coinface small { font-size: 10px; letter-spacing: 0.1em; text-transform: uppercase; }
 .coinface.back { transform: rotateY(180deg); background: #e7e9ee; border-color: #8e95a5; color: #3b4252; }
 @keyframes coinflip { from { transform: rotateY(0deg); } to { transform: rotateY(var(--end)); } }
+
+/* a glow around the tokens about to be taken */
+.stage .cell.picked { box-shadow: 0 0 18px 6px rgba(250, 204, 21, 0.85), inset 0 0 14px rgba(250, 204, 21, 0.6); }
+.stage .cell.picked .tok.sel { filter: drop-shadow(0 0 10px #facc15) drop-shadow(0 0 18px #facc15); }

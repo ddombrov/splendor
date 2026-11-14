@@ -1,17 +1,18 @@
 import { useState } from 'react';
-import { Bot, BookOpen, Globe, Loader2, Users, Zap } from 'lucide-react';
+import { Loader2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Switch } from '@/components/ui/switch';
 import Rules from '@/components/Rules.jsx';
 import { api } from '../net/api.js';
+import { Pic } from '@/components/Art.jsx';
 import { Field, GemRow, Segmented } from './parts.jsx';
 
 const MODES = [
-  { key: 'device', icon: Users, title: 'Play on this device' },
-  { key: 'ai', icon: Bot, title: 'Play the computer' },
-  { key: 'online', icon: Globe, title: 'Play with friends' },
-  { key: 'quick', icon: Zap, title: 'Quick match' },
+  { key: 'device', pic: 'friends', title: 'Play on this device' },
+  { key: 'ai', pic: 'ai', title: 'Play the computer' },
+  { key: 'online', pic: 'online', title: 'Play with friends' },
+  { key: 'quick', pic: 'quick_play', title: 'Quick match' },
 ];
 
 const DIFFICULTIES = [{ value: 'easy', label: 'Easy' }, { value: 'medium', label: 'Medium' }, { value: 'hard', label: 'Hard' }];
@@ -98,20 +99,20 @@ export default function Home({ onStart, onJoined, onQuick }) {
           <h1 className="text-5xl font-extrabold tracking-tight">Splendor Duel</h1>
                   </div>
         <div className="grid w-full gap-3 sm:grid-flow-col sm:grid-cols-2 sm:grid-rows-2">
-          {MODES.map(({ key, icon: Icon, title }) => (
+          {MODES.map(({ key, pic, title }) => (
             <button
               key={key}
               type="button"
               onClick={() => pick(key)}
               className={`flex items-center gap-4 rounded-xl border bg-card p-4 text-left transition hover:border-primary hover:bg-accent`}
             >
-              <Icon className="size-7 shrink-0 text-primary" />
+              <Pic name={pic} size={44} />
               <span className="font-semibold">{title}</span>
             </button>
           ))}
         </div>
         <div className="flex items-center gap-4">
-          <Button variant="ghost" onClick={() => setShowRules(true)}><BookOpen /> Rules</Button>
+          <Button variant="ghost" onClick={() => setShowRules(true)}><Pic name="rules" size={22} /> Rules</Button>
           <label className="flex cursor-pointer items-center gap-2 rounded-md px-3 py-2 text-sm font-medium hover:bg-accent">
             Counterfeiters expansion
             <Switch checked={exp} onCheckedChange={changeExp} />

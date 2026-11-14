@@ -90,8 +90,8 @@ export default function Rules({ exp, onClose }) {
         <Tabs defaultValue="summary" className="flex min-h-0 flex-1 flex-col">
           <TabsList>
             <TabsTrigger value="summary">Summary</TabsTrigger>
-            {!import.meta.env.PROD && <TabsTrigger value="rules">Rulebook (PDF)</TabsTrigger>}
-            {!import.meta.env.PROD && <TabsTrigger value="exp">Expansion (PDF)</TabsTrigger>}
+            <TabsTrigger value="rules">Rulebook (PDF)</TabsTrigger>
+            <TabsTrigger value="exp">Expansion (PDF)</TabsTrigger>
           </TabsList>
           <TabsContent value="summary" className="min-h-0 flex-1 overflow-y-auto rounded-md border"><Summary exp={exp} /></TabsContent>
           <TabsContent value="rules" className="min-h-0 flex-1"><iframe title="Rulebook" src="/docs/rules.pdf" className="pdf h-full rounded-md" /></TabsContent>

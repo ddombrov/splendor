@@ -15,7 +15,7 @@ const Stat = ({ title, children }) => (
   <div title={title} className="flex h-7 items-center gap-1 text-xl font-extrabold leading-none">{children}</div>
 );
 
-export default function Player({ S, idx, dispatch, colW = 52, viewer = null }) {
+export default function Player({ S, idx, dispatch, colW = 52, viewer = null, onOpen = null, zoomed = false }) {
   const p = S.players[idx];
   const active = idx === S.cur && !S.awaitingFirst;
   const pd = S.pending;
@@ -28,7 +28,10 @@ export default function Player({ S, idx, dispatch, colW = 52, viewer = null }) {
   const tokens = [...kinds(S), 'gold'].filter((k) => p.tok[k] > 0);
 
   return (
-    <Card className={cn('relative min-h-0 flex-1 gap-0 overflow-hidden border-transparent bg-transparent p-3 shadow-none', active && 'border-primary/50')}>
+    <Card
+      onClick={onOpen ? (e) => { if (!e.target.closest('[data-card-id], .pile')) onOpen(); } : undefined}
+      className={cn('relative min-h-0 flex-1 gap-0 overflow-hidden border-transparent bg-transparent p-3 shadow-none', active && 'border-primary/50', onOpen && 'cursor-zoom-in hover:bg-white/5', zoomed && 'overflow-y-auto')}
+    >
       {active && <BorderBeam size={120} duration={9} borderWidth={2} colorFrom="#d9b15a" colorTo="#d9b15a00" />}
       <div className="flex flex-wrap items-center justify-between gap-x-2 gap-y-1">
         <div className="flex items-center gap-2">
@@ -55,7 +58,7 @@ export default function Player({ S, idx, dispatch, colW = 52, viewer = null }) {
           return (
             <div key={k} title={canReturn ? `Return a ${k} token to the bag` : `${k}: ${p.tok[k]}`} onClick={click} className={cn('flex flex-col-reverse items-center', click && 'pile click')}>
               {Array.from({ length: p.tok[k] }, (_, i) => (
-                <div key={i} className="leading-none" style={{ marginBottom: i ? -18 : 0 }}><TokenArt kind={k} size={32} /></div>
+                <div key={i} className="leading-none" style={{ marginBottom: i ? (zoomed ? -32 : -18) : 0 }}><TokenArt kind={k} size={zoomed ? 56 : 32} /></div>
               ))}
             </div>
           );
@@ -67,7 +70,7 @@ export default function Player({ S, idx, dispatch, colW = 52, viewer = null }) {
           const owned = p.cards.filter((x) => x.color === c);
           if (!owned.length) return null;
           const z = colW / 124;
-          const strip = Math.round(40 * z);
+          const strip = Math.round((zoomed ? 62 : 40) * z);
           const full = Math.round(colW * 1.4);
           return (
             <div key={c} className="compact-cards pointer-events-none relative shrink-0" style={{ width: colW, height: (owned.length - 1) * strip + full, '--z': z }}>
@@ -103,7 +106,7 @@ export default function Player({ S, idx, dispatch, colW = 52, viewer = null }) {
         </>
       )}
 
-      <div data-dest-res={idx} data-zone="res" className="compact-cards mt-3" style={{ '--z': 0.52 }}>
+      <div data-dest-res={idx} data-zone="res" className="compact-cards mt-3" style={{ '--z': zoomed ? 0.9 : 0.52 }}>
         <div className="rowline wrap">
           {Array.from({ length: resCap(p) }, (_, i) => {
             const c = p.res[i];
