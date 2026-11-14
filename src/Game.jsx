@@ -258,10 +258,17 @@ function Board({ session, onExit, init }) {
   // spare width goes to the players, the cards and the board in that order of need.
   const prompt = statusText(S);
   const perk = perkText(inspect);
-  const { mode, players, stripH, padX, k, w, h, sideW, cardsW, cardZoom, boardColW, cell } = computeLayout({ ...vp, exp: S.exp });
+  const [sbW, setSbW] = useState(0); // width of the page scrollbar, which takes room from the stacked layout
+  const { mode, players, stripH, padX, k, w, h, sideW, cardsW, cardZoom, boardColW, cell } = computeLayout({ ...vp, vw: vp.vw - sbW, exp: S.exp });
   const strip = players === 'bottom';
   const place = (col) => (strip ? { gridRow: 1, gridColumn: col } : undefined);
   const tall = mode === 'tall';
+  const scrollRef = useRef(null);
+  useLayoutEffect(() => {
+    const el = scrollRef.current;
+    const next = el && tall ? el.offsetWidth - el.clientWidth : 0;
+    if (next !== sbW) setSbW(next);
+  });
   const stacked = tall && w < 760; // narrow screens put one player above the other, each across the full width
   const colW = 64;
   // The card rows are fitted to their box by measuring them: they shrink rather than get cut off, and grow to use the room.
@@ -376,7 +383,7 @@ function Board({ session, onExit, init }) {
 
   return (
     <>
-      <div className={cn('fixed inset-0', tall ? 'overflow-y-auto overflow-x-hidden' : 'overflow-hidden')}>
+      <div ref={scrollRef} className={cn('fixed inset-0', tall ? 'overflow-y-auto overflow-x-hidden' : 'overflow-hidden')}>
         <div>
           <div className="stage relative flex flex-col gap-2 p-2.5" onClick={(e) => { if (!e.target.closest('[data-card-id]')) setInspect(null); }} style={tall ? { width: w, minHeight: h, zoom: k, '--cell': `${cell}px` } : { width: w, height: h, transform: `scale(${k})`, transformOrigin: '0 0', '--cell': `${cell}px` }}>
             <div className={cn('z-30 flex items-center gap-1.5', tall ? 'justify-end' : 'absolute right-3 top-3')} > 
@@ -438,7 +445,7 @@ function Board({ session, onExit, init }) {
                 </div>
 
                 {(perk || prompt) && (
-                  <div className={cn('hintbox flex min-h-[76px] flex-1 items-center px-8 py-4 text-base font-bold leading-snug', S.toast && !perk ? 'text-amber-300' : 'text-white')} style={{ width: cell * 5.9615 }}>
+                  <div className={cn('hintbox flex min-h-[76px] shrink-0 items-center px-8 py-4 text-base font-bold leading-snug', S.toast && !perk ? 'text-amber-300' : 'text-white')} style={{ width: cell * 5.9615 }}>
                     {perk ?? prompt}
                   </div>
                 )}
