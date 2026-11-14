@@ -237,7 +237,7 @@ function Board({ session, onExit, init }) {
   const cardsW = Math.round(Math.min(764 + extra * 0.5, 744 * Math.min(zByHeight, 1.2) + 70));
   const cardZoom = Math.max(0.5, Math.min(zByHeight, (cardsW - 64) / 744, 1.2));
   const boardColW = w - 20 - cardsW - 12;
-  const cell = Math.max(56, Math.min(Math.floor((boardColW - 100) / 5.96), Math.floor((h - 340) / 5.96)));
+  const cell = Math.max(56, Math.min(Math.floor((boardColW - 100) / 5.96), Math.floor((h - 420) / 5.96)));
   const card = selectedCard(S);
   const act = (a) => () => dispatch(a);
 
@@ -349,13 +349,8 @@ function Board({ session, onExit, init }) {
                   </div>
                   </div>
                   <div className="flex flex-col items-center gap-2">
-                    <div className="relative flex min-h-14 w-full items-center justify-center">
-                      <div className="absolute bottom-0 left-0 z-20 h-14 w-80 hover:h-80 hover:w-full">
-                        <div className="group flex h-full flex-col overflow-hidden rounded-xl hover:border hover:bg-card">{hands[1 - lower]}</div>
-                      </div>
-                      <div className="flex min-h-7 items-center -space-x-1.5" title="Scrolls on the table">
-                        {Array.from({ length: S.privBoard }, (_, i) => <Scroll key={i} size={28} />)}
-                      </div>
+                    <div className="flex min-h-7 items-center -space-x-1.5" title="Scrolls on the table">
+                      {Array.from({ length: S.privBoard }, (_, i) => <Scroll key={i} size={28} />)}
                     </div>
                     <div className="flex flex-wrap justify-center gap-1.5">
                       {action ? (
@@ -379,6 +374,7 @@ function Board({ session, onExit, init }) {
                   </div>
                 </div>
 
+                <div className="flex shrink-0 flex-col opacity-75 transition-opacity hover:opacity-100" style={{ zoom: 0.55 }}>{hands[1 - lower]}</div>
                 <div className="flex min-h-0 flex-1 flex-col">{hands[lower]}</div>
               </div>
 
