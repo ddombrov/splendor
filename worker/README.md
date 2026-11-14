@@ -33,4 +33,4 @@ npx vite build
 npx wrangler deploy --config worker/wrangler.toml
 ```
 
-The public build hides the two rulebook PDF tabs in Rules, since those files are not uploaded.
+The rulebook PDF tabs in Rules only appear where /docs/rules.pdf and /docs/expansion.pdf are served, so the public build, which leaves them out, hides them.

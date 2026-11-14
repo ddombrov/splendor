@@ -1,3 +1,4 @@
+import { useEffect, useState } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Bookmark, Hand, RefreshCw, ScrollText, ShoppingCart } from 'lucide-react';
@@ -79,7 +80,18 @@ function Summary({ exp }) {
   );
 }
 
+// The rulebook PDFs are only offered where the files are actually being served.
+function usePdf(path) {
+  const [there, setThere] = useState(false);
+  useEffect(() => {
+    fetch(path, { method: 'HEAD' }).then((r) => setThere((r.headers.get('content-type') || '').includes('pdf'))).catch(() => {});
+  }, [path]);
+  return there;
+}
+
 export default function Rules({ exp, onClose }) {
+  const hasRules = usePdf('/docs/rules.pdf');
+  const hasExp = usePdf('/docs/expansion.pdf');
   return (
     <Dialog open onOpenChange={(o) => !o && onClose()}>
       <DialogContent className="flex h-[86vh] flex-col gap-3 sm:max-w-4xl">
@@ -90,8 +102,8 @@ export default function Rules({ exp, onClose }) {
         <Tabs defaultValue="summary" className="flex min-h-0 flex-1 flex-col">
           <TabsList>
             <TabsTrigger value="summary">Summary</TabsTrigger>
-            <TabsTrigger value="rules">Rulebook (PDF)</TabsTrigger>
-            <TabsTrigger value="exp">Expansion (PDF)</TabsTrigger>
+            {hasRules && <TabsTrigger value="rules">Rulebook (PDF)</TabsTrigger>}
+            {hasExp && <TabsTrigger value="exp">Expansion (PDF)</TabsTrigger>}
           </TabsList>
           <TabsContent value="summary" className="min-h-0 flex-1 overflow-y-auto rounded-md border"><Summary exp={exp} /></TabsContent>
           <TabsContent value="rules" className="min-h-0 flex-1"><iframe title="Rulebook" src="/docs/rules.pdf" className="pdf h-full rounded-md" /></TabsContent>
