@@ -140,7 +140,9 @@ export default function Player({ S, idx, dispatch, colW = 52, viewer = null, onO
         </div>
       )}
 
-      <div className="compact-cards mt-3" style={{ '--z': zoomed ? 0.9 : wide ? 0.68 : 0.52 }}>
+      </div>
+
+      <div className="compact-cards mt-auto pt-4" style={{ '--z': zoomed ? 0.9 : wide ? 0.68 : 0.52 }}>
         <div className="rowline wrap">
           {Array.from({ length: resCap(p) }, (_, i) => {
             const c = p.res[i];
@@ -158,7 +160,6 @@ export default function Player({ S, idx, dispatch, colW = 52, viewer = null, onO
             );
           })}
         </div>
-      </div>
       </div>
     </Card>
   );
