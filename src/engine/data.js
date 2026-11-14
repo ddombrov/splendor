@@ -106,7 +106,7 @@ const JEWEL_PERK = {
   steal: 'Steal: take 1 gem or pearl token from your opponent (never gold). If they have none, ignore it.',
 };
 
-const ROYAL_DETAIL = {
+export const ROYAL_DETAIL = {
   privilege: 'Take 1 privilege scroll from the table. If none are left, take 1 from your opponent.',
   extra: 'Take another turn immediately after this one ends.',
   steal: 'Take 1 gem or pearl token from your opponent (never gold). If they have none, ignore it.',
@@ -121,7 +121,7 @@ const ROYAL_DETAIL = {
   rtake3: 'Take up to 3 tokens of your choice from the board (not gold).',
 };
 
-const CF_DETAIL = {
+export const CF_DETAIL = {
   red2: (c) => `When you buy a card, spend up to 2 glassware: each one cuts the ${c.rc} cost by 2. Once per turn.`,
   any1: () => 'When you buy a card, spend up to 2 glassware: each one cuts the cost of any colour by 1 (same or different colours). Once per turn.',
   any3: () => 'When you buy a card, spend 2 glassware to cut the cost of one colour by 3. Once per turn.',

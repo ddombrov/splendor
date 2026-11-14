@@ -4,7 +4,7 @@ import { PAL, Gem, Crown, AbilityIcon, Mini } from './Art.jsx';
 // Royal abilities that have a picture; the first three need no words, the rest keep their text.
 const ICON_ONLY = ['privilege', 'extra', 'steal', 'take1', 'rtake3', 'rtake4', 'rbag2', 'rgold', 'rcounter', 'rreserve', 'w9c', 'w9k'];
 // Counterfeiter powers that are just a picture and a number.
-const CF_ICON = {
+export const CF_ICON = {
   any1: () => ['wild', '−1'],
   any3: () => ['wild', '−3'],
   red2: (c) => [`gem:${c.rc}`, '−2'],
@@ -20,8 +20,8 @@ const CF_ICON = {
   peek: () => ['takecard', '3', 'eye'],
 };
 // A number drawn on the picture, for powers that take several tokens.
-const ICON_COUNT = { rtake3: 3, rtake4: 4, rbag2: 2, w9c: '−1', w9k: '−1' };
-const ROYAL_ICON = { privilege: 'privilege', extra: 'extra', steal: 'steal', take1: 'match', rtake3: 'match', rtake4: 'match', rbag2: 'bag', rcounter: 'takecard', rreserve: 'takecard', rgold: 'gold', w9c: 'wild', w9k: 'crown' };
+export const ICON_COUNT = { rtake3: 3, rtake4: 4, rbag2: 2, w9c: '−1', w9k: '−1' };
+export const ROYAL_ICON = { privilege: 'privilege', extra: 'extra', steal: 'steal', take1: 'match', rtake3: 'match', rtake4: 'match', rbag2: 'bag', rcounter: 'takecard', rreserve: 'takecard', rgold: 'gold', w9c: 'wild', w9k: 'crown' };
 
 const COST_ORDER = ['blue', 'white', 'green', 'black', 'red', 'pearl', 'glass'];
 const AB_LABEL = { extra: 'Extra turn', privilege: 'Privilege', match: 'Match', steal: 'Steal', wild: 'Wild' };
