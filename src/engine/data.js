@@ -98,3 +98,21 @@ export const expRoyals = () => [
   { id: 'e7', kind: 'royal', pts: 1, ab: 'rbag2' },
   { id: 'e8', kind: 'royal', pts: 1, ab: 'rtake3' },
 ];
+
+const JEWEL_PERK = {
+  extra: 'Take another turn after this move.',
+  privilege: 'Take a privilege scroll.',
+  match: 'Take 1 token from the board of the colour this card gives you.',
+  steal: 'Steal 1 token (not gold) from your opponent.',
+};
+
+/** What a card's perk does, in words, or null for a card with no perk. */
+export function perkText(card) {
+  if (!card) return null;
+  if (card.kind === 'cf') return CF_TEXT[card.ab]?.(card) ?? null;
+  if (card.kind === 'royal') return ROYAL_TEXT[card.ab] ? `Royal card: ${ROYAL_TEXT[card.ab]}.` : null;
+  const parts = [];
+  if (card.bonus === 'wild') parts.push('Wild bonus: counts as any colour you already have.');
+  if (card.ability) parts.push(JEWEL_PERK[card.ability]);
+  return parts.length ? parts.join(' ') : null;
+}

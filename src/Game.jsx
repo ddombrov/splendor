@@ -12,6 +12,7 @@ import { Switch } from '@/components/ui/switch';
 import { cn } from '@/lib/utils';
 import { api } from './net/api.js';
 import { botActions } from './engine/bot.js';
+import { perkText } from './engine/data.js';
 import { createGame, reduce, cur, opp, plan, canReplenish, endOptions, validLine, selectedCard, resCap } from './engine/engine.js';
 import { JewelCard, CfCard, RoyalCard, CardBack } from './components/Cards.jsx';
 import Player from './components/Player.jsx';
@@ -238,6 +239,10 @@ function Board({ session, onExit, init }) {
   const [ask, setAsk] = useState(null);
   const [lastAsk, setLastAsk] = useState(null);
   const [picked, setPicked] = useState(null);
+  // Clicking a card also shows what its perk does in the hint; clicking anywhere else, or moving on, clears it.
+  const [inspect, setInspect] = useState(null);
+  useEffect(() => { setInspect(null); }, [S.log.length]);
+  const look = (card, fn) => () => { setInspect(card); fn?.(); };
   // A turn starts with the optional actions (replenish, use a privilege) and moves on to the main action when skipped.
   const [skipped, setSkipped] = useState(false);
   useEffect(() => { setSkipped(false); }, [S.cur, S.over, S.awaitingFirst]);
@@ -253,6 +258,7 @@ function Board({ session, onExit, init }) {
   // Layout numbers. The cards get the size their rows allow, the board takes what is left, and any
   // spare width goes to the players, the cards and the board in that order of need.
   const prompt = statusText(S);
+  const perk = perkText(inspect);
   const extra = Math.max(0, w - MIN_W);
   const colW = 64;
   const cardRows = S.exp ? 5 : 4;
@@ -352,7 +358,7 @@ function Board({ session, onExit, init }) {
     <>
       <div className="fixed inset-0 overflow-hidden">
         <div>
-          <div className="stage relative flex flex-col gap-2 p-2.5" style={{ width: w, height: h, transform: `scale(${k})`, transformOrigin: '0 0', '--cell': `${cell}px` }}>
+          <div className="stage relative flex flex-col gap-2 p-2.5" onClick={(e) => { if (!e.target.closest('[data-card-id]')) setInspect(null); }} style={{ width: w, height: h, transform: `scale(${k})`, transformOrigin: '0 0', '--cell': `${cell}px` }}>
             <div className="absolute right-3 top-3 z-30 flex items-center gap-1.5">
               {online && (
                 <div className="flex items-center gap-2 rounded-md border bg-card px-2.5 py-1 text-xs">
@@ -408,9 +414,9 @@ function Board({ session, onExit, init }) {
                   </div>
                 </div>
 
-                {prompt && (
-                  <div className={cn('hintbox flex min-h-[110px] flex-1 items-center px-8 py-6 text-base font-bold leading-snug', S.toast ? 'text-amber-300' : 'text-white')} style={{ width: cell * 5.9615 }}>
-                    {prompt}
+                {(perk || prompt) && (
+                  <div className={cn('hintbox flex min-h-[110px] flex-1 items-center px-8 py-6 text-base font-bold leading-snug', S.toast && !perk ? 'text-amber-300' : 'text-white')} style={{ width: cell * 5.9615 }}>
+                    {perk ?? prompt}
                   </div>
                 )}
               </div>
@@ -419,7 +425,7 @@ function Board({ session, onExit, init }) {
               <Card data-zone="pyr" className="compact-cards min-h-0 -my-0.5 justify-between gap-2 overflow-hidden p-0 border-0 bg-transparent shadow-none" style={{ '--z': cardZoom }}>
                 <div className="rowline">
                   {S.royals.map((r, i) => (
-                    <RoyalCard key={r.id} card={r} glow={pd?.type === 'royal'} onClick={() => dispatch({ type: 'royal', i })} />
+                    <RoyalCard key={r.id} card={r} glow={pd?.type === 'royal'} onClick={look(r, () => dispatch({ type: 'royal', i }))} />
                   ))}
                   {!S.royals.length && <span className="text-xs text-muted-foreground">All claimed</span>}
                 </div>
@@ -428,7 +434,7 @@ function Board({ session, onExit, init }) {
                     <CardBack level="cf" label="CF" count={S.cdeck.length} onClick={guard(() => dispatch({ type: 'card', src: 'cdeck' }))} />
                     {S.crow.map((c, i) => (
                       <CfCard key={c.id} card={c} selected={S.selCard?.src === 'cf' && S.selCard.i === i}
-                        afford={plans(c) || pd?.type === 'freeCf'} onClick={guard(() => dispatch({ type: 'card', src: 'cf', i }))} />
+                        afford={plans(c) || pd?.type === 'freeCf'} onClick={look(c, guard(() => dispatch({ type: 'card', src: 'cf', i })))} />
                     ))}
                   </div>
                 )}
@@ -438,7 +444,7 @@ function Board({ session, onExit, init }) {
                     {S.pyr[l].map((c, i) => (
                       <Dealt key={c.id} fresh={dealt.includes(c.id)} level={l + 1}>
                         <JewelCard card={c} selected={S.selCard?.src === 'pyr' && S.selCard.l === l && S.selCard.i === i}
-                          afford={plans(c)} onClick={guard(() => dispatch({ type: 'card', src: 'pyr', l, i }))} />
+                          afford={plans(c)} onClick={look(c, guard(() => dispatch({ type: 'card', src: 'pyr', l, i })))} />
                       </Dealt>
                     ))}
                   </div>
