@@ -9,7 +9,7 @@ describe('screen layout', () => {
       for (const [vw, vh] of SIZES) {
         const L = computeLayout({ vw, vh, exp });
         if (L.mode !== 'wide') continue;
-        if (L.players === 'top') expect(L.cardsW + L.boardColW + 12 + 20).toBeCloseTo(L.w, 0);
+        if (L.players === 'bottom') expect(2 * L.padX + L.boardColW + L.cardsW + 3 * 12 + 20).toBeLessThanOrEqual(L.w + 1);
         else expect(L.sideW + L.cardsW + L.boardColW + 2 * 12 + 20).toBeCloseTo(L.w, 0);
         expect(L.cell * 5.9615).toBeLessThanOrEqual(L.boardColW + 1);
         expect(L.cell * 6.692 + 32 + (L.stripH ?? 0)).toBeLessThanOrEqual(L.h + 60); // the board and its buttons fit the height
@@ -37,13 +37,28 @@ describe('screen layout', () => {
     expect(L.mode).toBe('wide');
     expect(L.k).toBeCloseTo(1.2, 2);
     expect(L.cell).toBeGreaterThanOrEqual(90);
+    expect(L.cardZoom).toBeGreaterThanOrEqual(0.8);
   });
 
   it('puts the players in a strip across the top when that makes the board and cards clearly bigger', () => {
     const L = computeLayout({ vw: 1207, vh: 887 });
-    expect(L.players).toBe('top');
+    expect(L.players).toBe('bottom');
     const side = computeLayout({ vw: 1920, vh: 1080 });
     expect(side.players).toBe('side');
+  });
+
+  it('never makes a card column too narrow for its cards', () => {
+    for (const exp of [false, true]) {
+      for (const [vw, vh] of SIZES) {
+        const L = computeLayout({ vw, vh, exp });
+        expect(L.cardsW).toBeGreaterThanOrEqual(Math.floor(744 * L.cardZoom) + 40);
+      }
+    }
+  });
+
+  it('lets the board use the room the height allows when the width is plentiful', () => {
+    const L = computeLayout({ vw: 3440, vh: 1440 });
+    expect(L.cell).toBeGreaterThanOrEqual(105);
   });
 
   it('switches between the layouts at one aspect ratio', () => {

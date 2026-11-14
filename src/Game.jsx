@@ -258,8 +258,9 @@ function Board({ session, onExit, init }) {
   // spare width goes to the players, the cards and the board in that order of need.
   const prompt = statusText(S);
   const perk = perkText(inspect);
-  const { mode, players, stripH, k, w, h, sideW, cardsW, cardZoom, boardColW, cell } = computeLayout({ ...vp, exp: S.exp });
-  const strip = players === 'top';
+  const { mode, players, stripH, padX, k, w, h, sideW, cardsW, cardZoom, boardColW, cell } = computeLayout({ ...vp, exp: S.exp });
+  const strip = players === 'bottom';
+  const place = (col) => (strip ? { gridRow: 1, gridColumn: col } : undefined);
   const tall = mode === 'tall';
   const colW = 64;
   const card = selectedCard(S);
@@ -270,7 +271,7 @@ function Board({ session, onExit, init }) {
   // While you must steal a token, the opponent's hand stays open so you can pick from it.
   const shownHand = pd?.type === 'steal' && myTurn ? 1 - S.cur : hovered;
   const playersColumn = (
-    <div className={cn('relative min-h-0', tall ? 'order-2 grid grid-cols-2 gap-3' : strip ? 'grid grid-cols-2 gap-3' : 'flex flex-col gap-3')} style={strip ? { gridColumn: '1 / -1', height: stripH } : undefined} onMouseLeave={() => setHovered(null)}>
+    <div className={cn('relative min-h-0', tall ? 'order-2 grid grid-cols-2 gap-3' : strip ? 'grid grid-cols-2 gap-3' : 'flex flex-col gap-3')} style={strip ? { gridColumn: '1 / -1', gridRow: 2, height: stripH } : undefined} onMouseLeave={() => setHovered(null)}>
       {[0, 1].map((i) => (
         <div key={i} className="flex min-h-0 flex-1 flex-col" onMouseEnter={() => setHovered(i)}>
           <Player S={S} idx={i} dispatch={dispatch} colW={colW} viewer={seat} summary horizontal={strip} />
@@ -282,11 +283,11 @@ function Board({ session, onExit, init }) {
           style={tall
             ? { left: -10, right: -10, bottom: -10, height: `calc(100% + ${Math.round(cell * 6.692) + 32}px)`, backgroundColor: '#17403a' }
             : strip
-              ? { left: -10, top: -10, height: stripH + 12 + Math.round(cell * 6.692) + 52, width: boardColW + 22, backgroundColor: '#17403a' }
+              ? { left: -10, bottom: -10, height: stripH + 12 + Math.round(cell * 6.692) + 52, width: padX + boardColW + 22, backgroundColor: '#17403a' }
               : { left: -10, top: -10, height: 'calc(100% + 20px)', width: sideW + 12 + boardColW + 20, backgroundColor: '#17403a' }}
         >
-          <div className="flex h-full flex-col" style={{ width: tall ? '100%' : strip ? boardColW : sideW + 12 + boardColW - 12 }}>
-            <Player S={S} idx={shownHand} dispatch={dispatch} colW={Math.floor(((tall ? w - 20 : strip ? boardColW + 12 : sideW + 12 + boardColW) - 12 - 6 * 12) / 7)} viewer={seat} zoomed wide />
+          <div className="flex h-full flex-col" style={{ width: tall ? '100%' : strip ? padX + boardColW : sideW + 12 + boardColW - 12 }}>
+            <Player S={S} idx={shownHand} dispatch={dispatch} colW={Math.floor(((tall ? w - 20 : strip ? padX + boardColW + 12 : sideW + 12 + boardColW) - 12 - 6 * 12) / 7)} viewer={seat} zoomed wide />
             {pd?.type === 'steal' && prompt && (
               <div className="hintbox mt-3 flex min-h-[90px] shrink-0 items-center px-8 py-5 text-base font-bold leading-snug text-white">{prompt}</div>
             )}
@@ -360,7 +361,7 @@ function Board({ session, onExit, init }) {
       <div className={cn('fixed inset-0', tall ? 'overflow-y-auto overflow-x-hidden' : 'overflow-hidden')}>
         <div>
           <div className="stage relative flex flex-col gap-2 p-2.5" onClick={(e) => { if (!e.target.closest('[data-card-id]')) setInspect(null); }} style={tall ? { width: w, minHeight: h, zoom: k, '--cell': `${cell}px` } : { width: w, height: h, transform: `scale(${k})`, transformOrigin: '0 0', '--cell': `${cell}px` }}>
-            <div className={cn('z-30 flex items-center gap-1.5', tall ? 'justify-end' : 'absolute right-3 top-3')} style={strip ? { top: stripH + 24 } : undefined}>
+            <div className={cn('z-30 flex items-center gap-1.5', tall ? 'justify-end' : 'absolute right-3 top-3')} > 
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
                   <Button variant="ghost" className="h-11 gap-2.5 px-5 text-base text-white hover:bg-white/10 hover:text-white"><Pic name="settings" size={26} /> Settings <ChevronDown className="size-5 opacity-60" /></Button>
@@ -388,10 +389,10 @@ function Board({ session, onExit, init }) {
                 </DropdownMenuContent>
               </DropdownMenu>
             </div>
-            <div className={cn('grid gap-3', !tall && 'min-h-0 flex-1')} style={{ gridTemplateColumns: tall ? 'minmax(0,1fr)' : strip ? `minmax(0,1fr) ${cardsW}px` : `${sideW}px minmax(0,1fr) ${cardsW}px`, gridTemplateRows: strip ? `${stripH}px minmax(0,1fr)` : undefined }}>
+            <div className={cn('grid gap-3', !tall && 'min-h-0 flex-1')} style={{ gridTemplateColumns: tall ? 'minmax(0,1fr)' : strip ? `${padX}px ${boardColW}px ${cardsW}px ${padX}px` : `${sideW}px minmax(0,1fr) ${cardsW}px`, gridTemplateRows: strip ? `minmax(0,1fr) ${stripH}px` : undefined }}>
               {playersColumn}
               {/* Middle: the board, with the selected card underneath */}
-              <div className={cn('flex min-h-0 flex-col items-center gap-3', tall && 'order-1')}>
+              <div className={cn('flex min-h-0 flex-col items-center gap-3', tall && 'order-1')} style={place(2)}>
                 <div className={cn('board-wrap', slots)}>
                   <div className="board">
                     {S.board.map((c, i) => {
@@ -426,7 +427,7 @@ function Board({ session, onExit, init }) {
               </div>
 
               {/* Right: all the cards */}
-              <Card data-zone="pyr" className={cn('compact-cards min-h-0 gap-3 overflow-hidden p-0 border-0 bg-transparent shadow-none', tall ? 'order-3' : '-mt-0.5')} style={{ '--z': cardZoom }}>
+              <Card data-zone="pyr" className={cn('compact-cards min-h-0 gap-3 overflow-hidden p-0 border-0 bg-transparent shadow-none', tall ? 'order-3' : '-mt-0.5')} style={{ '--z': cardZoom, ...place(3) }}>
                 <div className="rowline">
                   {S.royals.map((r, i) => (
                     <RoyalCard key={r.id} card={r} glow={pd?.type === 'royal'} onClick={look(r, () => dispatch({ type: 'royal', i }))} />
