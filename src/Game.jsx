@@ -280,6 +280,9 @@ function Board({ session, onExit, init }) {
         <div className="handboard absolute z-30 p-4" style={{ left: -10, top: -10, height: 'calc(100% + 20px)', width: sideW + 12 + boardColW + 20, backgroundColor: '#17403a' }}>
           <div className="flex h-full flex-col" style={{ width: sideW + 12 + boardColW - 12 }}>
             <Player S={S} idx={shownHand} dispatch={dispatch} colW={Math.floor((sideW + 12 + boardColW - 12 - 6 * 12) / 7)} viewer={seat} zoomed wide />
+            {pd?.type === 'steal' && prompt && (
+              <div className="hintbox mt-3 flex min-h-[90px] shrink-0 items-center px-8 py-5 text-base font-bold leading-snug text-white">{prompt}</div>
+            )}
           </div>
         </div>
       )}
@@ -406,7 +409,7 @@ function Board({ session, onExit, init }) {
                 </div>
 
                 {prompt && (
-                  <div className={cn('hintbox flex min-h-[110px] flex-1 items-center px-8 py-6 text-xl font-extrabold leading-snug', S.toast ? 'text-amber-300' : 'text-white')} style={{ width: cell * 5.9615 }}>
+                  <div className={cn('hintbox flex min-h-[110px] flex-1 items-center px-8 py-6 text-base font-bold leading-snug', S.toast ? 'text-amber-300' : 'text-white')} style={{ width: cell * 5.9615 }}>
                     {prompt}
                   </div>
                 )}
