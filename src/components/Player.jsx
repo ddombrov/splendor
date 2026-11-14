@@ -49,7 +49,7 @@ export default function Player({ S, idx, dispatch, colW = 52, viewer = null }) {
         </div>
       </div>
 
-      <div className="mt-3 flex min-h-10 items-end gap-2.5">
+      <div data-dest-tokens={idx} className="mt-3 flex min-h-10 items-end gap-2.5">
         {tokens.map((k) => {
           const click = canReturn ? () => dispatch({ type: 'giveBack', c: k }) : canDisc ? () => dispatch({ type: 'disc', c: k }) : canSteal && k !== 'gold' ? () => dispatch({ type: 'steal', c: k }) : null;
           return (
@@ -62,7 +62,7 @@ export default function Player({ S, idx, dispatch, colW = 52, viewer = null }) {
         })}
       </div>
 
-      <div className="mt-3 flex min-h-8 items-start gap-1" title="Purchased cards">
+      <div data-dest-cards={idx} className="mt-3 flex min-h-8 items-start gap-1" title="Purchased cards">
         {COLORS.map((c) => {
           const owned = p.cards.filter((x) => x.color === c);
           if (!owned.length) return null;
@@ -103,7 +103,7 @@ export default function Player({ S, idx, dispatch, colW = 52, viewer = null }) {
         </>
       )}
 
-      <div className="compact-cards mt-3" style={{ '--z': 0.52 }}>
+      <div data-dest-res={idx} data-zone="res" className="compact-cards mt-3" style={{ '--z': 0.52 }}>
         <div className="rowline wrap">
           {Array.from({ length: resCap(p) }, (_, i) => {
             const c = p.res[i];

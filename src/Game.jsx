@@ -1,4 +1,5 @@
-import { useCallback, useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useLayoutEffect, useRef, useState } from 'react';
+import { createPortal } from 'react-dom';
 import confetti from 'canvas-confetti';
 import { Check, Copy, DoorOpen, Flag, Loader2, ListChecks, History, BookOpen, RotateCcw, Settings, ChevronDown, TriangleAlert, CircleCheck, Circle, Swords, ScrollText, RefreshCw, Hand, Bookmark, ShoppingCart } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -16,6 +17,8 @@ import { JewelCard, CfCard, RoyalCard, CardBack } from './components/Cards.jsx';
 import Player from './components/Player.jsx';
 import Rules from './components/Rules.jsx';
 import { TokenArt, Scroll, Gem, Mini, CompleteIcon } from './components/Art.jsx';
+import { Flights, diffFlights, takeSnapshot } from './motion.jsx';
+import CoinFlip from './components/CoinFlip.jsx';
 
 // The engine is deterministic, so the screen supplies the seed for each new game.
 const newSeed = () => crypto.getRandomValues(new Uint32Array(1))[0];
@@ -127,6 +130,7 @@ function Board({ session, onExit, init }) {
   const [remote, setRemote] = useState(null);
   const [, setTick] = useState(0);
   const [copied, setCopied] = useState(false);
+  const [coin, setCoin] = useState(null);
 
   const adopt = useCallback((next, rev) => { Sref.current = next; revRef.current = rev; setS(next); }, []);
   // Online, every action goes to the server, which runs the rules and answers with the latest game.
@@ -179,6 +183,23 @@ function Board({ session, onExit, init }) {
     }, 700);
     return () => clearTimeout(t);
   }, [S, vsAi]);
+
+  // Things that move between the board and a player's inventory fly there instead of jumping.
+  const prevS = useRef(null);
+  const snapshot = useRef({ cells: {}, cards: {} });
+  const nextFlight = useRef(1);
+  const [flights, setFlights] = useState([]);
+  useLayoutEffect(() => {
+    const before = prevS.current;
+    const calm = window.matchMedia?.('(prefers-reduced-motion: reduce)').matches;
+    if (before && before !== S && S.log.length >= before.log.length && !calm) {
+      const found = diffFlights(before, S, snapshot.current);
+      if (found.length) setFlights((list) => [...list, ...found.map((f) => ({ ...f, id: nextFlight.current++ }))]);
+    }
+    prevS.current = S;
+    snapshot.current = takeSnapshot();
+  }, [S]);
+  const landed = useCallback((id) => setFlights((list) => list.filter((f) => f.id !== id)), []);
 
   const myTurn = seat == null || (S.awaitingFirst ? seat === 0 : S.cur === seat);
   const [showRules, setShowRules] = useState(false);
@@ -295,7 +316,8 @@ function Board({ session, onExit, init }) {
                         else if (pd?.type === 'multi') cls += c === 'gold' ? ' dim' : '';
                         else if (pd) cls += ' dim';
                         return (
-                          <div className="cell" key={i}>
+                          <div className={cn('cell', selIdx.includes(i) && 'picked')} data-cell={i} key={i}>
+                            {selIdx.includes(i) && selIdx.length > 1 && <span className="pickno">{selIdx.indexOf(i) + 1}</span>}
                             {c && <Token kind={c} cls={cls} size={Math.round(cell * 0.85)} onClick={() => dispatch({ type: 'tok', i })} />}
                           </div>
                         );
@@ -338,7 +360,7 @@ function Board({ session, onExit, init }) {
               </div>
 
               {/* Right: all the cards */}
-              <Card className="compact-cards min-h-0 gap-2 overflow-hidden p-3 border-0 bg-transparent shadow-none" style={{ '--z': cardZoom }}>
+              <Card data-zone="pyr" className="compact-cards min-h-0 gap-2 overflow-hidden p-3 border-0 bg-transparent shadow-none" style={{ '--z': cardZoom }}>
                 <div className="rowline">
                   {S.royals.map((r, i) => (
                     <RoyalCard key={r.id} card={r} glow={pd?.type === 'royal'} onClick={() => dispatch({ type: 'royal', i })} />
@@ -385,6 +407,7 @@ function Board({ session, onExit, init }) {
         </div>
       </div>
 
+      {createPortal(<Flights flights={flights} onLanded={landed} />, document.body)}
       {showRules && <Rules exp={exp} onClose={() => setShowRules(false)} />}
 
       <Dialog open={showLog} onOpenChange={setShowLog}>
@@ -416,16 +439,23 @@ function Board({ session, onExit, init }) {
           </DialogHeader>
           {online && seat !== 0 ? (
             <p className="flex items-center gap-2 text-sm text-muted-foreground"><Loader2 className="size-4 animate-spin" /> Waiting for Player 1 to choose.</p>
+          ) : coin ? (
+            <CoinFlip winner={coin.winner} names={[S.players[0].name, S.players[1].name]} onDone={() => { const w = coin.winner; setCoin(null); dispatch({ type: 'chooseFirst', player: w }); }} />
           ) : (
-            <div className="grid gap-3 sm:grid-cols-2">
-              {[0, 1].map((i) => (
-                <Button key={i} variant="outline" className="h-auto flex-col gap-2 py-4" onClick={() => dispatch({ type: 'chooseFirst', player: i })}>
-                  <span className="text-base font-semibold">{S.players[i].name} goes first</span>
-                  <span className="flex items-center gap-1.5 text-xs font-normal text-muted-foreground">
-                    <Scroll size={22} /> {S.players[1 - i].name} gets a scroll
-                  </span>
-                </Button>
-              ))}
+            <div className="space-y-3">
+              <div className="grid gap-3 sm:grid-cols-2">
+                {[0, 1].map((i) => (
+                  <Button key={i} variant="outline" className="h-auto flex-col gap-2 py-4" onClick={() => dispatch({ type: 'chooseFirst', player: i })}>
+                    <span className="text-base font-semibold">{S.players[i].name} goes first</span>
+                    <span className="flex items-center gap-1.5 text-xs font-normal text-muted-foreground">
+                      <Scroll size={22} /> {S.players[1 - i].name} gets a scroll
+                    </span>
+                  </Button>
+                ))}
+              </div>
+              <Button variant="secondary" className="w-full" onClick={() => setCoin({ winner: crypto.getRandomValues(new Uint8Array(1))[0] & 1 })}>
+                Flip a coin
+              </Button>
             </div>
           )}
         </DialogContent>

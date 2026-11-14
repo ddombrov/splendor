@@ -46,6 +46,7 @@ export function JewelCard({ card, onClick, selected, afford }) {
   const title = [wild && 'Wild bonus: copies one of your colours', card.ability && AB_LABEL[card.ability]].filter(Boolean).join(' + ');
   return (
     <div
+      data-card-id={card.id}
       className={`card jewel l${card.level} k-${kind} ${selected ? 'sel' : ''} ${afford ? 'afford' : ''}`}
       style={{ '--tint': PAL[kind].glow }}
       onClick={onClick}
@@ -71,7 +72,7 @@ export function JewelCard({ card, onClick, selected, afford }) {
 
 export function CfCard({ card, onClick, selected, afford }) {
   return (
-    <div className={`card cfcard k-cf ${selected ? 'sel' : ''} ${afford ? 'afford' : ''}`} onClick={onClick}>
+    <div data-card-id={card.id} className={`card cfcard k-cf ${selected ? 'sel' : ''} ${afford ? 'afford' : ''}`} onClick={onClick}>
       <div className="cfhead">
         <Mini kind="glass" size={16} />
         <span>Counterfeiter</span>
@@ -95,7 +96,7 @@ export function CfCard({ card, onClick, selected, afford }) {
 
 export function RoyalCard({ card, onClick, glow }) {
   return (
-    <div className={`card royal ${glow ? 'afford' : ''}`} onClick={onClick}>
+    <div data-card-id={card.id} className={`card royal ${glow ? 'afford' : ''}`} onClick={onClick}>
       <div className="ptsrow"><div className="pts">{card.pts}</div></div>
       <div className="royal-crown"><Crown size={42} /></div>
       <div className={`note royaltext ${ICON_ONLY.includes(card.ab) ? 'iconly' : ''}`}>
