@@ -231,16 +231,21 @@ function Board({ session, onExit, init }) {
   // spare width goes to the players, the cards and the board in that order of need.
   const prompt = statusText(S);
   const extra = Math.max(0, w - MIN_W);
-  const playersW = Math.round(Math.min(250 + extra * 0.2, 360));
-  const colW = Math.max(40, Math.floor((playersW - 24 - 2 - 4 * 4) / 5));
+  const colW = 64;
   const cardRows = S.exp ? 5 : 4;
   const zByHeight = (h - 20 - 24 - (cardRows - 1) * 8 - cardRows * 4) / (cardRows * 174);
   const cardsW = Math.round(Math.min(764 + extra * 0.5, 744 * Math.min(zByHeight, 1.2) + 70));
   const cardZoom = Math.max(0.5, Math.min(zByHeight, (cardsW - 64) / 744, 1.2));
-  const boardColW = w - 20 - playersW - cardsW - 24;
-  const cell = Math.max(56, Math.min(Math.floor(boardColW / 5.96), Math.floor((h - 290) / 5.96)));
+  const boardColW = w - 20 - cardsW - 12;
+  const cell = Math.max(56, Math.min(Math.floor((boardColW - 100) / 5.96), Math.floor((h - 340) / 5.96)));
   const card = selectedCard(S);
   const act = (a) => () => dispatch(a);
+
+  // The hand shown under the board is the one being played: yours online or against the computer, otherwise whoever's turn it is.
+  const lower = seat ?? S.cur;
+  const hands = [0, 1].map((i) => (
+    <Player key={i} S={S} idx={i} dispatch={dispatch} colW={colW} viewer={seat} wide onOpen={i === lower && !S.awaitingFirst ? () => setHand(true) : null} />
+  ));
 
   useEffect(() => {
     if (S.over) confetti({ particleCount: 160, spread: 85, origin: { y: 0.6 }, colors: ['#d9b15a', '#5b8bd6', '#4aa174', '#d8283a', '#ffffff'] });
@@ -317,25 +322,16 @@ function Board({ session, onExit, init }) {
                 {prompt}
               </div>
             )}
-            <div className="grid min-h-0 flex-1 gap-3" style={{ gridTemplateColumns: `${playersW}px minmax(0,1fr) ${cardsW}px` }}>
-              {/* Left: both players */}
-              <div className="flex min-h-0 flex-col gap-3">
-                {[0, 1].map((i) => {
-                  const idle = !S.awaitingFirst && !S.over && S.cur !== i;
-                  const player = <Player S={S} idx={i} dispatch={dispatch} colW={colW} viewer={seat} onOpen={handIdx === i ? () => setHand(true) : null} />;
-                  return idle ? (
-                    <div key={i} className="relative h-16 shrink-0">
-                      <div className={cn('group absolute inset-x-0 z-20 flex h-16 flex-col overflow-hidden rounded-xl hover:h-[640px] hover:border hover:bg-card', i === 0 ? 'top-0' : 'bottom-0')}>{player}</div>
-                    </div>
-                  ) : (
-                    <div key={i} className="flex min-h-0 flex-1 flex-col">{player}</div>
-                  );
-                })}
-              </div>
-
+            <div className="grid min-h-0 flex-1 gap-3" style={{ gridTemplateColumns: `minmax(0,1fr) ${cardsW}px` }}>
               {/* Middle: the board, with the selected card underneath */}
               <div className="flex min-h-0 flex-col gap-3">
                 <div className="flex shrink-0 flex-col gap-3">
+                  <div className="relative">
+                  {card && (
+                    <div className="compact-cards pointer-events-none absolute right-0 top-0 z-10" style={{ '--z': 0.7 }}>
+                      {card.kind === 'cf' ? <CfCard card={card} /> : <JewelCard card={card} />}
+                    </div>
+                  )}
                   <div className="board-wrap mx-auto">
                     <div className="board">
                       {S.board.map((c, i) => {
@@ -351,9 +347,15 @@ function Board({ session, onExit, init }) {
                       })}
                     </div>
                   </div>
+                  </div>
                   <div className="flex flex-col items-center gap-2">
-                    <div className="flex min-h-7 items-center -space-x-1.5" title="Scrolls on the table">
-                      {Array.from({ length: S.privBoard }, (_, i) => <Scroll key={i} size={28} />)}
+                    <div className="relative flex min-h-14 w-full items-center justify-center">
+                      <div className="absolute bottom-0 left-0 z-20 h-14 w-80 hover:h-80 hover:w-full">
+                        <div className="group flex h-full flex-col overflow-hidden rounded-xl hover:border hover:bg-card">{hands[1 - lower]}</div>
+                      </div>
+                      <div className="flex min-h-7 items-center -space-x-1.5" title="Scrolls on the table">
+                        {Array.from({ length: S.privBoard }, (_, i) => <Scroll key={i} size={28} />)}
+                      </div>
                     </div>
                     <div className="flex flex-wrap justify-center gap-1.5">
                       {action ? (
@@ -377,13 +379,7 @@ function Board({ session, onExit, init }) {
                   </div>
                 </div>
 
-                {card && (
-                  <Card className="min-h-0 flex-1 overflow-hidden p-3 border-0 bg-transparent shadow-none">
-                    <div className="compact-cards pointer-events-none" style={{ '--z': 0.7 }}>
-                      {card.kind === 'cf' ? <CfCard card={card} /> : <JewelCard card={card} />}
-                    </div>
-                  </Card>
-                )}
+                <div className="flex min-h-0 flex-1 flex-col">{hands[lower]}</div>
               </div>
 
               {/* Right: all the cards */}

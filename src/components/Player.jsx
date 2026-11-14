@@ -15,7 +15,7 @@ const Stat = ({ title, children }) => (
   <div title={title} className="flex h-7 items-center gap-1 text-xl font-extrabold leading-none">{children}</div>
 );
 
-export default function Player({ S, idx, dispatch, colW = 52, viewer = null, onOpen = null, zoomed = false }) {
+export default function Player({ S, idx, dispatch, colW = 52, viewer = null, onOpen = null, zoomed = false, wide = false }) {
   const p = S.players[idx];
   const active = idx === S.cur && !S.awaitingFirst;
   const pd = S.pending;
@@ -52,6 +52,7 @@ export default function Player({ S, idx, dispatch, colW = 52, viewer = null, onO
         </div>
       </div>
 
+      <div className={wide ? 'flex items-start gap-6' : 'contents'}>
       <div data-dest-tokens={idx} className="mt-3 flex min-h-10 items-end gap-2.5">
         {tokens.map((k) => {
           const click = canReturn ? () => dispatch({ type: 'giveBack', c: k }) : canDisc ? () => dispatch({ type: 'disc', c: k }) : canSteal && k !== 'gold' ? () => dispatch({ type: 'steal', c: k }) : null;
@@ -88,13 +89,13 @@ export default function Player({ S, idx, dispatch, colW = 52, viewer = null, onO
       </div>
 
       {p.royals.length > 0 && (
-        <>
+        <div>
           <Label>Royal cards</Label>
           <div className="text-xs">{p.royals.map((r) => `${r.pts} pts`).join(', ')}</div>
-        </>
+        </div>
       )}
       {p.cf.length > 0 && (
-        <>
+        <div>
           <Label>Counterfeiters</Label>
           <div className="flex flex-col gap-1">
             {p.cf.map((c) => (
@@ -103,10 +104,10 @@ export default function Player({ S, idx, dispatch, colW = 52, viewer = null, onO
               </span>
             ))}
           </div>
-        </>
+        </div>
       )}
 
-      <div data-dest-res={idx} data-zone="res" className="compact-cards mt-3" style={{ '--z': zoomed ? 0.9 : 0.52 }}>
+      <div data-dest-res={idx} data-zone="res" className="compact-cards mt-3" style={{ '--z': zoomed ? 0.9 : wide ? 0.68 : 0.52 }}>
         <div className="rowline wrap">
           {Array.from({ length: resCap(p) }, (_, i) => {
             const c = p.res[i];
@@ -124,6 +125,7 @@ export default function Player({ S, idx, dispatch, colW = 52, viewer = null, onO
             );
           })}
         </div>
+      </div>
       </div>
     </Card>
   );
