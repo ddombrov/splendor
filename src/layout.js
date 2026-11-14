@@ -22,7 +22,7 @@ const BOARD_W = 5.9615; // the board is this many squares wide...
 const BOARD_H = 6.692; // ...and this many tall, including its button strip
 const CARDS_W = 744; // a row of a deck and five cards is this wide at full size
 const CARDS_PAD = 38; // room the cards column needs around those rows
-const HINT_ROOM = 92; // height kept free under the board so a hint always fits
+const HINT_ROOM = 88; // height kept free under the board so a hint always fits
 const CARD_ROW_H = 174;
 const ROW_EXTRA = 10; // padding and borders each row of cards adds on top of the card height
 const GAP = 12;
@@ -46,8 +46,9 @@ export function fit(width, cmax, zmax) {
   const b = CARDS_W;
   const cCap = Math.min(cmax, 150);
   const zCap = Math.min(zmax, 1.2);
-  let c = width / (2 * a);
-  let z = width / (2 * b);
+  const share = 0.56; // the board gets a little more of the width than the cards
+  let c = (width * share) / a;
+  let z = (width * (1 - share)) / b;
   if (c > cCap) { c = cCap; z = Math.min(zCap, (width - a * c) / b); }
   else if (z > zCap) { z = zCap; c = Math.min(cCap, (width - b * z) / a); }
   return { cell: Math.max(48, Math.floor(c)), cardZoom: Math.max(0.4, Math.floor(z * 100) / 100) };
