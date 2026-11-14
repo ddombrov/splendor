@@ -54,9 +54,9 @@ export default function Player({ S, idx, dispatch, colW = 52, viewer = null, onO
   return (
     <Card
       onClick={onOpen ? (e) => { if (!e.target.closest('[data-card-id], .pile')) onOpen(); } : undefined}
-      className={cn('relative min-h-0 flex-1 gap-0 overflow-hidden border-transparent bg-transparent p-3 shadow-none', active && 'border-primary/50', onOpen && 'cursor-zoom-in hover:bg-white/5', zoomed && 'overflow-y-auto')}
+      className={cn('relative min-h-0 flex-1 gap-0 overflow-hidden border-transparent bg-transparent p-3 shadow-none', active && !zoomed && 'border-primary/50', onOpen && 'cursor-zoom-in hover:bg-white/5')}
     >
-      {active && <BorderBeam size={120} duration={9} borderWidth={2} colorFrom="#d9b15a" colorTo="#d9b15a00" />}
+      {active && !zoomed && <BorderBeam size={120} duration={9} borderWidth={2} colorFrom="#d9b15a" colorTo="#d9b15a00" />}
       <div className="flex flex-wrap items-center justify-between gap-x-2 gap-y-1">
         <div className="flex items-center gap-2">
           <h3 className="text-base font-bold">{p.name}</h3>
@@ -76,7 +76,7 @@ export default function Player({ S, idx, dispatch, colW = 52, viewer = null, onO
         </div>
       </div>
 
-      <div className={wide ? 'flex items-start gap-6' : 'contents'}>
+      <div className={wide ? cn('flex items-start gap-6', zoomed && 'flex-wrap') : 'contents'}>
       <div data-dest-tokens={idx} className="mt-3 flex min-h-10 items-end gap-2.5">
         {tokens.map((k) => {
           const click = canReturn ? () => dispatch({ type: 'giveBack', c: k }) : canDisc ? () => dispatch({ type: 'disc', c: k }) : canSteal && k !== 'gold' ? () => dispatch({ type: 'steal', c: k }) : null;

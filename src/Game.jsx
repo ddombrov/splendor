@@ -455,13 +455,13 @@ function Board({ session, onExit, init }) {
       {createPortal(<Flights flights={flights} onLanded={landed} />, document.body)}
       {hand != null && (
         <Dialog open onOpenChange={(o) => !o && setHand(null)}>
-          <DialogContent className="handboard flex h-[88vh] flex-col gap-2 p-10 sm:max-w-5xl">
-            <DialogHeader>
-              <DialogTitle>{S.players[hand].name}</DialogTitle>
+          <DialogContent className="handboard flex max-h-[88vh] flex-col gap-2 p-10 sm:max-w-5xl">
+            <DialogHeader className="sr-only">
+              <DialogTitle className="sr-only">{S.players[hand].name}</DialogTitle>
               <DialogDescription className="sr-only">Hand</DialogDescription>
             </DialogHeader>
             <div className="flex min-h-0 flex-1 flex-col">
-              <Player S={S} idx={hand} dispatch={dispatch} colW={110} viewer={seat} zoomed />
+              <Player S={S} idx={hand} dispatch={dispatch} colW={110} viewer={seat} zoomed wide />
             </div>
           </DialogContent>
         </Dialog>
