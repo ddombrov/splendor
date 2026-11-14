@@ -245,24 +245,28 @@ function Board({ session, onExit, init }) {
   const colW = 64;
   const cardRows = S.exp ? 5 : 4;
   const zByHeight = (h - 20 - 24 - (cardRows - 1) * 8 - cardRows * 4) / (cardRows * 174);
-  const sideW = 190;
+  const sideW = 230;
   const cardsW = Math.round(Math.min(600 + extra * 0.5, 744 * Math.min(zByHeight, 1.2) + 70));
   const cardZoom = Math.max(0.5, Math.min(zByHeight, (cardsW - 64) / 744, 1.2));
-  const boardColW = w - 20 - 3 * 12 - 2 * sideW - cardsW;
+  const boardColW = w - 20 - 2 * 12 - sideW - cardsW;
   const cell = Math.max(56, Math.min(Math.floor(boardColW / 5.9615), Math.floor((h - 60) / 6.673)));
   const card = selectedCard(S);
   const act = (a) => () => dispatch(a);
 
-  // Each player sits beside the board with a vertical inventory. Hovering one lays their full hand over the board.
-  const fullW = boardColW + 12;
-  const sidePlayer = (i) => (
-    <div key={i} className="group relative flex min-h-0 flex-col self-start">
-      <Player S={S} idx={i} dispatch={dispatch} colW={64} viewer={seat} summary />
-      <div className={cn('handboard absolute top-0 z-30 hidden p-3.5 group-hover:block', i === 0 ? 'left-full' : 'right-full')} style={{ width: fullW }}>
-        <div className="flex flex-col" style={{ width: 938, zoom: (fullW - 28) / 938 }}>
-          <Player S={S} idx={i} dispatch={dispatch} colW={64} viewer={seat} wide />
+  // Both players sit in one column left of the board, equal in height. Hovering one lets it take over the whole column.
+  const [hovered, setHovered] = useState(null);
+  const playersColumn = (
+    <div className="relative flex min-h-0 flex-col gap-3" onMouseLeave={() => setHovered(null)}>
+      {[0, 1].map((i) => (
+        <div key={i} className="flex min-h-0 flex-1 flex-col" onMouseEnter={() => setHovered(i)}>
+          <Player S={S} idx={i} dispatch={dispatch} colW={64} viewer={seat} summary />
         </div>
-      </div>
+      ))}
+      {hovered != null && (
+        <div className="absolute inset-0 z-20 flex flex-col">
+          <Player S={S} idx={hovered} dispatch={dispatch} colW={64} viewer={seat} summary expanded />
+        </div>
+      )}
     </div>
   );
 
@@ -308,12 +312,13 @@ function Board({ session, onExit, init }) {
 
   // The buttons that sit in the slots along the bottom of the board.
   const extras = [
-    pd?.type === 'multi' && { label: `Confirm ${pd.sel.length} token${pd.sel.length === 1 ? '' : 's'}`, onClick: act({ type: 'confirmMulti' }), span: 2, go: true },
+    pd?.type === 'multi' && { label: `Confirm ${pd.sel.length} token${pd.sel.length === 1 ? '' : 's'}`, onClick: act({ type: 'confirmMulti' }), go: true },
     (['freeReserve', 'freeCf'].includes(pd?.type) || (pd?.type === 'pick' && pd.plus)) && { label: 'Skip', onClick: act({ type: 'skip' }) },
   ].filter(Boolean);
+  const twoUp = !!(extras.length || action);
   const buttons = extras.length ? extras : action ? [
-    ...(action !== 'priv' ? [{ label: { take: 'Take tokens', buy: 'Buy card', reserve: 'Reserve card', refill: 'Replenish' }[action], disabled: !canComplete, onClick: complete, span: 2, go: true }] : []),
-    { label: 'Cancel', disabled: !idle, onClick: cancel, span: action !== 'priv' ? 2 : 4 },
+    ...(action !== 'priv' ? [{ label: { take: 'Take tokens', buy: 'Buy card', reserve: 'Reserve card', refill: 'Replenish' }[action], disabled: !canComplete, onClick: complete, go: true }] : []),
+    { label: 'Cancel', disabled: !idle, onClick: cancel, col: action !== 'priv' ? undefined : 2 },
   ] : [
     { label: 'Replenish', disabled: !(idle && S.bag.length), onClick: () => choose('refill') },
     { label: 'Buy', disabled: !idle, onClick: () => choose('buy') },
@@ -351,11 +356,11 @@ function Board({ session, onExit, init }) {
                 </DropdownMenuContent>
               </DropdownMenu>
             </div>
-            <div className="grid min-h-0 flex-1 gap-3" style={{ gridTemplateColumns: `${sideW}px minmax(0,1fr) ${sideW}px ${cardsW}px` }}>
-              {sidePlayer(0)}
+            <div className="grid min-h-0 flex-1 gap-3" style={{ gridTemplateColumns: `${sideW}px minmax(0,1fr) ${cardsW}px` }}>
+              {playersColumn}
               {/* Middle: the board, with the selected card underneath */}
               <div className="flex min-h-0 flex-col items-center gap-3">
-                <div className="board-wrap">
+                <div className={cn('board-wrap', twoUp && 'two')}>
                   <div className="board">
                     {S.board.map((c, i) => {
                       let cls = selIdx.includes(i) ? 'sel' : '';
@@ -369,9 +374,9 @@ function Board({ session, onExit, init }) {
                       );
                     })}
                   </div>
-                  <div className="boardbtns" style={{ fontSize: cell * 0.125 }}>
+                  <div className={cn('boardbtns', twoUp && 'two')} style={{ fontSize: cell * 0.125 }}>
                     {buttons.map((b) => (
-                      <button key={b.label} type="button" disabled={b.disabled} onClick={b.onClick} className={cn('woodbtn', b.go && 'go')} style={{ gridColumn: `span ${b.span ?? 1}` }}>
+                      <button key={b.label} type="button" disabled={b.disabled} onClick={b.onClick} className={cn('woodbtn', b.go && 'go')} style={b.col ? { gridColumn: b.col } : undefined}>
                         {b.go && !b.disabled && <CompleteIcon size={cell * 0.18} />}{b.label}
                       </button>
                     ))}
@@ -393,8 +398,6 @@ function Board({ session, onExit, init }) {
                   </div>
                 )}
               </div>
-
-              {sidePlayer(1)}
 
               {/* Right: all the cards */}
               <Card data-zone="pyr" className="compact-cards min-h-0 gap-2 overflow-hidden p-3 border-0 bg-transparent shadow-none" style={{ '--z': cardZoom }}>

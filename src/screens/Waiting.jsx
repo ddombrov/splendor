@@ -69,9 +69,7 @@ export function QuickMatch({ onMatched, onCancel, onPlayComputer }) {
       <GemRow size={34} />
       <div className="space-y-1">
         <h1 className="text-2xl font-bold">{slow ? 'No one has joined yet' : 'Looking for an opponent'}</h1>
-        <p className="text-sm text-muted-foreground">
-          {slow ? 'You can keep waiting, or play the computer now.' : 'Quick match is always the base game, with the same cards for both players.'}
-        </p>
+        {slow && <p className="text-sm text-muted-foreground">You can keep waiting, or play the computer now.</p>}
       </div>
       <div className="flex items-center gap-3 text-3xl font-extrabold tabular-nums">
         <Loader2 className="size-7 animate-spin text-primary" />

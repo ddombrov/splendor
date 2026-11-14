@@ -168,3 +168,5 @@
 .woodbtn:hover:not(:disabled) { background: rgba(94, 50, 28, 0.16); }
 .woodbtn:disabled { opacity: 0.35; cursor: default; }
 .woodbtn.go { background: #e0b64a; color: #2a1706; }
+.stage .board-wrap.two { background-image: url(/boards/wooden-board-two-buttons.svg); }
+.boardbtns.two { grid-template-columns: repeat(2, 1fr); gap: calc(var(--cell) * 0.0962); }
