@@ -499,7 +499,7 @@ function Board({ session, onExit, init }) {
         <DialogContent className="sm:max-w-md" showCloseButton={false}>
           <DialogHeader>
             <DialogTitle>Who goes first?</DialogTitle>
-            <DialogDescription>The other player starts with a scroll.</DialogDescription>
+            <DialogDescription className="sr-only">Choose who goes first</DialogDescription>
           </DialogHeader>
           {online && seat !== 0 ? (
             <p className="flex items-center gap-2 text-sm text-muted-foreground"><Loader2 className="size-4 animate-spin" /> Waiting for Player 1 to choose.</p>
@@ -518,7 +518,7 @@ function Board({ session, onExit, init }) {
                 ))}
               </div>
               <Button variant="secondary" className="w-full" onClick={() => setCoin({ winner: crypto.getRandomValues(new Uint8Array(1))[0] & 1 })}>
-                Flip a coin
+                <Pic name="coin" size={22} /> Flip a coin
               </Button>
             </div>
           )}

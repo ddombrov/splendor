@@ -175,3 +175,8 @@
 
 /* the felt box the hints are written on */
 .hintbox { background-image: url(/boards/hint-box.svg); background-size: 100% 100%; background-repeat: no-repeat; }
+
+/* the flipped coin is the coin picture itself */
+.coinbox .coin { width: 150px; height: 150px; }
+.coinface { background: none; border: 0; border-radius: 0; object-fit: contain; width: 100%; height: 100%; }
+.coinface.back { background: none; border: 0; transform: rotateY(180deg) scaleX(-1); }
