@@ -245,8 +245,8 @@ function Board({ session, onExit, init }) {
   const colW = 64;
   const cardRows = S.exp ? 5 : 4;
   const zByHeight = (h - 20 - 24 - (cardRows - 1) * 8 - cardRows * 4) / (cardRows * 174);
-  const sideW = 230;
-  const cardsW = Math.round(Math.min(600 + extra * 0.5, 744 * Math.min(zByHeight, 1.2) + 70));
+  const sideW = 210;
+  const cardsW = Math.round(Math.min(764 + extra * 0.5, 744 * Math.min(zByHeight, 1.2) + 70));
   const cardZoom = Math.max(0.5, Math.min(zByHeight, (cardsW - 64) / 744, 1.2));
   const boardColW = w - 20 - 2 * 12 - sideW - cardsW;
   const cell = Math.max(56, Math.min(Math.floor(boardColW / 5.9615), Math.floor((h - 60) / 6.673)));
