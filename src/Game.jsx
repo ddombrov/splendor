@@ -18,6 +18,7 @@ import { JewelCard, CfCard, RoyalCard, CardBack } from './components/Cards.jsx';
 import Player from './components/Player.jsx';
 import Rules from './components/Rules.jsx';
 import { TokenArt, Scroll, Gem, Mini, CompleteIcon, Pic } from './components/Art.jsx';
+import { computeLayout } from './layout.js';
 import { Flights, diffFlights, takeSnapshot } from './motion.jsx';
 import CoinFlip from './components/CoinFlip.jsx';
 
@@ -75,22 +76,17 @@ const ButtonRow = ({ children, className }) => (
   <div className={cn('flex flex-wrap justify-center gap-2', className)}>{children}</div>
 );
 
-// The game is laid out on a stage that matches the window exactly. The scale is chosen so a
-// 1560 by 900 design always fits, and any extra width or height is shared out by the layout.
-const MIN_W = 1560;
-const MIN_H = 900;
-function useFitScale() {
-  const read = () => {
-    const k = Math.max(0.4, Math.min(window.innerWidth / MIN_W, window.innerHeight / MIN_H));
-    return { k, w: window.innerWidth / k, h: window.innerHeight / k };
-  };
-  const [fit, setFit] = useState(read);
+// The window size, kept up to date. src/layout.js turns it into the layout.
+function useViewport() {
+  const read = () => ({ vw: window.innerWidth, vh: window.innerHeight });
+  const [vp, setVp] = useState(read);
   useEffect(() => {
-    const onResize = () => setFit(read());
+    const onResize = () => setVp(read());
     window.addEventListener('resize', onResize);
-    return () => window.removeEventListener('resize', onResize);
+    window.addEventListener('orientationchange', onResize);
+    return () => { window.removeEventListener('resize', onResize); window.removeEventListener('orientationchange', onResize); };
   }, []);
-  return fit;
+  return vp;
 }
 
 const freshGame = (session) => {
@@ -132,7 +128,7 @@ const ago = (t) => {
 };
 
 function Board({ session, onExit, init }) {
-  const { k, w, h } = useFitScale();
+  const vp = useViewport();
   const { exp } = session;
   const online = session.mode === 'online';
   const vsAi = session.mode === 'ai';
@@ -262,15 +258,9 @@ function Board({ session, onExit, init }) {
   // spare width goes to the players, the cards and the board in that order of need.
   const prompt = statusText(S);
   const perk = perkText(inspect);
-  const extra = Math.max(0, w - MIN_W);
+  const { mode, k, w, h, sideW, cardsW, cardZoom, boardColW, cell } = computeLayout({ ...vp, exp: S.exp });
+  const tall = mode === 'tall';
   const colW = 64;
-  const cardRows = S.exp ? 5 : 4;
-  const zByHeight = (h - 20 - 24 - (cardRows - 1) * 8 - cardRows * 4) / (cardRows * 174);
-  const sideW = 210;
-  const cardsW = Math.round(Math.min(764 + extra * 0.5, 744 * Math.min(zByHeight, 1.2) + 70));
-  const cardZoom = Math.max(0.5, Math.min(zByHeight, (cardsW - 64) / 744, 1.2));
-  const boardColW = w - 20 - 2 * 12 - sideW - cardsW;
-  const cell = Math.max(56, Math.min(Math.floor(boardColW / 5.9615), Math.floor((h - 32 - 130) / 6.692)));
   const card = selectedCard(S);
   const act = (a) => () => dispatch(a);
 
@@ -279,16 +269,21 @@ function Board({ session, onExit, init }) {
   // While you must steal a token, the opponent's hand stays open so you can pick from it.
   const shownHand = pd?.type === 'steal' && myTurn ? 1 - S.cur : hovered;
   const playersColumn = (
-    <div className="relative flex min-h-0 flex-col gap-3" onMouseLeave={() => setHovered(null)}>
+    <div className={cn('relative min-h-0', tall ? 'order-2 grid grid-cols-2 gap-3' : 'flex flex-col gap-3')} onMouseLeave={() => setHovered(null)}>
       {[0, 1].map((i) => (
         <div key={i} className="flex min-h-0 flex-1 flex-col" onMouseEnter={() => setHovered(i)}>
-          <Player S={S} idx={i} dispatch={dispatch} colW={64} viewer={seat} summary />
+          <Player S={S} idx={i} dispatch={dispatch} colW={colW} viewer={seat} summary />
         </div>
       ))}
       {shownHand != null && (
-        <div className="handboard absolute z-30 p-4" style={{ left: -10, top: -10, height: 'calc(100% + 20px)', width: sideW + 12 + boardColW + 20, backgroundColor: '#17403a' }}>
-          <div className="flex h-full flex-col" style={{ width: sideW + 12 + boardColW - 12 }}>
-            <Player S={S} idx={shownHand} dispatch={dispatch} colW={Math.floor((sideW + 12 + boardColW - 12 - 6 * 12) / 7)} viewer={seat} zoomed wide />
+        <div
+          className="handboard absolute z-30 p-4"
+          style={tall
+            ? { left: -10, right: -10, bottom: -10, height: `calc(100% + ${Math.round(cell * 6.692) + 32}px)`, backgroundColor: '#17403a' }
+            : { left: -10, top: -10, height: 'calc(100% + 20px)', width: sideW + 12 + boardColW + 20, backgroundColor: '#17403a' }}
+        >
+          <div className="flex h-full flex-col" style={{ width: tall ? '100%' : sideW + 12 + boardColW - 12 }}>
+            <Player S={S} idx={shownHand} dispatch={dispatch} colW={Math.floor(((tall ? w - 20 : sideW + 12 + boardColW) - 12 - 6 * 12) / 7)} viewer={seat} zoomed wide />
             {pd?.type === 'steal' && prompt && (
               <div className="hintbox mt-3 flex min-h-[90px] shrink-0 items-center px-8 py-5 text-base font-bold leading-snug text-white">{prompt}</div>
             )}
@@ -359,10 +354,10 @@ function Board({ session, onExit, init }) {
 
   return (
     <>
-      <div className="fixed inset-0 overflow-hidden">
+      <div className={cn('fixed inset-0', tall ? 'overflow-y-auto overflow-x-hidden' : 'overflow-hidden')}>
         <div>
-          <div className="stage relative flex flex-col gap-2 p-2.5" onClick={(e) => { if (!e.target.closest('[data-card-id]')) setInspect(null); }} style={{ width: w, height: h, transform: `scale(${k})`, transformOrigin: '0 0', '--cell': `${cell}px` }}>
-            <div className="absolute right-3 top-3 z-30 flex items-center gap-1.5">
+          <div className="stage relative flex flex-col gap-2 p-2.5" onClick={(e) => { if (!e.target.closest('[data-card-id]')) setInspect(null); }} style={tall ? { width: w, minHeight: h, zoom: k, '--cell': `${cell}px` } : { width: w, height: h, transform: `scale(${k})`, transformOrigin: '0 0', '--cell': `${cell}px` }}>
+            <div className={cn('z-30 flex items-center gap-1.5', tall ? 'justify-end' : 'absolute right-3 top-3')}>
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
                   <Button variant="secondary" className="h-11 gap-2.5 px-5 text-base"><Pic name="settings" size={26} /> Settings <ChevronDown className="size-5 opacity-60" /></Button>
@@ -390,10 +385,10 @@ function Board({ session, onExit, init }) {
                 </DropdownMenuContent>
               </DropdownMenu>
             </div>
-            <div className="grid min-h-0 flex-1 gap-3" style={{ gridTemplateColumns: `${sideW}px minmax(0,1fr) ${cardsW}px` }}>
+            <div className={cn('grid gap-3', !tall && 'min-h-0 flex-1')} style={{ gridTemplateColumns: tall ? 'minmax(0,1fr)' : `${sideW}px minmax(0,1fr) ${cardsW}px` }}>
               {playersColumn}
               {/* Middle: the board, with the selected card underneath */}
-              <div className="flex min-h-0 flex-col items-center gap-3">
+              <div className={cn('flex min-h-0 flex-col items-center gap-3', tall && 'order-1')}>
                 <div className={cn('board-wrap', slots)}>
                   <div className="board">
                     {S.board.map((c, i) => {
@@ -428,7 +423,7 @@ function Board({ session, onExit, init }) {
               </div>
 
               {/* Right: all the cards */}
-              <Card data-zone="pyr" className="compact-cards min-h-0 -my-0.5 justify-between gap-2 overflow-hidden p-0 border-0 bg-transparent shadow-none" style={{ '--z': cardZoom }}>
+              <Card data-zone="pyr" className={cn('compact-cards min-h-0 gap-3 overflow-hidden p-0 border-0 bg-transparent shadow-none', tall ? 'order-3' : '-mt-0.5')} style={{ '--z': cardZoom }}>
                 <div className="rowline">
                   {S.royals.map((r, i) => (
                     <RoyalCard key={r.id} card={r} glow={pd?.type === 'royal'} onClick={look(r, () => dispatch({ type: 'royal', i }))} />
