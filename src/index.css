@@ -58,4 +58,6 @@
 }
 
 /* the page sits on a blue paper texture; the dark colour shows while it loads */
+html, body { height: 100%; overflow: hidden; overscroll-behavior: none; }
 body { background: #0f1218 url(/backgrounds/blue.jpg) center / cover no-repeat fixed; }
+#root { height: 100%; }

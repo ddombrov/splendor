@@ -402,7 +402,7 @@ function Board({ session, onExit, init }) {
 
   return (
     <>
-      <div ref={scrollRef} className={cn('fixed inset-0', tall ? 'overflow-y-auto overflow-x-hidden' : 'overflow-hidden')}>
+      <div ref={scrollRef} className={cn('fixed inset-0', tall ? 'overflow-y-auto overflow-x-hidden overscroll-contain' : 'overflow-hidden')}>
         <div>
           <div className="stage relative flex flex-col gap-2 p-2.5" onClick={(e) => { if (!e.target.closest('[data-card-id]')) setInspect(null); }} style={tall ? { width: w, minHeight: h, zoom: k, '--cell': `${cell}px` } : { width: w, height: h, transform: `scale(${k})`, transformOrigin: '0 0', '--cell': `${cell}px` }}>
             <div className={cn('z-30 flex items-center gap-1.5', tall ? 'justify-end' : 'absolute right-3 top-3')} > 

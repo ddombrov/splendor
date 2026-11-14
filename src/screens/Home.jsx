@@ -92,19 +92,19 @@ export default function Home({ onStart, onJoined, onQuick }) {
   // Playing on one device has nothing to choose, so it starts straight away.
   const pick = (key) => (key === 'quick' ? onQuick() : key === 'device' ? onStart({ mode: 'device', exp, source: 'random' }) : setOpen(key));
   return (
-    <div className="fixed inset-0 overflow-auto">
-      <div className="mx-auto flex min-h-full max-w-2xl flex-col items-center justify-center gap-8 px-6 py-10">
-        <div className="space-y-4 text-center">
+    <div className="fixed inset-0 overflow-y-auto overflow-x-hidden overscroll-contain">
+      <div className="mx-auto flex min-h-full max-w-2xl flex-col items-center justify-center gap-8 px-6 py-10 [@media(max-height:520px)]:max-w-4xl [@media(max-height:520px)]:gap-3 [@media(max-height:520px)]:py-3">
+        <div className="space-y-4 text-center [@media(max-height:520px)]:space-y-1">
           <GemRow size={44} />
-          <h1 className="text-5xl font-extrabold tracking-tight">Splendor Duel</h1>
+          <h1 className="text-5xl font-extrabold tracking-tight [@media(max-height:520px)]:text-3xl">Splendor Duel</h1>
                   </div>
-        <div className="grid w-full gap-3 sm:grid-flow-col sm:grid-cols-2 sm:grid-rows-2">
+        <div className="grid w-full gap-3 sm:grid-flow-col sm:grid-cols-2 sm:grid-rows-2 [@media(max-height:520px)]:grid-flow-row [@media(max-height:520px)]:grid-cols-4 [@media(max-height:520px)]:grid-rows-1 [@media(max-height:520px)]:gap-2">
           {MODES.map(({ key, pic, title }) => (
             <button
               key={key}
               type="button"
               onClick={() => pick(key)}
-              className={`flex items-center gap-4 rounded-xl border bg-card p-4 text-left transition hover:border-primary hover:bg-accent`}
+              className={`flex items-center gap-4 rounded-xl border bg-card p-4 text-left [@media(max-height:520px)]:flex-col [@media(max-height:520px)]:gap-1 [@media(max-height:520px)]:p-2 [@media(max-height:520px)]:text-center [@media(max-height:520px)]:text-sm transition hover:border-primary hover:bg-accent`}
             >
               <Pic name={pic} size={44} />
               <span className="font-semibold">{title}</span>
