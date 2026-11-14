@@ -261,7 +261,7 @@ function Board({ session, onExit, init }) {
   const cardsW = Math.round(Math.min(764 + extra * 0.5, 744 * Math.min(zByHeight, 1.2) + 70));
   const cardZoom = Math.max(0.5, Math.min(zByHeight, (cardsW - 64) / 744, 1.2));
   const boardColW = w - 20 - 2 * 12 - sideW - cardsW;
-  const cell = Math.max(56, Math.min(Math.floor(boardColW / 5.9615), Math.floor((h - 60) / 6.673)));
+  const cell = Math.max(56, Math.min(Math.floor(boardColW / 5.9615), Math.floor((h - 32 - 130) / 6.692)));
   const card = selectedCard(S);
   const act = (a) => () => dispatch(a);
 
@@ -405,18 +405,9 @@ function Board({ session, onExit, init }) {
                   </div>
                 </div>
 
-                {(
-                  <div className="flex min-h-0 w-full flex-1 items-stretch gap-4">
-                    {card && (
-                      <div className="compact-cards pointer-events-none shrink-0" style={{ '--z': 0.7 }}>
-                        {card.kind === 'cf' ? <CfCard card={card} /> : <JewelCard card={card} />}
-                      </div>
-                    )}
-                    {(
-                      <div className={cn('hintbox flex min-w-0 flex-1 items-center px-8 py-6 text-xl font-extrabold leading-snug', S.toast ? 'text-amber-300' : 'text-white')}>
-                        {prompt}
-                      </div>
-                    )}
+                {prompt && (
+                  <div className={cn('hintbox flex min-h-[110px] w-full flex-1 items-center px-8 py-6 text-xl font-extrabold leading-snug', S.toast ? 'text-amber-300' : 'text-white')}>
+                    {prompt}
                   </div>
                 )}
               </div>
