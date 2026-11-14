@@ -134,7 +134,7 @@
 .card.royal { background: url(/cards/front-yellow.svg) center / 100% 100% no-repeat; }
 
 /* the board is the supplied wooden picture: its 5 by 5 sockets line up with the token cells */
-.stage .board-wrap { padding: calc(var(--cell) * 0.327); border: 0; border-radius: 0; background: url(/boards/wooden-board.svg) center / 100% 100% no-repeat; }
+.stage .board-wrap { position: relative; padding: calc(var(--cell) * 0.327) calc(var(--cell) * 0.327) calc(var(--cell) * 1.0385); border: 0; border-radius: 0; background: url(/boards/wooden-board-actions.svg) center / 100% 100% no-repeat; }
 .stage .board { gap: calc(var(--cell) * 0.0769); }
 .stage .cell { background: transparent; box-shadow: none; }
 
@@ -160,3 +160,11 @@
 
 /* the felt tray a hand is shown on when it is hovered or opened */
 .handboard { background-image: url(/boards/player-hand-board.svg); background-size: 100% 100%; background-repeat: no-repeat; background-position: center; border: 0; box-shadow: none; }
+
+/* buttons and scrolls sit in the slots carved into the bottom of the board */
+.boardbtns { position: absolute; left: calc(var(--cell) * 0.327); top: calc(var(--cell) * 5.846); width: calc(var(--cell) * 3.173); height: calc(var(--cell) * 0.5); display: grid; grid-template-columns: repeat(4, 1fr); gap: calc(var(--cell) * 0.0865); }
+.boardscrolls { position: absolute; left: calc(var(--cell) * 3.942); top: calc(var(--cell) * 5.846); width: calc(var(--cell) * 1.692); height: calc(var(--cell) * 0.5); display: flex; align-items: center; justify-content: center; }
+.woodbtn { display: flex; align-items: center; justify-content: center; gap: 4px; min-width: 0; border-radius: 6px; background: transparent; color: #4a2612; font-weight: 700; line-height: 1.05; text-align: center; cursor: pointer; }
+.woodbtn:hover:not(:disabled) { background: rgba(94, 50, 28, 0.16); }
+.woodbtn:disabled { opacity: 0.35; cursor: default; }
+.woodbtn.go { background: #e0b64a; color: #2a1706; }

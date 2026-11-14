@@ -234,7 +234,6 @@ function Board({ session, onExit, init }) {
   const myTurn = seat == null || (S.awaitingFirst ? seat === 0 : S.cur === seat);
   const [showRules, setShowRules] = useState(false);
   const [showLog, setShowLog] = useState(false);
-  const [hand, setHand] = useState(null); // index of the player whose hand is open full screen
   const [ask, setAsk] = useState(null);
   const [lastAsk, setLastAsk] = useState(null);
   const [picked, setPicked] = useState(null);
@@ -246,17 +245,25 @@ function Board({ session, onExit, init }) {
   const colW = 64;
   const cardRows = S.exp ? 5 : 4;
   const zByHeight = (h - 20 - 24 - (cardRows - 1) * 8 - cardRows * 4) / (cardRows * 174);
-  const cardsW = Math.round(Math.min(764 + extra * 0.5, 744 * Math.min(zByHeight, 1.2) + 70));
+  const sideW = 190;
+  const cardsW = Math.round(Math.min(600 + extra * 0.5, 744 * Math.min(zByHeight, 1.2) + 70));
   const cardZoom = Math.max(0.5, Math.min(zByHeight, (cardsW - 64) / 744, 1.2));
-  const boardColW = w - 20 - cardsW - 12;
-  const cell = Math.max(56, Math.min(Math.floor((boardColW - 100) / 5.96), Math.floor((h - 330) / 5.96)));
+  const boardColW = w - 20 - 3 * 12 - 2 * sideW - cardsW;
+  const cell = Math.max(56, Math.min(Math.floor(boardColW / 5.9615), Math.floor((h - 60) / 6.673)));
   const card = selectedCard(S);
   const act = (a) => () => dispatch(a);
 
-  // The hand shown under the board is the one being played: yours online or against the computer, otherwise whoever's turn it is.
-  const lower = seat ?? S.cur;
-  const handOf = (i, summary) => (
-    <Player S={S} idx={i} dispatch={dispatch} colW={colW} viewer={seat} wide summary={summary} onOpen={S.awaitingFirst ? null : () => setHand(i)} />
+  // Each player sits beside the board with a vertical inventory. Hovering one lays their full hand over the board.
+  const fullW = boardColW + 12;
+  const sidePlayer = (i) => (
+    <div key={i} className="group relative flex min-h-0 flex-col self-start">
+      <Player S={S} idx={i} dispatch={dispatch} colW={64} viewer={seat} summary />
+      <div className={cn('handboard absolute top-0 z-30 hidden p-3.5 group-hover:block', i === 0 ? 'left-full' : 'right-full')} style={{ width: fullW }}>
+        <div className="flex flex-col" style={{ width: 938, zoom: (fullW - 28) / 938 }}>
+          <Player S={S} idx={i} dispatch={dispatch} colW={64} viewer={seat} wide />
+        </div>
+      </div>
+    </div>
   );
 
   useEffect(() => {
@@ -299,6 +306,21 @@ function Board({ session, onExit, init }) {
   const selIdx = pd?.type === 'multi' ? pd.sel : S.goldSel != null ? [...S.sel, S.goldSel] : S.sel;
   const shownAsk = ask || lastAsk;
 
+  // The buttons that sit in the slots along the bottom of the board.
+  const extras = [
+    pd?.type === 'multi' && { label: `Confirm ${pd.sel.length} token${pd.sel.length === 1 ? '' : 's'}`, onClick: act({ type: 'confirmMulti' }), span: 2, go: true },
+    (['freeReserve', 'freeCf'].includes(pd?.type) || (pd?.type === 'pick' && pd.plus)) && { label: 'Skip', onClick: act({ type: 'skip' }) },
+  ].filter(Boolean);
+  const buttons = extras.length ? extras : action ? [
+    ...(action !== 'priv' ? [{ label: { take: 'Take tokens', buy: 'Buy card', reserve: 'Reserve card', refill: 'Replenish' }[action], disabled: !canComplete, onClick: complete, span: 2, go: true }] : []),
+    { label: 'Cancel', disabled: !idle, onClick: cancel, span: action !== 'priv' ? 2 : 4 },
+  ] : [
+    { label: 'Replenish', disabled: !(idle && S.bag.length), onClick: () => choose('refill') },
+    { label: 'Buy', disabled: !idle, onClick: () => choose('buy') },
+    { label: 'Reserve', disabled: !(idle && S.board.includes('gold') && p.res.length < resCap(p)), onClick: () => choose('reserve') },
+    { label: 'Use privilege', disabled: !(idle && (p.priv > 0 || S.mode === 'priv2')), onClick: () => choose('priv') },
+  ];
+
   return (
     <>
       <div className="fixed inset-0 overflow-hidden">
@@ -329,69 +351,50 @@ function Board({ session, onExit, init }) {
                 </DropdownMenuContent>
               </DropdownMenu>
             </div>
-            {prompt && (
-              <div className={cn('absolute left-1/2 top-3 z-30 max-w-[55%] -translate-x-1/2 truncate rounded-full border bg-card/95 px-4 py-1.5 text-xs shadow-lg backdrop-blur', S.toast ? 'border-amber-500/50 text-amber-300' : 'text-foreground')}>
-                {prompt}
-              </div>
-            )}
-            <div className="grid min-h-0 flex-1 gap-3" style={{ gridTemplateColumns: `minmax(0,1fr) ${cardsW}px` }}>
+            <div className="grid min-h-0 flex-1 gap-3" style={{ gridTemplateColumns: `${sideW}px minmax(0,1fr) ${sideW}px ${cardsW}px` }}>
+              {sidePlayer(0)}
               {/* Middle: the board, with the selected card underneath */}
-              <div className="flex min-h-0 flex-col gap-3">
-                <div className="flex shrink-0 flex-col gap-3">
-                  <div className="relative">
-                  {card && (
-                    <div className="compact-cards pointer-events-none absolute right-0 top-0 z-10" style={{ '--z': 0.7 }}>
-                      {card.kind === 'cf' ? <CfCard card={card} /> : <JewelCard card={card} />}
-                    </div>
-                  )}
-                  <div className="board-wrap mx-auto">
-                    <div className="board">
-                      {S.board.map((c, i) => {
-                        let cls = selIdx.includes(i) ? 'sel' : '';
-                        if (pd?.type === 'pick') cls += c === pd.color || (pd.plus && c !== 'gold' && pd.left === 2) ? ' hl' : ' dim';
-                        else if (pd?.type === 'multi') cls += c === 'gold' ? ' dim' : '';
-                        else if (pd) cls += ' dim';
-                        return (
-                          <div className={cn('cell', selIdx.includes(i) && 'picked')} data-cell={i} key={i}>
-                            {c && <Token kind={c} cls={cls} size={Math.round(cell * 0.85)} onClick={() => dispatch({ type: 'tok', i })} />}
-                          </div>
-                        );
-                      })}
-                    </div>
+              <div className="flex min-h-0 flex-col items-center gap-3">
+                <div className="board-wrap">
+                  <div className="board">
+                    {S.board.map((c, i) => {
+                      let cls = selIdx.includes(i) ? 'sel' : '';
+                      if (pd?.type === 'pick') cls += c === pd.color || (pd.plus && c !== 'gold' && pd.left === 2) ? ' hl' : ' dim';
+                      else if (pd?.type === 'multi') cls += c === 'gold' ? ' dim' : '';
+                      else if (pd) cls += ' dim';
+                      return (
+                        <div className={cn('cell', selIdx.includes(i) && 'picked')} data-cell={i} key={i}>
+                          {c && <Token kind={c} cls={cls} size={Math.round(cell * 0.85)} onClick={() => dispatch({ type: 'tok', i })} />}
+                        </div>
+                      );
+                    })}
                   </div>
+                  <div className="boardbtns" style={{ fontSize: cell * 0.125 }}>
+                    {buttons.map((b) => (
+                      <button key={b.label} type="button" disabled={b.disabled} onClick={b.onClick} className={cn('woodbtn', b.go && 'go')} style={{ gridColumn: `span ${b.span ?? 1}` }}>
+                        {b.go && !b.disabled && <CompleteIcon size={cell * 0.18} />}{b.label}
+                      </button>
+                    ))}
                   </div>
-                  <div className="flex flex-col items-center gap-2">
-                    <div className="flex min-h-7 items-center -space-x-1.5" title="Scrolls on the table">
-                      {Array.from({ length: S.privBoard }, (_, i) => <Scroll key={i} size={28} />)}
-                    </div>
-                    <div className="flex flex-wrap justify-center gap-1.5">
-                      {action ? (
-                        <>
-                          {action !== 'priv' && (
-                            <Button size="sm" disabled={!canComplete} onClick={complete}>{canComplete && <CompleteIcon size={16} />}{{ take: 'Take tokens', buy: 'Buy card', reserve: 'Reserve card', refill: 'Replenish' }[action]}</Button>
-                          )}
-                          <Button size="sm" variant="outline" disabled={!idle} onClick={cancel}>Cancel</Button>
-                        </>
-                      ) : (
-                        <>
-                          <Button size="sm" variant="outline" disabled={!(idle && S.bag.length)} onClick={() => choose('refill')}>Replenish</Button>
-                          <Button size="sm" variant="outline" disabled={!idle} onClick={() => choose('buy')}>Buy</Button>
-                          <Button size="sm" variant="outline" disabled={!(idle && S.board.includes('gold') && p.res.length < resCap(p))} onClick={() => choose('reserve')}>Reserve</Button>
-                          <Button size="sm" variant="outline" disabled={!(idle && (p.priv > 0 || S.mode === 'priv2'))} onClick={() => choose('priv')}>Use privilege</Button>
-                        </>
-                      )}
-                      {pd?.type === 'multi' && <Button size="sm" onClick={act({ type: 'confirmMulti' })}>Confirm {pd.sel.length} token{pd.sel.length === 1 ? '' : 's'}</Button>}
-                      {(['freeReserve', 'freeCf'].includes(pd?.type) || (pd?.type === 'pick' && pd.plus)) && <Button size="sm" variant="outline" onClick={act({ type: 'skip' })}>Skip</Button>}
-                    </div>
+                  <div className="boardscrolls" title="Scrolls on the table">
+                    {Array.from({ length: S.privBoard }, (_, i) => <Scroll key={i} size={Math.round(cell * 0.42)} />)}
                   </div>
                 </div>
 
-                <div className="grid min-h-0 flex-1 items-start gap-3" style={{ gridTemplateColumns: lower === 0 ? '6fr 4fr' : '4fr 6fr' }}>
-                  {[0, 1].map((i) => (
-                    <div key={i} className={cn('handboard flex min-w-0 flex-col p-3', i !== lower && 'opacity-70')} style={i === lower ? { zoom: 0.6 } : undefined}>{handOf(i, i !== lower)}</div>
-                  ))}
-                </div>
+                {prompt && (
+                  <div className={cn('max-w-full rounded-full border bg-card/95 px-4 py-1.5 text-center text-xs', S.toast ? 'border-amber-500/50 text-amber-300' : 'text-foreground')}>
+                    {prompt}
+                  </div>
+                )}
+
+                {card && (
+                  <div className="compact-cards pointer-events-none" style={{ '--z': 0.7 }}>
+                    {card.kind === 'cf' ? <CfCard card={card} /> : <JewelCard card={card} />}
+                  </div>
+                )}
               </div>
+
+              {sidePlayer(1)}
 
               {/* Right: all the cards */}
               <Card data-zone="pyr" className="compact-cards min-h-0 gap-2 overflow-hidden p-3 border-0 bg-transparent shadow-none" style={{ '--z': cardZoom }}>
@@ -444,19 +447,6 @@ function Board({ session, onExit, init }) {
       </div>
 
       {createPortal(<Flights flights={flights} onLanded={landed} />, document.body)}
-      {hand != null && (
-        <Dialog open onOpenChange={(o) => !o && setHand(null)}>
-          <DialogContent className="handboard flex max-h-[88vh] flex-col gap-2 p-10 sm:max-w-5xl">
-            <DialogHeader className="sr-only">
-              <DialogTitle className="sr-only">{S.players[hand].name}</DialogTitle>
-              <DialogDescription className="sr-only">Hand</DialogDescription>
-            </DialogHeader>
-            <div className="flex min-h-0 flex-1 flex-col">
-              <Player S={S} idx={hand} dispatch={dispatch} colW={110} viewer={seat} zoomed wide />
-            </div>
-          </DialogContent>
-        </Dialog>
-      )}
       {showRules && <Rules exp={exp} onClose={() => setShowRules(false)} />}
 
       <Dialog open={showLog} onOpenChange={setShowLog}>

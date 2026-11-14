@@ -15,7 +15,7 @@
       <stop offset="100%" stop-color="#000" stop-opacity="0.35"/>
     </radialGradient>
     <clipPath id="panel">
-      <rect x="16" y="16" width="218" height="318" rx="8"/>
+      <rect x="8" y="8" width="234" height="334" rx="8"/>
     </clipPath>
   </defs>
 
@@ -24,11 +24,11 @@
 
   <!-- Patterned panel -->
   <g clip-path="url(#panel)">
-    <rect x="16" y="16" width="218" height="318" fill="url(#lattice)"/>
-    <rect x="16" y="16" width="218" height="318" fill="url(#vignette)"/>
+    <rect x="8" y="8" width="234" height="334" fill="url(#lattice)"/>
+    <rect x="8" y="8" width="234" height="334" fill="url(#vignette)"/>
   </g>
 
   <!-- Double gold frame -->
   <rect x="16" y="16" width="218" height="318" rx="8" fill="none" stroke="#7a5212" stroke-width="3"/>
-  <rect x="24" y="24" width="202" height="302" rx="5" fill="none" stroke="#fff4cc" stroke-width="1"/>
+  <rect x="16" y="16" width="218" height="318" rx="5" fill="none" stroke="#fff4cc" stroke-width="1"/>
 </svg>

@@ -22,11 +22,8 @@
     </linearGradient>
   </defs>
 
-  <!-- Dark leather rim -->
-  <rect x="1" y="1" width="898" height="318" rx="24" fill="url(#rim)" stroke="#0b0c10" stroke-width="2"/>
-  <rect x="5" y="5" width="890" height="310" rx="21" fill="none" stroke="#ffffff" stroke-opacity="0.06" stroke-width="1.5"/>
 
   <!-- Felt surface -->
-  <rect x="18" y="18" width="864" height="284" rx="14" fill="url(#cloth)" filter="url(#felt)"/>
-  <rect x="18" y="18" width="864" height="284" rx="14" fill="url(#inset)"/>
+  <rect x="0" y="0" width="900" height="320" rx="18" fill="url(#cloth)" filter="url(#felt)"/>
+  <rect x="0" y="0" width="900" height="320" rx="18" fill="url(#inset)"/>
 </svg>
