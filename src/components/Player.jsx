@@ -14,7 +14,7 @@ const Stat = ({ title, big, children }) => (
   <div title={title} className={cn('flex items-center gap-1 font-extrabold leading-none', big ? 'h-12 gap-2 text-5xl' : 'h-7 text-xl')}>{children}</div>
 );
 
-export default function Player({ S, idx, dispatch, colW = 52, viewer = null, onOpen = null, zoomed = false, wide = false, summary = false, expanded = false }) {
+export default function Player({ S, idx, dispatch, colW = 52, viewer = null, onOpen = null, zoomed = false, wide = false, summary = false, expanded = false, horizontal = false }) {
   const p = S.players[idx];
   const active = idx === S.cur && !S.awaitingFirst;
   const pd = S.pending;
@@ -25,6 +25,55 @@ export default function Player({ S, idx, dispatch, colW = 52, viewer = null, onO
   const canReturn = active && mine && !S.main && !pd && roomLeft(p) === 0;
   const b = bonuses(p);
   const tokens = [...kinds(S), 'gold'].filter((k) => p.tok[k] > 0);
+
+  if (summary && horizontal) {
+    const cw = 34;
+    const ch = 48;
+    return (
+      <Card data-dest-tokens={idx} data-dest-cards={idx} data-dest-res={idx} className={cn('handboard min-h-0 flex-1 flex-row items-stretch gap-4 overflow-hidden px-4 py-2', active && 'outline outline-2 -outline-offset-4 outline-primary/70')}>
+        <div className="flex shrink-0 flex-col justify-center gap-1">
+          <h3 className="text-base font-bold">{p.name}</h3>
+          <div className="flex items-center gap-3">
+            <Stat title="Prestige points"><span>{pts(p)}</span></Stat>
+            <Stat title="Crowns"><span>{crowns(p)}</span><Crown size={20} /></Stat>
+            <Stat title="Scrolls"><span>{p.priv}</span><Scroll size={22} /></Stat>
+          </div>
+        </div>
+        <div className="flex min-w-0 flex-1 items-start justify-center gap-2 pt-1">
+          {[...new Set([...kinds(S), 'gold', ...COLORS])].filter((k) => p.tok[k] > 0 || p.cards.some((x) => x.color === k)).map((k) => {
+            const owned = p.cards.filter((x) => x.color === k);
+            const step = owned.length > 1 ? Math.min(16, Math.floor(56 / (owned.length - 1))) : 0;
+            return (
+              <div key={k} title={`${k}: ${p.tok[k]} tokens${owned.length ? `, ${owned.length} cards` : ''}`} className="flex flex-col items-center gap-0.5" style={{ width: cw }}>
+                <TokenArt kind={k} size={26} />
+                <span className="text-base font-extrabold leading-none">{p.tok[k]}</span>
+                {owned.length > 0 && (
+                  <div className="compact-cards pointer-events-none relative mt-0.5" style={{ '--z': cw / 124, width: cw, height: ch + step * (owned.length - 1) }}>
+                    {owned.map((card, i) => (
+                      <div key={card.id} className="absolute left-0 overflow-hidden rounded-[4px]" style={{ top: i * step, width: cw, height: ch, zIndex: i }}>
+                        <JewelCard card={card} />
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+            );
+          })}
+        </div>
+        <div data-zone="res" className="compact-cards flex shrink-0 items-center gap-1.5" style={{ '--z': 0.26 }}>
+          {Array.from({ length: resCap(p) }, (_, i) => {
+            const c = p.res[i];
+            if (!c) return <div key={`slot${i}`} className="slot" />;
+            return showReserved ? (
+              <JewelCard key={c.id} card={c} selected={S.selCard?.src === 'res' && S.selCard.i === i} afford={!S.main && !!plan(S, p, c)} onClick={() => dispatch({ type: 'card', src: 'res', i })} />
+            ) : (
+              <CardBack key={c.id} level="hidden" />
+            );
+          })}
+        </div>
+      </Card>
+    );
+  }
 
   if (summary) {
     const z = expanded ? 0.5 : 0.24;

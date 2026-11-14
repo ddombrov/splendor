@@ -9,9 +9,10 @@ describe('screen layout', () => {
       for (const [vw, vh] of SIZES) {
         const L = computeLayout({ vw, vh, exp });
         if (L.mode !== 'wide') continue;
-        expect(L.sideW + L.cardsW + L.boardColW + 2 * 12 + 20).toBeCloseTo(L.w, 0);
+        if (L.players === 'top') expect(L.cardsW + L.boardColW + 12 + 20).toBeCloseTo(L.w, 0);
+        else expect(L.sideW + L.cardsW + L.boardColW + 2 * 12 + 20).toBeCloseTo(L.w, 0);
         expect(L.cell * 5.9615).toBeLessThanOrEqual(L.boardColW + 1);
-        expect(L.cell * 6.692 + 32).toBeLessThanOrEqual(L.h + 60); // the board and its buttons fit the height
+        expect(L.cell * 6.692 + 32 + (L.stripH ?? 0)).toBeLessThanOrEqual(L.h + 60); // the board and its buttons fit the height
         expect(L.w * L.k).toBeCloseTo(vw, 0);
         expect(L.h * L.k).toBeCloseTo(vh, 0);
       }
@@ -36,6 +37,13 @@ describe('screen layout', () => {
     expect(L.mode).toBe('wide');
     expect(L.k).toBeCloseTo(1.2, 2);
     expect(L.cell).toBeGreaterThanOrEqual(90);
+  });
+
+  it('puts the players in a strip across the top when that makes the board and cards clearly bigger', () => {
+    const L = computeLayout({ vw: 1207, vh: 887 });
+    expect(L.players).toBe('top');
+    const side = computeLayout({ vw: 1920, vh: 1080 });
+    expect(side.players).toBe('side');
   });
 
   it('switches between the layouts at one aspect ratio', () => {

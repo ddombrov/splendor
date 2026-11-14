@@ -35,7 +35,26 @@ function wide({ vw, vh, exp }) {
   const cardZoom = Math.max(0.45, Math.min(zByHeight, (cardsW - 64) / 744, 1.2));
   const boardColW = w - 20 - 2 * 12 - sideW - cardsW;
   const cell = Math.max(48, Math.min(Math.floor(boardColW / BOARD_UNITS_W), Math.floor((h - 32 - HINT_ROOM) / BOARD_UNITS_H)));
-  return { mode: 'wide', k, w, h, sideW, cardsW, cardZoom, cell, boardColW };
+  const side = { mode: 'wide', players: 'side', k, w, h, sideW, cardsW, cardZoom, cell, boardColW };
+  // Windows that are not very wide leave empty height; the strip layout uses it, but only when it clearly gives bigger pieces.
+  const top = wideTop({ k, w, h, s }, exp);
+  return top.cell * top.cardZoom > side.cell * side.cardZoom * 1.1 ? top : side;
+}
+
+const STRIP_H = 150; // height of the players strip when the players sit across the top
+
+/** Same stage, but the players go in a strip across the top so the board and the cards get the whole width. */
+function wideTop({ k, w, h, s }, exp) {
+  const cardRows = exp ? 5 : 4;
+  const free = h - 20 - STRIP_H - 12; // height under the strip
+  const byWidth = (w - 20 - 12 - 70) / (BOARD_UNITS_W + 744 / 96);
+  const byBoard = (free - HINT_ROOM - 12) / BOARD_UNITS_H;
+  const byCards = (free - (cardRows - 1) * 12) / (cardRows * 174 / 96);
+  const cell = Math.max(48, Math.floor(Math.min(byWidth, byBoard, byCards)));
+  const cardZoom = Math.max(0.45, Math.min(cell / 96, 1.2));
+  const cardsW = Math.round(744 * cardZoom + 70);
+  const boardColW = w - 20 - 12 - cardsW;
+  return { mode: 'wide', players: 'top', stripH: STRIP_H, k, w, h, sideW: 0, cardsW, cardZoom, cell, boardColW, s };
 }
 
 function tall({ vw, vh, exp }) {
@@ -45,7 +64,7 @@ function tall({ vw, vh, exp }) {
   const cell = Math.min(124, Math.floor(inner / BOARD_UNITS_W));
   const cardZoom = clamp((inner - 14) / 744, 0.5, 1.1);
   void exp;
-  return { mode: 'tall', k, w, h: vh / k, sideW: inner, cardsW: inner, cardZoom, cell, boardColW: inner };
+  return { mode: 'tall', players: 'side', k, w, h: vh / k, sideW: inner, cardsW: inner, cardZoom, cell, boardColW: inner };
 }
 
 export function computeLayout({ vw, vh, exp = false }) {
