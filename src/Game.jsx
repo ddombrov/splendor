@@ -386,15 +386,18 @@ function Board({ session, onExit, init }) {
                   </div>
                 </div>
 
-                {prompt && (
-                  <div className={cn('max-w-full rounded-full border bg-card/95 px-4 py-1.5 text-center text-xs', S.toast ? 'border-amber-500/50 text-amber-300' : 'text-foreground')}>
-                    {prompt}
-                  </div>
-                )}
-
-                {card && (
-                  <div className="compact-cards pointer-events-none" style={{ '--z': 0.7 }}>
-                    {card.kind === 'cf' ? <CfCard card={card} /> : <JewelCard card={card} />}
+                {(prompt || card) && (
+                  <div className="flex w-full items-start gap-4">
+                    {card && (
+                      <div className="compact-cards pointer-events-none shrink-0" style={{ '--z': 0.7 }}>
+                        {card.kind === 'cf' ? <CfCard card={card} /> : <JewelCard card={card} />}
+                      </div>
+                    )}
+                    {prompt && (
+                      <div className={cn('min-w-0 flex-1 rounded-xl border bg-card/95 px-4 py-2 text-sm', S.toast ? 'border-amber-500/50 text-amber-300' : 'text-foreground')}>
+                        {prompt}
+                      </div>
+                    )}
                   </div>
                 )}
               </div>
