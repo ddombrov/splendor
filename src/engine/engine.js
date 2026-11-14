@@ -49,6 +49,19 @@ export function validLine(S, sel) {
   return true;
 }
 
+/**
+ * Two picks with exactly one square between them in a line are kept: the player may still be
+ * about to pick the token in the middle to make a line of three.
+ */
+export function gapPair(S, sel) {
+  if (sel.length !== 2) return false;
+  const [a, b] = sel.map((i) => [Math.floor(i / 5), i % 5]);
+  const dr = b[0] - a[0], dc = b[1] - a[1];
+  if (Math.max(Math.abs(dr), Math.abs(dc)) !== 2 || ![0, 2].includes(Math.abs(dr)) || ![0, 2].includes(Math.abs(dc))) return false;
+  const mid = (a[0] + dr / 2) * 5 + a[1] + dc / 2;
+  return S.board[mid] != null && S.board[mid] !== 'gold' && sel.every((i) => S.board[i] != null && S.board[i] !== 'gold');
+}
+
 /* Cheapest way for the current player to pay for a card, including counterfeiter discounts. */
 export function plan(S, p, card) {
   if (card.bonus === 'wild' && !ownedColors(p).length) return null;
@@ -388,7 +401,7 @@ const handlers = {
       if (roomLeft(p) < 1) { S.toast = 'You already hold 10 tokens.'; return; }
       const next = [...S.sel, i];
       if (next.length > roomLeft(p) && validLine(S, next)) { S.toast = `You can only take ${roomLeft(p)} more token${roomLeft(p) === 1 ? '' : 's'} (10 token limit).`; return; }
-      S.sel = validLine(S, next) ? next : [i];
+      S.sel = validLine(S, next) || (roomLeft(p) >= 3 && gapPair(S, next)) ? next : [i];
     }
   },
   take(S) {

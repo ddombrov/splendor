@@ -446,3 +446,50 @@ describe('replenishing', () => {
     expect(next.log.length).toBe(S.log.length);
   });
 });
+
+describe('picking tokens in a line', () => {
+  const setup = () => {
+    const S = createGame(false, 9, 0);
+    S.board = Array(25).fill('red');
+    return S;
+  };
+
+  it('keeps a pick when the next one has one square between, so the middle one can be added', () => {
+    let S = setup();
+    S = reduce(S, { type: 'tok', i: 0 });
+    S = reduce(S, { type: 'tok', i: 2 });
+    expect(S.sel).toEqual([0, 2]);
+    S = reduce(S, { type: 'tok', i: 1 });
+    expect(S.sel).toEqual([0, 2, 1]);
+  });
+
+  it('also keeps diagonal and vertical gaps', () => {
+    let S = setup();
+    S = reduce(S, { type: 'tok', i: 0 });
+    S = reduce(S, { type: 'tok', i: 12 });
+    expect(S.sel).toEqual([0, 12]);
+    S = setup();
+    S = reduce(S, { type: 'tok', i: 0 });
+    S = reduce(S, { type: 'tok', i: 10 });
+    expect(S.sel).toEqual([0, 10]);
+  });
+
+  it('starts over when the second token is too far away or the middle is gold', () => {
+    let S = setup();
+    S = reduce(S, { type: 'tok', i: 0 });
+    S = reduce(S, { type: 'tok', i: 3 });
+    expect(S.sel).toEqual([3]);
+    S = setup(); S.board[1] = 'gold';
+    S = reduce(S, { type: 'tok', i: 0 });
+    S = reduce(S, { type: 'tok', i: 2 });
+    expect(S.sel).toEqual([2]);
+  });
+
+  it('cannot take a pick with a gap in it', () => {
+    let S = setup();
+    S = reduce(S, { type: 'tok', i: 0 });
+    S = reduce(S, { type: 'tok', i: 2 });
+    const next = reduce(S, { type: 'take' });
+    expect(next.players[0].tok.red + next.players[1].tok.red).toBe(0);
+  });
+});

@@ -55,6 +55,7 @@ function statusText(S) {
   }
   if (S.mode === 'priv') return `${p.name}: click any non-gold token to take it with your privilege.`;
   if (S.mode === 'priv2') return `${p.name}: counterfeiter bonus, click one more non-gold token.`;
+  if (S.sel.length === 2 && !validLine(S, S.sel)) return `${p.name}: pick the token between these two to take 3 in a line, or choose different tokens.`;
   if (S.goldSel != null) return `${p.name}: gold token chosen. Choose a card or deck to reserve, then press Complete move.`;
   return null;
 }
@@ -252,7 +253,9 @@ function Board({ session, onExit, init }) {
     if (lastPriv.current.cur === S.cur && privCount < lastPriv.current.n) setSkipped(true); // a privilege was just used
     lastPriv.current = { cur: S.cur, n: privCount };
   }, [S.cur, privCount]);
-  const locked = !skipped && !S.mode && !S.pending && !S.awaitingFirst;
+  const noOptional = !canReplenish(S) && !(S.players[S.cur].priv > 0 || S.mode === 'priv2');
+  const past = skipped || noOptional; // the optional step is over, by choice or because there is nothing to choose
+  const locked = !past && !S.mode && !S.pending && !S.awaitingFirst;
   const guard = (fn) => (locked ? undefined : fn);
   const p = cur(S), pd = S.pending;
   // Layout numbers. The cards get the size their rows allow, the board takes what is left, and any
@@ -344,7 +347,7 @@ function Board({ session, onExit, init }) {
   const buttons = extras.length ? extras : action ? [
     ...(action !== 'priv' ? [{ label: { take: 'Take tokens', buy: 'Buy card', reserve: 'Reserve card', refill: 'Replenish' }[action], disabled: !canComplete, onClick: complete, go: true }] : []),
     { label: 'Cancel', disabled: !idle, onClick: cancel, col: action !== 'priv' ? undefined : 2 },
-  ] : skipped ? [
+  ] : past ? [
     { label: 'Take', disabled: !idle, onClick: () => choose('take') },
     { label: 'Reserve', disabled: !(idle && S.board.includes('gold') && p.res.length < resCap(p)), onClick: () => choose('reserve') },
   ] : [
@@ -352,7 +355,7 @@ function Board({ session, onExit, init }) {
     { label: 'Use privilege', disabled: !(idle && (p.priv > 0 || S.mode === 'priv2')), onClick: () => choose('priv') },
     { label: 'Skip', disabled: !idle, onClick: () => setSkipped(true) },
   ];
-  const slots = !extras.length && !action && !skipped ? 'three' : 'two';
+  const slots = !extras.length && !action && !past ? 'three' : 'two';
 
   return (
     <>
