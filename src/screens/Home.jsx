@@ -27,7 +27,6 @@ function CodeEntry({ onJoined }) {
   const [busy, setBusy] = useState(false);
   const [askName, setAskName] = useState(false);
   const [seats, setSeats] = useState(null); // the two names, when the game is full and this player has to say which one they are
-  const [sure, setSure] = useState(null);
   const join = async () => {
     setBusy(true);
     setError('');
@@ -39,25 +38,15 @@ function CodeEntry({ onJoined }) {
   };
   const claim = async (seat) => {
     setBusy(true);
-    try { onJoined(await api.claimSeat(code, seat)); } catch (e) { setError(e.message); setBusy(false); setSure(null); }
+    try { onJoined(await api.claimSeat(code, seat)); } catch (e) { setError(e.message); setBusy(false); }
   };
   if (seats) {
     return (
       <div className="space-y-4">
         <p className="text-center text-sm text-muted-foreground">This game already has two players. Which one are you?</p>
-        {sure == null ? (
-          <div className="grid gap-2">
-            {seats.map((n, i) => <Button key={i} size="lg" variant="outline" className="h-14 text-lg" onClick={() => setSure(i)}>{n}</Button>)}
-          </div>
-        ) : (
-          <div className="space-y-3 text-center">
-            <p className="text-sm">Take over as <b>{seats[sure]}</b>? If {seats[sure]} is still in the game on another device, they will be signed out of it.</p>
-            <div className="flex justify-center gap-2">
-              <Button variant="outline" onClick={() => setSure(null)}>Back</Button>
-              <Button onClick={() => claim(sure)} disabled={busy}>{busy && <Loader2 className="animate-spin" />}Yes, I am {seats[sure]}</Button>
-            </div>
-          </div>
-        )}
+        <div className="grid gap-2">
+          {seats.map((n, i) => <Button key={i} size="lg" variant="outline" className="h-14 text-lg" disabled={busy} onClick={() => claim(i)}>{n}</Button>)}
+        </div>
         {error && <p className="text-sm text-amber-400">{error}</p>}
       </div>
     );
