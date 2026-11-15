@@ -19,6 +19,7 @@ import Player from './components/Player.jsx';
 import Rules from './components/Rules.jsx';
 import { TokenArt, Scroll, Gem, Mini, CompleteIcon, Pic } from './components/Art.jsx';
 import { computeLayout } from './layout.js';
+import { clearSave, loadSave, writeSave } from './lib/saves.js';
 import { Flights, diffFlights, takeSnapshot } from './motion.jsx';
 import CoinFlip from './components/CoinFlip.jsx';
 
@@ -117,7 +118,7 @@ const freshGame = (session) => {
 /** Loads an online game from the server, then hands it to the board. */
 export default function Game({ session, onExit }) {
   const online = session.mode === 'online';
-  const [init, setInit] = useState(() => (online ? null : { S: freshGame(session), rev: 0 }));
+  const [init, setInit] = useState(() => (online ? null : { S: (session.resume && loadSave(session.mode)?.S) || freshGame(session), rev: 0 }));
   const [gone, setGone] = useState(false);
   useEffect(() => {
     if (!online) return;
@@ -200,6 +201,12 @@ function Board({ session, onExit, init }) {
     const id = setInterval(() => { pull(); setTick((t) => t + 1); }, 2000);
     return () => clearInterval(id);
   }, [online, session.code, adopt]);
+
+  // Games that are not online are kept in the browser so they can be resumed from the home page.
+  useEffect(() => {
+    if (online) return;
+    if (S.over) clearSave(session.mode); else writeSave(session, S);
+  }, [S, online, session]);
 
   // Against the computer: it plays seat 1 after a short pause. It first shows what it has picked
   // (tokens or a card highlighted), then confirms the move a moment later.
@@ -347,7 +354,7 @@ function Board({ session, onExit, init }) {
 
   const openAsk = (a) => { setLastAsk(a); setAsk(a); };
   const restart = () => openAsk({ title: 'Start over?', msg: 'The current game will be lost.', yes: 'Start over', onYes: () => adopt(freshGame(session), 0) });
-  const leave = () => openAsk({ title: 'Leave this game?', msg: online ? 'You can come back with the game code while it still exists.' : 'The current game will be lost.', yes: 'Leave', onYes: onExit });
+  const leave = () => openAsk({ title: 'Leave this game?', msg: online ? 'You can come back with the game code while it still exists.' : 'The game is saved. You can resume it from the home page.', yes: 'Leave', onYes: onExit });
   const resign = () => openAsk({ title: 'Resign?', msg: 'The other player wins.', yes: 'Resign', onYes: () => dispatch({ type: 'resign', player: seat ?? S.cur }) });
   const copyCode = () => {
     try { navigator.clipboard.writeText(session.code); } catch { /* ignore */ }

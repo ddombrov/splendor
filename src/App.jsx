@@ -3,6 +3,7 @@ import Game from './Game.jsx';
 import Home from './screens/Home.jsx';
 import { Lobby, QuickMatch } from './screens/Waiting.jsx';
 import { api } from './net/api.js';
+import { loadSave } from './lib/saves.js';
 
 const SAVED = 'sd:view';
 const loadView = () => {
@@ -29,6 +30,7 @@ export default function App() {
       setView({ name: 'game', session: { ...opts, key: Date.now() } });
     }
   };
+  const resume = (mode) => { const v = loadSave(mode); if (v) setView({ name: 'game', session: { mode, exp: v.exp, source: v.source, difficulty: v.difficulty, depth: v.depth, resume: true, key: Date.now() } }); };
   const joined = ({ code, seat }) => api.getRoom(code).then((room) => setView({ name: 'game', session: { mode: 'online', code, seat, exp: room.exp } }));
   const matched = useCallback(({ code, seat }) => api.getRoom(code).then((room) => setView({ name: 'game', session: { mode: 'online', code, seat, exp: room.exp } })), [setView]);
 
@@ -45,5 +47,5 @@ export default function App() {
     return <QuickMatch onMatched={matched} onCancel={home} onPlayComputer={() => start({ mode: 'ai', exp: false, source: 'random', difficulty: 'medium', depth: 'standard' })} />;
   }
   if (view.name === 'game') return <Game key={view.session.key ?? view.session.code} session={view.session} onExit={home} />;
-  return <Home onStart={start} onJoined={joined} onQuick={() => setView({ name: 'quick' })} />;
+  return <Home onStart={start} onResume={resume} onJoined={joined} onQuick={() => setView({ name: 'quick' })} />;
 }

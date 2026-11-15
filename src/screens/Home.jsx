@@ -7,6 +7,7 @@ import Rules from '@/components/Rules.jsx';
 import { api } from '../net/api.js';
 import { Pic } from '@/components/Art.jsx';
 import { Field, GemRow, Segmented } from './parts.jsx';
+import { loadSave } from '../lib/saves.js';
 
 const MODES = [
   { key: 'device', pic: 'friends', title: 'Play on this device' },
@@ -84,7 +85,8 @@ function GameDialog({ mode, exp, onClose, onStart, onJoined }) {
   );
 }
 
-export default function Home({ onStart, onJoined, onQuick }) {
+export default function Home({ onStart, onJoined, onQuick, onResume }) {
+  const saves = ['device', 'ai'].map((m) => ({ mode: m, save: loadSave(m) })).filter((x) => x.save);
   const [open, setOpen] = useState(null);
   const [showRules, setShowRules] = useState(false);
   const [exp, setExp] = useState(() => { try { return localStorage.getItem('sd-exp') === '1'; } catch { return false; } });
@@ -111,6 +113,15 @@ export default function Home({ onStart, onJoined, onQuick }) {
             </button>
           ))}
         </div>
+        {saves.length > 0 && (
+          <div className="flex flex-wrap justify-center gap-2">
+            {saves.map(({ mode, save }) => (
+              <Button key={mode} variant="secondary" onClick={() => onResume(mode)}>
+                Resume {mode === 'ai' ? 'game against the computer' : 'game on this device'}{save.exp ? ' (expansion)' : ''}
+              </Button>
+            ))}
+          </div>
+        )}
         <div className="flex items-center gap-4">
           <Button variant="ghost" onClick={() => setShowRules(true)}><Pic name="rules" size={22} /> Rules</Button>
           <label className="flex cursor-pointer items-center gap-2 rounded-md px-3 py-2 text-sm font-medium hover:bg-accent">
