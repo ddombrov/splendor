@@ -98,7 +98,7 @@ describe.skipIf(!sqliteAvailable)('the game server', () => {
       const host = (await api('POST', '/api/rooms', {})).body;
       const before = (await api('GET', `/api/rooms/${host.code}?token=${host.token}`)).body;
       expect(before.seated).toBe(false);
-      await api('POST', `/api/rooms/${host.code}/join`);
+      await api('POST', `/api/rooms/${host.code}/join`, { name: 'Guest' });
       const after = (await api('GET', `/api/rooms/${host.code}?token=${host.token}`)).body;
       expect(after.seated).toBe(true);
     });
