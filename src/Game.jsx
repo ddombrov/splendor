@@ -138,15 +138,6 @@ export default function Game({ session, onExit }) {
   return <Board session={session} onExit={onExit} init={init} onReplaced={() => setGone('replaced')} />;
 }
 
-const ago = (t) => {
-  if (!t) return 'not yet';
-  const sec = Math.max(0, Math.round((Date.now() - t) / 1000));
-  if (sec < 10) return 'just now';
-  if (sec < 60) return `${sec}s ago`;
-  if (sec < 3600) return `${Math.floor(sec / 60)} min ago`;
-  return `${Math.floor(sec / 3600)} h ago`;
-};
-
 function Board({ session, onExit, init, onReplaced }) {
   const vp = useViewport();
   const { exp } = session;
@@ -156,8 +147,6 @@ function Board({ session, onExit, init, onReplaced }) {
   const [S, setS] = useState(init.S);
   const Sref = useRef(init.S);
   const revRef = useRef(init.rev);
-  const [remote, setRemote] = useState(null);
-  const [, setTick] = useState(0);
   const [copied, setCopied] = useState(false);
   const [coin, setCoin] = useState(null);
 
@@ -195,11 +184,10 @@ function Board({ session, onExit, init, onReplaced }) {
       const room = await api.getRoom(session.code);
       if (!room) return;
       if (room.replaced) { onReplaced(); return; }
-      setRemote({ active: room.active, seated: room.seated });
       if (room.rev > revRef.current) adopt(room.S, room.rev);
     };
     pull();
-    const id = setInterval(() => { pull(); setTick((t) => t + 1); }, 2000);
+    const id = setInterval(() => { pull(); }, 2000);
     return () => clearInterval(id);
   }, [online, session.code, adopt]);
 
@@ -362,7 +350,6 @@ function Board({ session, onExit, init, onReplaced }) {
     setCopied(true);
     setTimeout(() => setCopied(false), 1500);
   };
-  const opponentActive = remote ? ago(remote.active[1 - seat]) : '';
 
   const idle = !S.main && !pd && myTurn;
   const plans = (c) => idle && !locked && !!plan(S, p, c);
@@ -428,7 +415,6 @@ function Board({ session, onExit, init, onReplaced }) {
                           {copied ? <Check className="size-4" /> : <Copy className="size-4" />}
                         </button>
                       </div>
-                      <div className="px-2 pb-2 text-xs text-muted-foreground">{remote && !remote.seated ? 'Waiting for opponent' : `Opponent ${opponentActive}`}</div>
                       <DropdownMenuSeparator />
                     </>
                   )}
