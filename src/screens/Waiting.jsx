@@ -2,7 +2,7 @@ import { useEffect, useRef, useState } from 'react';
 import { Bot, Check, Copy, Loader2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { api, savedName } from '../net/api.js';
-import { CodeBoxes, GemRow, NameField } from './parts.jsx';
+import { CodeBoxes, GemRow, NameChoice } from './parts.jsx';
 
 const Shell = ({ children }) => (
   <div className="fixed inset-0 flex items-center justify-center overflow-auto p-6">
@@ -74,7 +74,7 @@ export function QuickMatch({ onMatched, onCancel, onPlayComputer }) {
         <GemRow size={34} />
         <h1 className="text-2xl font-bold">Quick match</h1>
         <div className="w-full space-y-4">
-          <NameField autoFocus value={name} onChange={setName} onEnter={() => name.trim() && setReady(true)} />
+          <NameChoice autoFocus value={name} onChange={setName} onEnter={() => name.trim() && setReady(true)} />
           <div className="flex justify-center gap-2">
             <Button variant="outline" onClick={onCancel}>Cancel</Button>
             <Button onClick={() => setReady(true)} disabled={!name.trim()}>Find an opponent</Button>

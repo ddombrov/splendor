@@ -18,7 +18,7 @@ describe.skipIf(!sqliteAvailable)('the game server', () => {
 
   const startGame = async (exp = false) => {
     const host = (await api('POST', '/api/rooms', { exp })).body;
-    const guest = (await api('POST', `/api/rooms/${host.code}/join`)).body;
+    const guest = (await api('POST', `/api/rooms/${host.code}/join`, { name: 'Guest' })).body;
     const view = (who) => api('GET', `/api/rooms/${host.code}?token=${who.token}`).then((r) => r.body);
     const act = (who, action, baseRev) => api('POST', `/api/rooms/${host.code}/action`, { token: who.token, baseRev, action }).then((r) => r.body);
     return { host, guest, view, act, code: host.code };

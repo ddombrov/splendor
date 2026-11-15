@@ -98,7 +98,8 @@ export async function handle(request, env) {
       const names = S.players.map((p) => p.name);
       // A full game cannot be joined, but a player who lost their seat can take one back (see claim).
       if (row.seat1) return json({ error: { reason: 'full', message: 'That game is already full.', names } }, 409);
-      const name = cleanName(body.name) || 'Player 2';
+      const name = cleanName(body.name);
+      if (!name) return fail(400, 'needname', 'Choose a name to join.');
       if (sameName(name, names[0])) return fail(409, 'taken', 'That name is taken, pick another.');
       const token = hex(16);
       const res = await db.prepare('UPDATE rooms SET seat1 = ?, active1 = ? WHERE code = ? AND seat1 IS NULL').bind(token, Date.now(), code).run();

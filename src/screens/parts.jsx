@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Gem } from '@/components/Art.jsx';
 import { cn } from '@/lib/utils';
@@ -40,6 +41,20 @@ export const CodeBoxes = ({ code, big }) => (
     ))}
   </div>
 );
+
+/** The player's name: a text box when there is no name yet or they want to change it, otherwise just a reminder. */
+export function NameChoice({ value, onChange, onEnter, autoFocus }) {
+  const [editing, setEditing] = useState(!value.trim());
+  if (!editing && value.trim()) {
+    return (
+      <p className="flex items-center justify-center gap-2 text-sm text-muted-foreground">
+        Playing as <b className="text-foreground">{value}</b>
+        <button type="button" className="underline hover:text-foreground" onClick={() => setEditing(true)}>Change</button>
+      </p>
+    );
+  }
+  return <NameField autoFocus={autoFocus} value={value} onChange={onChange} onEnter={onEnter} />;
+}
 
 /** A text box for the player's name. */
 export const NameField = ({ value, onChange, onEnter, autoFocus }) => (

@@ -6,7 +6,7 @@ import { Switch } from '@/components/ui/switch';
 import Rules from '@/components/Rules.jsx';
 import { api, savedName } from '../net/api.js';
 import { Pic } from '@/components/Art.jsx';
-import { Field, GemRow, NameField, Segmented } from './parts.jsx';
+import { Field, GemRow, NameChoice, Segmented } from './parts.jsx';
 import { loadSave } from '../lib/saves.js';
 
 const MODES = [
@@ -25,13 +25,15 @@ function CodeEntry({ onJoined }) {
   const [name, setName] = useState(savedName);
   const [error, setError] = useState('');
   const [busy, setBusy] = useState(false);
+  const [askName, setAskName] = useState(false);
   const [seats, setSeats] = useState(null); // the two names, when the game is full and this player has to say which one they are
   const [sure, setSure] = useState(null);
   const join = async () => {
     setBusy(true);
     setError('');
     try { onJoined(await api.joinRoom(code, name.trim())); } catch (e) {
-      if (e.reason === 'full' && e.names) setSeats(e.names); else setError(e.message);
+      if (e.reason === 'full' && e.names) setSeats(e.names);
+      else { setError(e.message); if (e.reason === 'needname' || e.reason === 'taken') setAskName(true); }
       setBusy(false);
     }
   };
@@ -62,8 +64,7 @@ function CodeEntry({ onJoined }) {
   }
   return (
     <div className="space-y-4">
-      <NameField value={name} onChange={(v) => { setName(v); setError(''); }} />
-      <p className="-mt-2 text-xs text-muted-foreground">Rejoining a game? You can leave the name empty.</p>
+      {(name.trim() || askName) && <NameChoice autoFocus={askName} value={name} onChange={(v) => { setName(v); setError(''); }} onEnter={() => code.length === 5 && name.trim() && join()} />}
       <input
         autoFocus
         value={code}
@@ -101,7 +102,7 @@ function GameDialog({ mode, exp, onClose, onStart, onJoined }) {
           {mode === 'online' && <Segmented value={tab} onChange={setTab} options={[{ value: 'create', label: 'Create a game' }, { value: 'join', label: 'Join with a code' }]} />}
           {joining ? <CodeEntry onJoined={onJoined} /> : (
             <>
-              {mode === 'online' && <NameField autoFocus value={name} onChange={setName} onEnter={() => name.trim() && go()} />}
+              {mode === 'online' && <NameChoice autoFocus value={name} onChange={setName} onEnter={() => name.trim() && go()} />}
               {mode === 'ai' && (
                 <>
                   <Field label="Difficulty"><Segmented value={opts.difficulty} onChange={(v) => set({ difficulty: v })} options={DIFFICULTIES} /></Field>
