@@ -46,6 +46,48 @@ describe.skipIf(!sqliteAvailable)('the game server', () => {
       expect(third.body.error.reason).toBe('full');
     });
 
+    describe('names', () => {
+      const names = async (code, who) => (await api('GET', `/api/rooms/${code}?token=${who.token}`)).body.S.players.map((p) => p.name);
+
+      it('puts the typed names on the players', async () => {
+        const host = (await api('POST', '/api/rooms', { name: '  Dana   K ' })).body;
+        await api('POST', `/api/rooms/${host.code}/join`, { name: 'Sam' });
+        expect(await names(host.code, host)).toEqual(['Dana K', 'Sam']);
+      });
+
+      it('refuses a name the host already has, ignoring case and spaces', async () => {
+        const host = (await api('POST', '/api/rooms', { name: 'Dana' })).body;
+        const res = await api('POST', `/api/rooms/${host.code}/join`, { name: ' dana ' });
+        expect(res.status).toBe(409);
+        expect(res.body.error.reason).toBe('taken');
+        expect((await api('POST', `/api/rooms/${host.code}/join`, { name: 'Sam' })).status).toBe(200);
+      });
+
+      it('lists the names when the game is full, and lets a player take a seat back', async () => {
+        const host = (await api('POST', '/api/rooms', { name: 'Dana' })).body;
+        const guest = (await api('POST', `/api/rooms/${host.code}/join`, { name: 'Sam' })).body;
+        const full = await api('POST', `/api/rooms/${host.code}/join`, { name: 'Lee' });
+        expect(full.body.error.names).toEqual(['Dana', 'Sam']);
+        const back = (await api('POST', `/api/rooms/${host.code}/claim`, { seat: 1 })).body;
+        expect(back.seat).toBe(1);
+        expect((await api('GET', `/api/rooms/${host.code}?token=${back.token}`)).status).toBe(200);
+        expect((await api('GET', `/api/rooms/${host.code}?token=${guest.token}`)).status).toBe(403);
+        expect((await api('GET', `/api/rooms/${host.code}?token=${host.token}`)).status).toBe(200);
+      });
+
+      it('does not let a seat be claimed before the second player has joined', async () => {
+        const host = (await api('POST', '/api/rooms', { name: 'Dana' })).body;
+        expect((await api('POST', `/api/rooms/${host.code}/claim`, { seat: 1 })).status).toBe(409);
+      });
+
+      it('carries quick match names into the game, and tells identical names apart', async () => {
+        const a = (await api('POST', '/api/quick', { name: 'Sam' })).body.ticket;
+        await api('POST', '/api/quick', { name: 'sam' });
+        const ra = (await api('GET', `/api/quick/${a}`)).body;
+        expect(await names(ra.code, ra)).toEqual(['Sam', 'sam (2)']);
+      });
+    });
+
     it('says when a code does not exist', async () => {
       const res = await api('POST', '/api/rooms/12345/join');
       expect(res.status).toBe(404);

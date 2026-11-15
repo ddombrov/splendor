@@ -16,6 +16,9 @@ const fail = (status, reason, message) => json({ error: { reason, message } }, s
 const hex = (bytes) => [...crypto.getRandomValues(new Uint8Array(bytes))].map((b) => b.toString(16).padStart(2, '0')).join('');
 const newSeed = () => crypto.getRandomValues(new Uint32Array(1))[0];
 const nulls = (list) => list.map(() => null);
+/** A player's name as typed: trimmed, single spaces, at most 20 characters. */
+const cleanName = (n) => (typeof n === 'string' ? n.replace(/\s+/g, ' ').trim().slice(0, 20) : '');
+const sameName = (a, b) => a.toLowerCase() === b.toLowerCase();
 const sameGame = (a, b) => JSON.stringify({ ...a, toast: null }) === JSON.stringify({ ...b, toast: null });
 
 /** The game as one player may see it: no opponent reserve, no deck or bag contents, no random state. */
@@ -46,14 +49,16 @@ const getRoom = (db, code) => db.prepare('SELECT * FROM rooms WHERE code = ?').b
 const seatOf = (row, token) => (token && row.seat0 === token ? 0 : token && row.seat1 && row.seat1 === token ? 1 : null);
 
 /** Makes a game under a fresh 5-digit code. */
-async function createRoom(db, { exp, source, paired }) {
+async function createRoom(db, { exp, source, paired, names = [] }) {
   for (let tries = 0; tries < 60; tries++) {
     const code = String(Math.floor(Math.random() * 100000)).padStart(5, '0');
     const now = Date.now();
     const tokens = [hex(16), paired ? hex(16) : null];
+    const game = createGame(!!exp, newSeed(), null);
+    names.forEach((n, i) => { if (n) game.players[i].name = n; });
     try {
       await db.prepare('INSERT INTO rooms (code, exp, source, rev, state, seat0, seat1, active0, active1, created, last_move) VALUES (?, ?, ?, 0, ?, ?, ?, ?, ?, ?, ?)')
-        .bind(code, exp ? 1 : 0, source, JSON.stringify(createGame(!!exp, newSeed(), null)), tokens[0], tokens[1], now, paired ? now : 0, now, now).run();
+        .bind(code, exp ? 1 : 0, source, JSON.stringify(game), tokens[0], tokens[1], now, paired ? now : 0, now, now).run();
       return { code, tokens };
     } catch (e) {
       if (!/UNIQUE|constraint/i.test(String(e?.message ?? e))) throw e;
@@ -78,7 +83,7 @@ export async function handle(request, env) {
     if (method === 'POST' && parts.length === 2) {
       const body = await readJson(request);
       const source = body.source === 'official' ? 'official' : 'random';
-      const { code, tokens } = await createRoom(db, { exp: !!body.exp, source, paired: false });
+      const { code, tokens } = await createRoom(db, { exp: !!body.exp, source, paired: false, names: [cleanName(body.name)] });
       return json({ code, seat: 0, token: tokens[0] });
     }
 
@@ -86,12 +91,33 @@ export async function handle(request, env) {
     if (!/^\d{5}$/.test(code || '')) return fail(404, 'notfound', 'No game has that code.');
 
     if (method === 'POST' && parts[3] === 'join') {
+      const body = await readJson(request);
       const row = await getRoom(db, code);
       if (!row) return fail(404, 'notfound', 'No game has that code.');
+      const S = JSON.parse(row.state);
+      const names = S.players.map((p) => p.name);
+      // A full game cannot be joined, but a player who lost their seat can take one back (see claim).
+      if (row.seat1) return json({ error: { reason: 'full', message: 'That game is already full.', names } }, 409);
+      const name = cleanName(body.name) || 'Player 2';
+      if (sameName(name, names[0])) return fail(409, 'taken', 'That name is taken, pick another.');
       const token = hex(16);
       const res = await db.prepare('UPDATE rooms SET seat1 = ?, active1 = ? WHERE code = ? AND seat1 IS NULL').bind(token, Date.now(), code).run();
       if (res.meta.changes !== 1) return fail(409, 'full', 'That game is already full.');
+      S.players[1].name = name;
+      await db.prepare('UPDATE rooms SET state = ? WHERE code = ?').bind(JSON.stringify(S), code).run();
       return json({ code, seat: 1, token });
+    }
+
+    // Take over a seat in a full game. The old holder's token stops working, so it is whoever asked last.
+    if (method === 'POST' && parts[3] === 'claim') {
+      const body = await readJson(request);
+      const row = await getRoom(db, code);
+      if (!row) return fail(404, 'notfound', 'No game has that code.');
+      if (!row.seat1) return fail(409, 'open', 'That game is still waiting for a second player.');
+      if (body.seat !== 0 && body.seat !== 1) return fail(400, 'bad', 'Pick a player.');
+      const token = hex(16);
+      await db.prepare(`UPDATE rooms SET seat${body.seat} = ?, active${body.seat} = ? WHERE code = ?`).bind(token, Date.now(), code).run();
+      return json({ code, seat: body.seat, token });
     }
 
     if (method === 'GET' && parts.length === 3) {
@@ -154,15 +180,16 @@ export async function handle(request, env) {
       await db.prepare('DELETE FROM queue WHERE code IS NULL AND at < ?').bind(now - QUEUE_WAIT).run();
       await db.prepare('DELETE FROM queue WHERE code IS NOT NULL AND at < ?').bind(now - 10 * 60 * 1000).run();
       const ticket = hex(8);
-      const waiting = await db.prepare('SELECT ticket FROM queue WHERE code IS NULL ORDER BY at LIMIT 1').first();
+      const name = cleanName((await readJson(request)).name);
+      const waiting = await db.prepare('SELECT ticket, name FROM queue WHERE code IS NULL ORDER BY at LIMIT 1').first();
       // claim the waiting ticket so two newcomers cannot both pair with it
       const claimed = waiting && (await db.prepare("UPDATE queue SET code = 'pending' WHERE ticket = ? AND code IS NULL").bind(waiting.ticket).run()).meta.changes === 1;
       if (claimed) {
-        const { code, tokens } = await createRoom(db, { exp: false, source: 'random', paired: true });
+        const { code, tokens } = await createRoom(db, { exp: false, source: 'random', paired: true, names: [waiting.name || '', name && waiting.name && sameName(name, waiting.name) ? `${name} (2)` : name] });
         await db.prepare('UPDATE queue SET code = ?, seat = 0, token = ? WHERE ticket = ?').bind(code, tokens[0], waiting.ticket).run();
         await db.prepare('INSERT INTO queue (ticket, at, code, seat, token) VALUES (?, ?, ?, 1, ?)').bind(ticket, now, code, tokens[1]).run();
       } else {
-        await db.prepare('INSERT INTO queue (ticket, at) VALUES (?, ?)').bind(ticket, now).run();
+        await db.prepare('INSERT INTO queue (ticket, at, name) VALUES (?, ?, ?)').bind(ticket, now, name).run();
       }
       return json({ ticket });
     }

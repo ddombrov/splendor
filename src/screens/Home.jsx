@@ -4,9 +4,9 @@ import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Switch } from '@/components/ui/switch';
 import Rules from '@/components/Rules.jsx';
-import { api } from '../net/api.js';
+import { api, savedName } from '../net/api.js';
 import { Pic } from '@/components/Art.jsx';
-import { Field, GemRow, Segmented } from './parts.jsx';
+import { Field, GemRow, NameField, Segmented } from './parts.jsx';
 import { loadSave } from '../lib/saves.js';
 
 const MODES = [
@@ -22,15 +22,48 @@ const DEPTHS = [{ value: 'quick', label: 'Quick' }, { value: 'standard', label: 
 /** The choices every new game has. */
 function CodeEntry({ onJoined }) {
   const [code, setCode] = useState('');
+  const [name, setName] = useState(savedName);
   const [error, setError] = useState('');
   const [busy, setBusy] = useState(false);
+  const [seats, setSeats] = useState(null); // the two names, when the game is full and this player has to say which one they are
+  const [sure, setSure] = useState(null);
   const join = async () => {
     setBusy(true);
     setError('');
-    try { onJoined(await api.joinRoom(code)); } catch (e) { setError(e.message); setBusy(false); }
+    try { onJoined(await api.joinRoom(code, name.trim())); } catch (e) {
+      if (e.reason === 'full' && e.names) setSeats(e.names); else setError(e.message);
+      setBusy(false);
+    }
   };
+  const claim = async (seat) => {
+    setBusy(true);
+    try { onJoined(await api.claimSeat(code, seat)); } catch (e) { setError(e.message); setBusy(false); setSure(null); }
+  };
+  if (seats) {
+    return (
+      <div className="space-y-4">
+        <p className="text-center text-sm text-muted-foreground">This game already has two players. Which one are you?</p>
+        {sure == null ? (
+          <div className="grid gap-2">
+            {seats.map((n, i) => <Button key={i} size="lg" variant="outline" className="h-14 text-lg" onClick={() => setSure(i)}>{n}</Button>)}
+          </div>
+        ) : (
+          <div className="space-y-3 text-center">
+            <p className="text-sm">Take over as <b>{seats[sure]}</b>? If {seats[sure]} is still in the game on another device, they will be signed out of it.</p>
+            <div className="flex justify-center gap-2">
+              <Button variant="outline" onClick={() => setSure(null)}>Back</Button>
+              <Button onClick={() => claim(sure)} disabled={busy}>{busy && <Loader2 className="animate-spin" />}Yes, I am {seats[sure]}</Button>
+            </div>
+          </div>
+        )}
+        {error && <p className="text-sm text-amber-400">{error}</p>}
+      </div>
+    );
+  }
   return (
     <div className="space-y-4">
+      <NameField value={name} onChange={(v) => { setName(v); setError(''); }} />
+      <p className="-mt-2 text-xs text-muted-foreground">Rejoining a game? You can leave the name empty.</p>
       <input
         autoFocus
         value={code}
@@ -54,7 +87,8 @@ function GameDialog({ mode, exp, onClose, onStart, onJoined }) {
   const [busy, setBusy] = useState(false);
   const set = (patch) => setOpts((o) => ({ ...o, ...patch }));
   const title = MODES.find((m) => m.key === mode).title;
-  const go = async () => { setBusy(true); await onStart({ mode, exp, ...opts }); };
+  const [name, setName] = useState(savedName);
+  const go = async () => { setBusy(true); await onStart({ mode, exp, ...opts, name: name.trim() }); };
   const joining = mode === 'online' && tab === 'join';
   return (
     <Dialog open onOpenChange={(o) => !o && onClose()}>
@@ -67,6 +101,7 @@ function GameDialog({ mode, exp, onClose, onStart, onJoined }) {
           {mode === 'online' && <Segmented value={tab} onChange={setTab} options={[{ value: 'create', label: 'Create a game' }, { value: 'join', label: 'Join with a code' }]} />}
           {joining ? <CodeEntry onJoined={onJoined} /> : (
             <>
+              {mode === 'online' && <NameField autoFocus value={name} onChange={setName} onEnter={() => name.trim() && go()} />}
               {mode === 'ai' && (
                 <>
                   <Field label="Difficulty"><Segmented value={opts.difficulty} onChange={(v) => set({ difficulty: v })} options={DIFFICULTIES} /></Field>
@@ -75,7 +110,7 @@ function GameDialog({ mode, exp, onClose, onStart, onJoined }) {
               )}
               <DialogFooter>
                 <Button variant="outline" onClick={onClose}>Cancel</Button>
-                <Button onClick={go} disabled={busy}>{busy && <Loader2 className="animate-spin" />}{mode === 'online' ? 'Create game' : 'Start game'}</Button>
+                <Button onClick={go} disabled={busy || (mode === 'online' && !name.trim())}>{busy && <Loader2 className="animate-spin" />}{mode === 'online' ? 'Create game' : 'Start game'}</Button>
               </DialogFooter>
             </>
           )}

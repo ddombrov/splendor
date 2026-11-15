@@ -24,7 +24,7 @@ export default function App() {
 
   const start = async (opts) => {
     if (opts.mode === 'online') {
-      const { code } = await api.createRoom({ exp: opts.exp, source: opts.source });
+      const { code } = await api.createRoom({ exp: opts.exp, source: opts.source, name: opts.name });
       setView({ name: 'lobby', code, exp: opts.exp });
     } else {
       setView({ name: 'game', session: { ...opts, key: Date.now() } });

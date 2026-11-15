@@ -29,7 +29,8 @@ CREATE TABLE IF NOT EXISTS queue (
   at INTEGER NOT NULL,
   code TEXT,
   seat INTEGER,
-  token TEXT
+  token TEXT,
+  name TEXT
 );
 CREATE INDEX IF NOT EXISTS queue_waiting ON queue (code, at);
 CREATE INDEX IF NOT EXISTS rooms_last_move ON rooms (last_move);

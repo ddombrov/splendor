@@ -1,8 +1,8 @@
 import { useEffect, useRef, useState } from 'react';
 import { Bot, Check, Copy, Loader2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { api } from '../net/api.js';
-import { CodeBoxes, GemRow } from './parts.jsx';
+import { api, savedName } from '../net/api.js';
+import { CodeBoxes, GemRow, NameField } from './parts.jsx';
 
 const Shell = ({ children }) => (
   <div className="fixed inset-0 flex items-center justify-center overflow-auto p-6">
@@ -45,24 +45,44 @@ export function Lobby({ code, onCancel, onOpponentJoined }) {
 
 /** Quick match: wait in line to be paired. After a minute, offer the computer instead. */
 export function QuickMatch({ onMatched, onCancel, onPlayComputer }) {
+  const [name, setName] = useState(savedName);
+  const [ready, setReady] = useState(false);
   const [seconds, setSeconds] = useState(0);
   const ticket = useRef(null);
   const done = useRef(false);
   useEffect(() => {
+    if (!ready) return undefined;
     let live = true;
     const poll = async () => {
       if (!ticket.current || done.current) return;
       const res = await api.quickStatus(ticket.current);
       if (live && res && !done.current) { done.current = true; onMatched(res); }
     };
-    api.quickJoin().then((id) => {
+    api.quickJoin(name.trim()).then((id) => {
       if (!live) { api.quickLeave(id); return; }
       ticket.current = id;
       poll();
     });
     const id = setInterval(() => { setSeconds((s) => s + 1); poll(); }, 1000);
     return () => { live = false; clearInterval(id); if (ticket.current && !done.current) api.quickLeave(ticket.current); };
-  }, [onMatched]);
+    // the name is only read once, when the search starts
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [onMatched, ready]);
+  if (!ready) {
+    return (
+      <Shell>
+        <GemRow size={34} />
+        <h1 className="text-2xl font-bold">Quick match</h1>
+        <div className="w-full space-y-4">
+          <NameField autoFocus value={name} onChange={setName} onEnter={() => name.trim() && setReady(true)} />
+          <div className="flex justify-center gap-2">
+            <Button variant="outline" onClick={onCancel}>Cancel</Button>
+            <Button onClick={() => setReady(true)} disabled={!name.trim()}>Find an opponent</Button>
+          </div>
+        </div>
+      </Shell>
+    );
+  }
   const slow = seconds >= 60;
   return (
     <Shell>

@@ -122,12 +122,12 @@ export default function Game({ session, onExit }) {
   const [gone, setGone] = useState(false);
   useEffect(() => {
     if (!online) return;
-    api.getRoom(session.code).then((room) => (room ? setInit({ S: room.S, rev: room.rev }) : setGone(true)));
+    api.getRoom(session.code).then((room) => (room?.S ? setInit({ S: room.S, rev: room.rev }) : setGone(room?.replaced ? 'replaced' : true)));
   }, [online, session.code, session.seat]);
   if (gone) {
     return (
       <div className="fixed inset-0 flex flex-col items-center justify-center gap-4 text-center">
-        <p className="text-lg font-semibold">This game no longer exists.</p>
+        <p className="text-lg font-semibold">{gone === 'replaced' ? 'You joined this game from another device.' : 'This game no longer exists.'}</p>
         <Button onClick={onExit}>Back to home</Button>
       </div>
     );
@@ -135,7 +135,7 @@ export default function Game({ session, onExit }) {
   if (!init) {
     return <div className="fixed inset-0 flex items-center justify-center"><Loader2 className="size-8 animate-spin text-muted-foreground" /></div>;
   }
-  return <Board session={session} onExit={onExit} init={init} />;
+  return <Board session={session} onExit={onExit} init={init} onReplaced={() => setGone('replaced')} />;
 }
 
 const ago = (t) => {
@@ -147,7 +147,7 @@ const ago = (t) => {
   return `${Math.floor(sec / 3600)} h ago`;
 };
 
-function Board({ session, onExit, init }) {
+function Board({ session, onExit, init, onReplaced }) {
   const vp = useViewport();
   const { exp } = session;
   const online = session.mode === 'online';
@@ -194,6 +194,7 @@ function Board({ session, onExit, init }) {
     const pull = async () => {
       const room = await api.getRoom(session.code);
       if (!room) return;
+      if (room.replaced) { onReplaced(); return; }
       setRemote({ active: room.active, seated: room.seated });
       if (room.rev > revRef.current) adopt(room.S, room.rev);
     };
