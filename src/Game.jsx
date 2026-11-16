@@ -290,6 +290,8 @@ function Board({ session, onExit, init, onReplaced }) {
   const steals = inspect && (inspect.ability === 'steal' || inspect.ab === 'steal' || inspect.ab === 'xsteal');
   const stealNote = !steals ? '' : roomLeft(me) < 1 ? ' Your hand is full (10/10), so you would not get to steal unless paying frees room.' : !kinds(S).some((k) => them.tok[k] > 0) ? ' Your opponent has nothing to steal right now.' : ' Your opponent has tokens, so you would get to steal.';
   const perk = perkText(inspect) && perkText(inspect) + stealNote;
+  // Either tokens are highlighted as chosen or a card is shown enlarged, never both.
+  const previewCard = S.sel.length || S.goldSel != null || S.mode ? null : inspect;
   const [sbW, setSbW] = useState(0); // width of the page scrollbar, which takes room from the stacked layout
   const { mode, players, stripH, padX, k, w, h, sideW, cardsW, cardZoom, boardColW, cell } = computeLayout({ ...vp, vw: vp.vw - sbW, exp: S.exp });
   const strip = players === 'bottom';
@@ -534,14 +536,14 @@ function Board({ session, onExit, init, onReplaced }) {
       </div>
 
       {createPortal(<Flights flights={flights} onLanded={landed} />, document.body)}
-      {inspect && createPortal(
+      {previewCard && createPortal(
         <div className="pointer-events-none fixed right-3 z-[70]" style={{ top: 64 }}>
           {(() => {
             const sc = Math.min(2.6, (vp.vh * 0.5) / 174, (vp.vw * 0.5) / 124);
-            const Big = inspect.kind === 'cf' ? CfCard : inspect.kind === 'royal' ? RoyalCard : JewelCard;
+            const Big = previewCard.kind === 'cf' ? CfCard : previewCard.kind === 'royal' ? RoyalCard : JewelCard;
             return (
               <div style={{ width: 124 * sc, height: 174 * sc }}>
-                <div style={{ width: 124, transform: `scale(${sc})`, transformOrigin: 'top left' }}><Big card={inspect} /></div>
+                <div style={{ width: 124, transform: `scale(${sc})`, transformOrigin: 'top left' }}><Big card={previewCard} /></div>
               </div>
             );
           })()}

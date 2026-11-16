@@ -434,6 +434,18 @@ describe('random cards', () => {
       for (const c of all) expect(c.crowns === 2 && c.n === 2).toBe(false);
     }
   });
+
+  it('cost at most one pearl, and always one when the card has a perk', () => {
+    for (let seed = 1; seed <= 200; seed++) {
+      const S = createGame(false, seed, 0);
+      const all = [...S.pyr.flat(), ...S.decks.flat()];
+      for (const c of all) {
+        expect(c.cost.pearl ?? 0).toBeLessThanOrEqual(1);
+        if (c.ability || c.bonus === 'wild') expect(c.cost.pearl).toBe(1);
+        expect(Object.keys(c.cost).some((k) => k !== 'pearl')).toBe(true);
+      }
+    }
+  });
 });
 
 describe('replenishing', () => {

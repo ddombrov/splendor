@@ -17,19 +17,23 @@ export function genJewels(level, rand) {
   const cards = [];
   for (let i = 0; i < count; i++) {
     const total = level === 1 ? rnd(2, 5) : level === 2 ? rnd(5, 8) : rnd(8, 11);
-    const k = Math.min(total, level === 1 ? rnd(1, 3) : rnd(2, 3));
-    const pool = shuffle([...COLORS, ...(rand() < (level === 1 ? 0.25 : 0.5) ? ['pearl'] : [])]).slice(0, k);
+    // A card with a perk (an ability or a wild bonus) always costs exactly one pearl; other cards may cost one.
+    const ability = rand() < [0.35, 0.4, 0.45][level - 1] ? ['extra', 'privilege', 'match', 'steal'][rnd(0, 3)] : null;
+    const wild = level >= 2 && rand() < 0.12;
+    const pearl = ability || wild || rand() < (level === 1 ? 0.25 : 0.5) ? 1 : 0;
+    const colored = total - pearl;
+    const k = Math.min(colored, level === 1 ? rnd(1, 3) : rnd(2, 3));
+    const pool = shuffle([...COLORS]).slice(0, k);
     const cost = {};
     pool.forEach((g) => (cost[g] = 1));
-    for (let t = total - k; t > 0; t--) {
+    if (pearl) cost.pearl = 1;
+    for (let t = colored - k; t > 0; t--) {
       const g = pool[rnd(0, pool.length - 1)];
       if (cost[g] < 6) cost[g]++;
       else t++;
     }
     const pts = level === 1 ? (rand() < 0.35 ? 1 : 0) : level === 2 ? rnd(1, 3) : rnd(3, 6);
     const crowns = level === 1 ? (rand() < 0.1 ? 1 : 0) : level === 2 ? (rand() < 0.4 ? 1 : 0) : rnd(1, 2);
-    const ability = rand() < [0.35, 0.4, 0.45][level - 1] ? ['extra', 'privilege', 'match', 'steal'][rnd(0, 3)] : null;
-    const wild = level >= 2 && rand() < 0.12;
     let n = level === 3 && rand() < 0.3 ? 2 : level === 2 && rand() < 0.1 ? 2 : 1;
     if (crowns === 2) n = 1; // a card never has both 2 crowns and a bonus worth 2 gems
     cards.push({ id: `j${level}-${i}`, kind: 'jewel', level, cost, pts, crowns, ability, n, bonus: wild ? 'wild' : COLORS[i % 5], color: null });

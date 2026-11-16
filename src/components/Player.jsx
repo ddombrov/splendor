@@ -206,7 +206,7 @@ export default function Player({ S, idx, dispatch, onInspect, colW = 52, viewer 
                   ))}
                 </div>
               )}
-              {COLORS.includes(k) && (
+              {COLORS.includes(k) && owned.length > 0 && (
                 <div title={`Points from ${k} cards`} className={cn('font-extrabold leading-none', zoomed ? 'text-3xl' : 'text-lg')}>{colorPts(p, k)}</div>
               )}
             </div>
