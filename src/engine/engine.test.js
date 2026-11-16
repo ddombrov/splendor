@@ -523,3 +523,36 @@ describe('winning ends the game at once', () => {
     expect(after.pending).toBeNull();
   });
 });
+
+describe('tokens or a card, not both', () => {
+  const start = () => {
+    const S = createGame(false, 9, 0);
+    S.board = Array(25).fill('red');
+    return S;
+  };
+
+  it('drops the picked tokens when a card is chosen', () => {
+    let S = start();
+    S = reduce(S, { type: 'tok', i: 0 });
+    S = reduce(S, { type: 'card', src: 'pyr', l: 0, i: 0 });
+    expect(S.sel).toEqual([]);
+    expect(S.selCard).toMatchObject({ src: 'pyr' });
+  });
+
+  it('drops the chosen card when a token is picked', () => {
+    let S = start();
+    S = reduce(S, { type: 'card', src: 'pyr', l: 0, i: 0 });
+    S = reduce(S, { type: 'tok', i: 0 });
+    expect(S.selCard).toBeNull();
+    expect(S.sel).toEqual([0]);
+  });
+
+  it('still lets a gold token and a card be chosen together to reserve', () => {
+    let S = start();
+    S.board[3] = 'gold';
+    S = reduce(S, { type: 'tok', i: 3 });
+    S = reduce(S, { type: 'card', src: 'pyr', l: 0, i: 0 });
+    expect(S.goldSel).toBe(3);
+    expect(S.selCard).toMatchObject({ src: 'pyr' });
+  });
+});

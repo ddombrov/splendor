@@ -111,13 +111,19 @@ function GameDialog({ mode, exp, onClose, onStart, onJoined }) {
 }
 
 export default function Home({ onStart, onJoined, onQuick, onResume }) {
-  const saves = ['device', 'ai'].map((m) => ({ mode: m, save: loadSave(m) })).filter((x) => x.save);
   const [open, setOpen] = useState(null);
   const [showRules, setShowRules] = useState(false);
+  const [resuming, setResuming] = useState(null); // a game kind that has an unfinished game saved
   const [exp, setExp] = useState(() => { try { return localStorage.getItem('sd-exp') === '1'; } catch { return false; } });
   const changeExp = (v) => { setExp(v); try { localStorage.setItem('sd-exp', v ? '1' : '0'); } catch { /* ignore */ } };
   // Playing on one device has nothing to choose, so it starts straight away.
-  const pick = (key) => (key === 'quick' ? onQuick() : key === 'device' ? onStart({ mode: 'device', exp, source: 'random' }) : setOpen(key));
+  const begin = (key) => (key === 'device' ? onStart({ mode: 'device', exp, source: 'random' }) : setOpen(key));
+  // Starting a game on this device or against the computer first offers to resume the unfinished one.
+  const pick = (key) => {
+    if (key === 'quick') return onQuick();
+    if (loadSave(key)) return setResuming(key);
+    return begin(key);
+  };
   return (
     <div className="fixed inset-0 overflow-y-auto overflow-x-hidden overscroll-contain">
       <div className="mx-auto flex min-h-full max-w-2xl flex-col items-center justify-center gap-8 px-6 py-10 [@media(max-height:520px)]:max-w-4xl [@media(max-height:520px)]:gap-3 [@media(max-height:520px)]:py-3">
@@ -138,15 +144,6 @@ export default function Home({ onStart, onJoined, onQuick, onResume }) {
             </button>
           ))}
         </div>
-        {saves.length > 0 && (
-          <div className="flex flex-wrap justify-center gap-2">
-            {saves.map(({ mode, save }) => (
-              <Button key={mode} variant="secondary" onClick={() => onResume(mode)}>
-                Resume {mode === 'ai' ? 'game against the computer' : 'game on this device'}{save.exp ? ' (expansion)' : ''}
-              </Button>
-            ))}
-          </div>
-        )}
         <div className="flex items-center gap-4">
           <Button variant="ghost" onClick={() => setShowRules(true)}><Pic name="rules" size={22} /> Rules</Button>
           <label className="flex cursor-pointer items-center gap-2 rounded-md px-3 py-2 text-sm font-medium hover:bg-accent">
@@ -156,6 +153,20 @@ export default function Home({ onStart, onJoined, onQuick, onResume }) {
         </div>
       </div>
 
+      {resuming && (
+        <Dialog open onOpenChange={(o) => !o && setResuming(null)}>
+          <DialogContent className="sm:max-w-sm">
+            <DialogHeader>
+              <DialogTitle>Resume your game?</DialogTitle>
+              <DialogDescription>You have an unfinished game {resuming === 'ai' ? 'against the computer' : 'on this device'}.</DialogDescription>
+            </DialogHeader>
+            <DialogFooter>
+              <Button variant="outline" onClick={() => { const k = resuming; setResuming(null); begin(k); }}>New game</Button>
+              <Button onClick={() => { const k = resuming; setResuming(null); onResume(k); }}>Resume game</Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
+      )}
       {open && <GameDialog mode={open} exp={exp} onClose={() => setOpen(null)} onStart={onStart} onJoined={onJoined} />}
       {showRules && <Rules exp={exp} onClose={() => setShowRules(false)} />}
     </div>

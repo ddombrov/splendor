@@ -3,7 +3,6 @@ import { Badge } from '@/components/ui/badge';
 import { BorderBeam } from '@/components/ui/border-beam';
 import { cn } from '@/lib/utils';
 import { COLORS, CF_TEXT } from '../engine/data.js';
-import { Hand } from 'lucide-react';
 import { JewelCard, RoyalCard, CardBack } from './Cards.jsx';
 import { TokenArt, Gem, Scroll, Crown } from './Art.jsx';
 import { bonuses, colorPts, crowns, kinds, limitCount, plan, pts, resCap, roomLeft } from '../engine/engine.js';
@@ -23,7 +22,6 @@ const TokenStat = ({ p, big }) => {
   return (
     <Stat big={big} title="Tokens held, out of the limit of 10">
       <span className={n >= 10 ? 'text-amber-300' : undefined}>{n}/10</span>
-      <Hand size={big ? 40 : 18} className="opacity-80" />
     </Stat>
   );
 };
@@ -66,7 +64,7 @@ export default function Player({ S, idx, dispatch, onInspect, colW = 52, viewer 
       <Card data-dest-tokens={idx} data-dest-cards={idx} data-dest-res={idx} className={cn('handboard min-h-0 flex-1 flex-row items-stretch gap-4 overflow-hidden px-4 py-2', active && 'outline outline-2 -outline-offset-4 outline-primary/70')}>
         <div className="flex shrink-0 flex-col justify-center gap-1">
           <h3 className="text-base font-bold">{p.name}</h3>
-          <div className="flex items-center gap-3">
+          <div className="flex flex-wrap items-center gap-x-3">
             <Stat title="Prestige points"><span>{pts(p)}</span></Stat>
             <Stat title="Crowns"><span>{crowns(p)}</span><Crown size={20} /></Stat>
             <Stat title="Scrolls"><span>{p.priv}</span><Scroll size={22} /></Stat>
@@ -110,7 +108,7 @@ export default function Player({ S, idx, dispatch, onInspect, colW = 52, viewer 
     return (
       <Card data-dest-tokens={idx} data-dest-cards={idx} data-dest-res={idx} className={cn('handboard min-h-0 flex-1 gap-0 overflow-hidden p-3', active && 'outline outline-2 -outline-offset-4 outline-primary/70')}>
         <h3 className="text-base font-bold">{p.name}</h3>
-        <div className="mt-1 flex items-center gap-3">
+        <div className="mt-1 flex flex-wrap items-center gap-x-3">
           <Stat title="Prestige points"><span>{pts(p)}</span></Stat>
           <Stat title="Crowns"><span>{crowns(p)}</span><Crown size={20} /></Stat>
           <Stat title="Scrolls"><span>{p.priv}</span><Scroll size={22} /></Stat>
@@ -188,7 +186,13 @@ export default function Player({ S, idx, dispatch, onInspect, colW = 52, viewer 
           const tok = zoomed ? Math.min(colW - 6, 80) : 32;
           return (
             <div key={k} className="flex shrink-0 flex-col items-center gap-2" style={{ width: colW }}>
-              <div title={canReturn ? `Return a ${k} token to the bag` : `${k}: ${p.tok[k]}`} onClick={click} className={cn('flex flex-col-reverse items-center', click && 'pile click')} style={{ minHeight: tok }}>
+              {zoomed && (
+                <div className="flex items-center gap-2" title={`${k}: ${p.tok[k]} tokens`}>
+                  <TokenArt kind={k} size={34} />
+                  <span className="text-3xl font-extrabold leading-none">{p.tok[k]}</span>
+                </div>
+              )}
+              <div title={canReturn ? `Return a ${k} token to the bag` : `${k}: ${p.tok[k]}`} onClick={click} className={cn('flex flex-col-reverse items-center', click && 'pile click')} style={{ minHeight: zoomed ? 0 : tok }}>
                 {Array.from({ length: p.tok[k] }, (_, i) => (
                   <div key={i} className="leading-none" style={{ marginBottom: i ? (zoomed ? -Math.round(tok * 0.57) : -18) : 0 }}><TokenArt kind={k} size={tok} /></div>
                 ))}

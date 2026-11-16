@@ -395,7 +395,7 @@ const handlers = {
       S.sel = [];
       return;
     }
-    S.goldSel = null;
+    S.goldSel = null; S.selCard = null; // tokens or a card is chosen, not both
     const k = S.sel.indexOf(i);
     if (k >= 0) S.sel.splice(k, 1);
     else {
@@ -465,6 +465,7 @@ const handlers = {
     }
     if (pd) return;
     if (src === 'cdeck') return;
+    S.sel = [];
     S.selCard = { src, l, i };
   },
   buy(S) { doBuy(S); },

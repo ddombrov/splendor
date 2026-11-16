@@ -277,6 +277,7 @@ function Board({ session, onExit, init, onReplaced }) {
   const mainPossible = canTakeTokens || canReserveGold || canPay;
   const noOptional = !canReplenish(S) && !canUsePriv;
   const past = skipped || optUsed || noOptional; // the optional step is over, by choice or because there is nothing to choose
+  const canGoBack = skipped && !optUsed && !noOptional; // skipped the optional step but could still take it
   const locked = !past && !S.mode && !S.pending && !S.awaitingFirst;
   const guard = (fn) => (locked ? undefined : fn);
   const pdispatch = (a) => { if (!(locked && a.type === 'card')) dispatch(a); };
@@ -405,12 +406,13 @@ function Board({ session, onExit, init, onReplaced }) {
     { label: 'Take', disabled: !(idle && canTakeTokens), onClick: () => choose('take') },
     { label: 'Reserve', disabled: !(idle && canReserveGold), onClick: () => choose('reserve') },
     { label: 'Buy', disabled: !(idle && canPay), onClick: () => choose('buy') },
+    ...(canGoBack ? [{ label: 'Back', disabled: !idle, onClick: () => setSkipped(false) }] : []),
   ] : [
     { label: 'Replenish', disabled: !(idle && canReplenish(S)), onClick: () => choose('refill') },
     { label: 'Use privilege', disabled: !(idle && canUsePriv), onClick: () => choose('priv') },
     { label: 'Skip', disabled: !(idle && mainPossible), onClick: () => setSkipped(true) },
   ];
-  const slots = !extras.length && !action ? 'three' : 'two';
+  const slots = extras.length || action ? 'two' : canGoBack ? '' : 'three';
 
   return (
     <>
@@ -533,9 +535,9 @@ function Board({ session, onExit, init, onReplaced }) {
 
       {createPortal(<Flights flights={flights} onLanded={landed} />, document.body)}
       {inspect && createPortal(
-        <div className="pointer-events-none fixed inset-0 z-[70] flex items-center justify-center">
+        <div className="pointer-events-none fixed right-3 z-[70]" style={{ top: 64 }}>
           {(() => {
-            const sc = Math.min(3, (vp.vh * 0.45) / 174, (vp.vw * 0.6) / 124);
+            const sc = Math.min(2.6, (vp.vh * 0.5) / 174, (vp.vw * 0.5) / 124);
             const Big = inspect.kind === 'cf' ? CfCard : inspect.kind === 'royal' ? RoyalCard : JewelCard;
             return (
               <div style={{ width: 124 * sc, height: 174 * sc }}>
@@ -592,7 +594,7 @@ function Board({ session, onExit, init, onReplaced }) {
                 ))}
               </div>
               <Button variant="secondary" className="w-full" onClick={() => setCoin({ winner: crypto.getRandomValues(new Uint8Array(1))[0] & 1 })}>
-                <Pic name="coin" size={22} /> Flip a coin
+                <Pic name="coin-gold-1" size={22} /> Flip a coin
               </Button>
             </div>
           )}
