@@ -201,7 +201,8 @@ function toBag(S, k, n) { for (let i = 0; i < n; i++) S.bag.push(k); }
 
 function finishMain(S, steps = []) {
   S.main = true; S.mode = null; S.sel = []; S.goldSel = null; S.selCard = null;
-  S.queue = [...steps, 'royal', 'endabil', 'discard', 'win', 'switch'];
+  // A player who has already won does not get to use card abilities or claim royals: the game ends at once.
+  S.queue = ['win', ...steps, 'royal', 'endabil', 'discard', 'win', 'switch'];
   runQueue(S);
 }
 function runQueue(S) {

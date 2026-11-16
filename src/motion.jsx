@@ -13,8 +13,9 @@ const copy = (r) => ({ left: r.left, top: r.top, width: r.width, height: r.heigh
 
 /** Where things are on screen right now: board squares, and cards on the pyramid or in a reserve. */
 export function takeSnapshot() {
-  const snap = { cells: {}, cards: {} };
+  const snap = { cells: {}, cards: {}, tokens: {} };
   document.querySelectorAll('[data-cell]').forEach((el) => { snap.cells[el.dataset.cell] = copy(el.getBoundingClientRect()); });
+  document.querySelectorAll('[data-dest-tokens]').forEach((el) => { if (!snap.tokens[el.dataset.destTokens]) snap.tokens[el.dataset.destTokens] = copy(el.getBoundingClientRect()); });
   document.querySelectorAll('[data-zone] [data-card-id]').forEach((el) => {
     if (!snap.cards[el.dataset.cardId]) snap.cards[el.dataset.cardId] = copy(el.getBoundingClientRect());
   });
@@ -35,6 +36,17 @@ export function diffFlights(prev, next, snap) {
     const c = snap.cells[i];
     const size = c.width * 0.85;
     out.push({ type: 'token', kind, to: `[data-dest-tokens="${taker}"]`, from: { left: c.left + (c.width - size) / 2, top: c.top + (c.height - size) / 2, width: size, height: size } });
+  });
+
+  // steal: a player gained a token that the other player lost, and it did not come off the board
+  Object.keys(next.players[0].tok).forEach((kind) => {
+    [0, 1].forEach((a) => {
+      const b = 1 - a;
+      const from = snap.tokens?.[b];
+      if (!from || next.players[a].tok[kind] <= prev.players[a].tok[kind] || next.players[b].tok[kind] >= prev.players[b].tok[kind]) return;
+      const size = 40;
+      out.push({ type: 'token', kind, to: `[data-dest-tokens="${a}"]`, from: { left: from.left + from.width / 2 - size / 2, top: from.top + from.height / 2 - size / 2, width: size, height: size } });
+    });
   });
 
   // replenish: new tokens pop into their squares one after another, following the arrows on the board

@@ -13,7 +13,7 @@ import { cn } from '@/lib/utils';
 import { api } from './net/api.js';
 import { botActions } from './engine/bot.js';
 import { perkText } from './engine/data.js';
-import { createGame, reduce, cur, opp, plan, canReplenish, endOptions, validLine, selectedCard, resCap } from './engine/engine.js';
+import { createGame, reduce, cur, opp, plan, canReplenish, endOptions, validLine, selectedCard, resCap, roomLeft, kinds } from './engine/engine.js';
 import { JewelCard, CfCard, RoyalCard, CardBack } from './components/Cards.jsx';
 import Player from './components/Player.jsx';
 import Rules from './components/Rules.jsx';
@@ -256,23 +256,39 @@ function Board({ session, onExit, init, onReplaced }) {
   useEffect(() => { setInspect(null); }, [S.log.length]);
   const look = (card, fn) => () => { setInspect(card); fn?.(); };
   // A turn starts with the optional actions (replenish, use a privilege) and moves on to the main action when skipped.
+  // Skipping can be undone by cancelling the main action; replenishing or using a privilege cannot.
   const [skipped, setSkipped] = useState(false);
-  useEffect(() => { setSkipped(false); }, [S.cur, S.over, S.awaitingFirst]);
+  const [optUsed, setOptUsed] = useState(false);
+  useEffect(() => { setSkipped(false); setOptUsed(false); }, [S.cur, S.over, S.awaitingFirst]);
   const privCount = S.players[S.cur].priv;
   const lastPriv = useRef({ cur: S.cur, n: privCount });
   useEffect(() => {
-    if (lastPriv.current.cur === S.cur && privCount < lastPriv.current.n) setSkipped(true); // a privilege was just used
+    if (lastPriv.current.cur === S.cur && privCount < lastPriv.current.n) setOptUsed(true); // a privilege was just used
     lastPriv.current = { cur: S.cur, n: privCount };
   }, [S.cur, privCount]);
-  const noOptional = !canReplenish(S) && !(S.players[S.cur].priv > 0 || S.mode === 'priv2');
-  const past = skipped || noOptional; // the optional step is over, by choice or because there is nothing to choose
+  const p = cur(S), pd = S.pending;
+  const boardHasTokens = S.board.some((c) => c && c !== 'gold');
+  const canTakeTokens = boardHasTokens && roomLeft(p) >= 1;
+  const canReserveGold = S.board.includes('gold') && p.res.length < resCap(p) && roomLeft(p) >= 1;
+  const canPay = [...S.pyr.flat(), ...p.res, ...(S.exp ? S.crow : [])].some((c) => c && plan(S, p, c));
+  // A privilege only takes a gem or pearl token from the board, and only if there is room for it.
+  const canUsePriv = (p.priv > 0 || S.mode === 'priv2') && canTakeTokens;
+  // Skipping the optional step is only allowed when the player has a main action left to do.
+  const mainPossible = canTakeTokens || canReserveGold || canPay;
+  const noOptional = !canReplenish(S) && !canUsePriv;
+  const past = skipped || optUsed || noOptional; // the optional step is over, by choice or because there is nothing to choose
   const locked = !past && !S.mode && !S.pending && !S.awaitingFirst;
   const guard = (fn) => (locked ? undefined : fn);
-  const p = cur(S), pd = S.pending;
+  const pdispatch = (a) => { if (!(locked && a.type === 'card')) dispatch(a); };
   // Layout numbers. The cards get the size their rows allow, the board takes what is left, and any
   // spare width goes to the players, the cards and the board in that order of need.
   const prompt = statusText(S);
-  const perk = perkText(inspect);
+  // A perk that steals also says whether the steal would happen right now.
+  const me = S.players[seat ?? S.cur];
+  const them = S.players[1 - (seat ?? S.cur)];
+  const steals = inspect && (inspect.ability === 'steal' || inspect.ab === 'steal' || inspect.ab === 'xsteal');
+  const stealNote = !steals ? '' : roomLeft(me) < 1 ? ' Your hand is full (10/10), so you would not get to steal unless paying frees room.' : !kinds(S).some((k) => them.tok[k] > 0) ? ' Your opponent has nothing to steal right now.' : ' Your opponent has tokens, so you would get to steal.';
+  const perk = perkText(inspect) && perkText(inspect) + stealNote;
   const [sbW, setSbW] = useState(0); // width of the page scrollbar, which takes room from the stacked layout
   const { mode, players, stripH, padX, k, w, h, sideW, cardsW, cardZoom, boardColW, cell } = computeLayout({ ...vp, vw: vp.vw - sbW, exp: S.exp });
   const strip = players === 'bottom';
@@ -313,8 +329,8 @@ function Board({ session, onExit, init, onReplaced }) {
   const playersColumn = (
     <div className={cn('relative min-h-0', tall ? (stacked ? 'order-2 flex flex-col gap-3' : 'order-2 grid grid-cols-2 gap-3') : strip ? 'grid grid-cols-2 gap-3' : 'flex flex-col gap-3')} style={strip ? { gridColumn: '1 / -1', gridRow: 2, height: stripH } : undefined} onMouseLeave={() => setHovered(null)}>
       {[0, 1].map((i) => (
-        <div key={i} className="flex min-h-0 flex-1 flex-col" style={stacked ? { height: 150, flex: 'none' } : undefined} onMouseEnter={() => setHovered(i)}>
-          <Player S={S} idx={i} dispatch={dispatch} colW={colW} viewer={seat} summary horizontal={strip || stacked} compact={stacked} />
+        <div key={i} className="flex min-h-0 flex-1 flex-col" style={stacked ? { height: 150, flex: 'none' } : undefined} onMouseOver={(e) => setHovered(e.target.closest('[data-zone="res"]') ? null : i)}>
+          <Player S={S} idx={i} dispatch={pdispatch} onInspect={setInspect} colW={colW} viewer={seat} summary horizontal={strip || stacked} compact={stacked} />
         </div>
       ))}
       {shownHand != null && (
@@ -327,7 +343,7 @@ function Board({ session, onExit, init, onReplaced }) {
               : { left: -10, top: -10, height: 'calc(100% + 20px)', width: sideW + 12 + boardColW + 20, backgroundColor: '#17403a' }}
         >
           <div className="flex h-full flex-col" style={{ width: tall ? '100%' : strip ? padX + boardColW : sideW + 12 + boardColW - 12 }}>
-            <Player S={S} idx={shownHand} dispatch={dispatch} colW={Math.floor(((tall ? w - 20 : strip ? padX + boardColW + 12 : sideW + 12 + boardColW) - 12 - 6 * 12) / 7)} viewer={seat} zoomed wide />
+            <Player S={S} idx={shownHand} dispatch={pdispatch} onInspect={setInspect} colW={Math.floor(((tall ? w - 20 : strip ? padX + boardColW + 12 : sideW + 12 + boardColW) - 12 - 6 * 12) / 7)} viewer={seat} zoomed wide />
             {pd?.type === 'steal' && prompt && (
               <div className="hintbox mt-3 flex min-h-[90px] shrink-0 items-center px-8 py-5 text-base font-bold leading-snug text-white">{prompt}</div>
             )}
@@ -364,10 +380,10 @@ function Board({ session, onExit, init, onReplaced }) {
   const complete = () => {
     const type = { take: 'take', buy: 'buy', reserve: 'reserve', refill: 'repl' }[action];
     setPicked(null);
-    if (action === 'refill') setSkipped(true);
+    if (action === 'refill') setOptUsed(true);
     dispatch({ type });
   };
-  const cancel = () => { setPicked(null); dispatch({ type: 'cancelAction' }); };
+  const cancel = () => { setPicked(null); if (!optUsed) setSkipped(false); dispatch({ type: 'cancelAction' }); };
   const choose = (what) => {
     dispatch({ type: 'cancelAction' });
     if (what === 'priv') dispatch({ type: 'priv' });
@@ -386,14 +402,15 @@ function Board({ session, onExit, init, onReplaced }) {
     ...(action !== 'priv' ? [{ label: { take: 'Take tokens', buy: 'Buy card', reserve: 'Reserve card', refill: 'Replenish' }[action], disabled: !canComplete, onClick: complete, go: true }] : []),
     { label: 'Cancel', disabled: !idle, onClick: cancel, col: action !== 'priv' ? undefined : 2 },
   ] : past ? [
-    { label: 'Take', disabled: !idle, onClick: () => choose('take') },
-    { label: 'Reserve', disabled: !(idle && S.board.includes('gold') && p.res.length < resCap(p)), onClick: () => choose('reserve') },
+    { label: 'Take', disabled: !(idle && canTakeTokens), onClick: () => choose('take') },
+    { label: 'Reserve', disabled: !(idle && canReserveGold), onClick: () => choose('reserve') },
+    { label: 'Buy', disabled: !(idle && canPay), onClick: () => choose('buy') },
   ] : [
     { label: 'Replenish', disabled: !(idle && canReplenish(S)), onClick: () => choose('refill') },
-    { label: 'Use privilege', disabled: !(idle && (p.priv > 0 || S.mode === 'priv2')), onClick: () => choose('priv') },
-    { label: 'Skip', disabled: !idle, onClick: () => setSkipped(true) },
+    { label: 'Use privilege', disabled: !(idle && canUsePriv), onClick: () => choose('priv') },
+    { label: 'Skip', disabled: !(idle && mainPossible), onClick: () => setSkipped(true) },
   ];
-  const slots = !extras.length && !action && !past ? 'three' : 'two';
+  const slots = !extras.length && !action ? 'three' : 'two';
 
   return (
     <>
@@ -515,6 +532,20 @@ function Board({ session, onExit, init, onReplaced }) {
       </div>
 
       {createPortal(<Flights flights={flights} onLanded={landed} />, document.body)}
+      {inspect && createPortal(
+        <div className="pointer-events-none fixed inset-0 z-[70] flex items-center justify-center">
+          {(() => {
+            const sc = Math.min(3, (vp.vh * 0.45) / 174, (vp.vw * 0.6) / 124);
+            const Big = inspect.kind === 'cf' ? CfCard : inspect.kind === 'royal' ? RoyalCard : JewelCard;
+            return (
+              <div style={{ width: 124 * sc, height: 174 * sc }}>
+                <div style={{ width: 124, transform: `scale(${sc})`, transformOrigin: 'top left' }}><Big card={inspect} /></div>
+              </div>
+            );
+          })()}
+        </div>,
+        document.body,
+      )}
       {showRules && <Rules exp={exp} onClose={() => setShowRules(false)} />}
 
       <Dialog open={showLog} onOpenChange={setShowLog}>

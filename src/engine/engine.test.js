@@ -511,3 +511,15 @@ describe('picking tokens in a line', () => {
     expect(next.players[0].tok.red + next.players[1].tok.red).toBe(0);
   });
 });
+
+describe('winning ends the game at once', () => {
+  it('does not offer a steal or anything else after the winning card', () => {
+    const state = createGame(false, 8, 0);
+    state.pyr[0][0] = { id: 'win-test', kind: 'jewel', level: 1, cost: {}, pts: 2, crowns: 0, ability: 'steal', n: 1, bonus: 'blue', color: null };
+    state.players[0].cards = [{ id: 'old', kind: 'jewel', level: 1, cost: {}, pts: 18, crowns: 0, n: 1, bonus: 'red', color: 'red' }];
+    state.players[1].tok.red = 2;
+    const after = play(state, { type: 'card', src: 'pyr', l: 0, i: 0 }, { type: 'buy' });
+    expect(after.over).toBe(state.players[0].name);
+    expect(after.pending).toBeNull();
+  });
+});

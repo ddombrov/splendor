@@ -114,3 +114,17 @@ describe('what flies when the game changes', () => {
     expect(diffFlights(prev, next, snap).find((f) => f.type === 'royal')).toMatchObject({ to: '[data-dest-cards="1"]' });
   });
 });
+
+describe('stealing', () => {
+  it('flies a token from the player who lost it to the player who took it', () => {
+    const { prev, next, snap } = states();
+    snap.tokens = { 0: rect(0, 500), 1: rect(600, 500) };
+    prev.players[1].tok.red = 1;
+    next.players[1].tok.red = 0;
+    next.players[0].tok.red = 1;
+    const out = diffFlights(prev, next, snap).filter((f) => f.type === 'token');
+    expect(out).toHaveLength(1);
+    expect(out[0]).toMatchObject({ kind: 'red', to: '[data-dest-tokens="0"]' });
+    expect(out[0].from.left).toBeGreaterThan(600);
+  });
+});
