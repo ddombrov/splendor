@@ -238,3 +238,6 @@ html[data-look=maaike] .back.lv1 { background: url(/maaike/backs/0.jpg) center /
 html[data-look=maaike] .back.lv2 { background: url(/maaike/backs/1.jpg) center / 100% 100% no-repeat; }
 html[data-look=maaike] .back.lv3 { background: url(/maaike/backs/2.jpg) center / 100% 100% no-repeat; }
 html[data-look=maaike] .back.lvcf { background: url(/maaike/backs/3.jpg) center / 100% 100% no-repeat; }
+/* Maaike version: photo cards keep a frame in their own colour, like the modern cards */
+.card.photo::after { content: ''; position: absolute; inset: 0; border: 3px solid var(--edge, #8b93a7); border-radius: 8px; pointer-events: none; z-index: 5; }
+.card.jewel.photo.k-wild::after { border-image: linear-gradient(135deg, #ff5d73, #ffd25e, #4fd18b, #4f8cff, #b78bf0) 1; border-radius: 0; }
