@@ -170,10 +170,12 @@
 .card.imgcard img { display: block; width: 100%; height: 100%; object-fit: fill; }
 html[data-look=classic] .back.lv1 { background: url(/classic/back-1.jpg) center / 100% 100% no-repeat; }
 html[data-look=classic] .back.lv2 { background: url(/classic/back-2.jpg) center / 100% 100% no-repeat; }
+html[data-look=classic] .back.lvcf { background: url(/classic/back-cf.png) center / 100% 100% no-repeat; }
+html[data-look=classic] .card.cfcard { border: 0; }
 html[data-look=classic] .back.lv3 { background: url(/classic/back-3.jpg) center / 100% 100% no-repeat; }
 
 /* the felt tray a hand is shown on when it is hovered or opened */
-.handboard { background-image: url(/boards/felt-hand.svg); background-size: 100% 100%; background-repeat: no-repeat; background-position: center; border: 2px solid var(--felt-edge); border-radius: 12px; box-shadow: none; }
+.handboard { background-image: url(/boards/felt-hand.svg); background-size: 100% 100%; background-repeat: no-repeat; background-position: center; border: 2px solid var(--hand-edge); border-radius: 12px; box-shadow: none; }
 
 /* buttons and scrolls sit in the slots carved into the bottom of the board */
 .boardbtns { position: absolute; left: calc(var(--cell) * 0.327); top: calc(var(--cell) * 5.846); width: calc(var(--cell) * 3.173); height: calc(var(--cell) * 0.5); display: grid; grid-template-columns: repeat(4, 1fr); gap: calc(var(--cell) * 0.0865); }
@@ -188,8 +190,8 @@ html[data-look=classic] .back.lv3 { background: url(/classic/back-3.jpg) center 
 .boardbtns.three { grid-template-columns: repeat(3, 1fr); gap: calc(var(--cell) * 0.0962); }
 
 /* the felt box the hints are written on */
-.hintbox { background-image: url(/boards/felt-hint.svg); background-size: 100% 100%; background-repeat: no-repeat; border: 2px solid var(--felt-edge); border-radius: 12px; }
-:root { --felt-edge: #b98a4a; }
+.hintbox { background-image: url(/boards/felt-hint.svg); background-size: 100% 100%; background-repeat: no-repeat; border: 2px solid var(--hint-edge); border-radius: 12px; }
+:root { --hand-edge: #2f8576; --hint-edge: #6b7487; }
 
 /* the flipped coin is the coin picture itself */
 .coinbox .coin { width: 150px; height: 150px; }

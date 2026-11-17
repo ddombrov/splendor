@@ -10,7 +10,7 @@ const PREF = { exp: expPref, randomCards: cardsPref, randomRoyals: royalsPref };
  * The game options, the same list on the home page and inside a game. Looks change at once. Options that
  * change the cards in play start a new game when changed inside a game, and cannot change in an online one.
  */
-export default function GameSettings({ onClose, inGame = false, current, locked = false, onRestart }) {
+export default function GameSettings({ onClose, inGame = false, current, locked = false, onRestart, title = 'Game settings', children }) {
   const look = useLook();
   const counters = countersPref.use();
   const stored = { exp: expPref.use(), randomCards: cardsPref.use(), randomRoyals: royalsPref.use() };
@@ -43,7 +43,7 @@ export default function GameSettings({ onClose, inGame = false, current, locked 
     <Dialog open onOpenChange={(o) => !o && onClose()}>
       <DialogContent className="sm:max-w-md">
         <DialogHeader>
-          <DialogTitle>{pending ? 'Start a new game?' : 'Game settings'}</DialogTitle>
+          <DialogTitle>{pending ? 'Start a new game?' : title}</DialogTitle>
           <DialogDescription className={pending ? undefined : 'sr-only'}>{pending ? 'This changes the cards in play, so the current game will be lost.' : 'Choose what the game uses'}</DialogDescription>
         </DialogHeader>
         {pending ? (
@@ -64,6 +64,7 @@ export default function GameSettings({ onClose, inGame = false, current, locked 
                 </label>
               ))}
             </div>
+            {children}
             <DialogFooter><Button onClick={onClose}>Done</Button></DialogFooter>
           </>
         )}

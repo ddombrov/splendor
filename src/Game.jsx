@@ -5,7 +5,6 @@ import { Check, Copy, Loader2, ListChecks, History, ChevronDown, TriangleAlert, 
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Separator } from '@/components/ui/separator';
 import { Switch } from '@/components/ui/switch';
@@ -424,32 +423,7 @@ function Board({ session, onExit, onRestart, init, onReplaced }) {
         <div>
           <div className="stage relative flex flex-col gap-2 p-2.5" onClick={(e) => { if (e.currentTarget.contains(e.target) && !e.target.closest('[data-card-id], [data-keep]')) setInspect(null); }} style={tall ? { width: w, minHeight: h, zoom: k, '--cell': `${cell}px` } : { width: w, height: h, transform: `scale(${k})`, transformOrigin: '0 0', '--cell': `${cell}px` }}>
             <div data-keep className={cn('z-30 flex items-center gap-1.5', tall ? 'justify-end' : 'absolute right-3 top-3')} > 
-              <DropdownMenu>
-                <DropdownMenuTrigger asChild>
-                  <Button variant="ghost" className="h-11 gap-2.5 px-5 text-base text-white hover:bg-white/10 hover:text-white"><Pic name="settings" size={26} /> Settings <ChevronDown className="size-5 opacity-60" /></Button>
-                </DropdownMenuTrigger>
-                <DropdownMenuContent align="end" className="z-[90] w-72">
-                  {online && (
-                    <>
-                      <div className="flex items-center justify-between gap-3 px-2 py-2 text-sm">
-                        <span className="text-muted-foreground">Code</span>
-                        <span className="font-bold tracking-[0.2em]">{session.code}</span>
-                        <button type="button" onClick={(e) => { e.preventDefault(); copyCode(); }} className="text-muted-foreground hover:text-foreground" title="Copy the code">
-                          {copied ? <Check className="size-4" /> : <Copy className="size-4" />}
-                        </button>
-                      </div>
-                      <DropdownMenuSeparator />
-                    </>
-                  )}
-                  <DropdownMenuItem onSelect={() => setShowSettings(true)} className="gap-2 py-2.5"><Pic name="settings" size={20} /> Game settings</DropdownMenuItem>
-                  <DropdownMenuItem onSelect={() => setShowLog(true)} className="gap-2 py-2.5"><Pic name="log" size={20} /> Log</DropdownMenuItem>
-                  <DropdownMenuItem onSelect={() => setShowRules(true)} className="gap-2 py-2.5"><Pic name="rules" size={20} /> Rules</DropdownMenuItem>
-                  <DropdownMenuSeparator />
-                  {!online && <DropdownMenuItem onSelect={restart} className="gap-2 py-2.5"><Pic name="go-again" size={20} /> Start over</DropdownMenuItem>}
-                  <DropdownMenuItem onSelect={resign} className="gap-2 py-2.5"><Pic name="resign" size={20} /> Resign</DropdownMenuItem>
-                  <DropdownMenuItem onSelect={leave} className="gap-2 py-2.5"><Pic name="leave-game" size={20} /> Leave game</DropdownMenuItem>
-                </DropdownMenuContent>
-              </DropdownMenu>
+              <Button variant="ghost" className="h-10 gap-2 px-3 text-sm text-white hover:bg-white/10 hover:text-white" onClick={() => setShowSettings(true)}><Pic name="settings" size={22} /> Settings</Button>
             </div>
             <div className={cn('grid gap-3', !tall && 'min-h-0 flex-1')} style={{ gridTemplateColumns: tall ? 'minmax(0,1fr)' : strip ? `${padX}px ${boardColW}px ${cardsW}px ${padX}px` : `${sideW}px minmax(0,1fr) ${cardsW}px`, gridTemplateRows: strip ? `minmax(0,1fr) ${stripH}px` : undefined }}>
               {playersColumn}
@@ -556,12 +530,34 @@ function Board({ session, onExit, onRestart, init, onReplaced }) {
       {showRules && <Rules exp={exp} onClose={() => setShowRules(false)} />}
       {showSettings && (
         <GameSettings
+          title="Settings"
           inGame
           locked={online}
           current={{ exp: !!session.exp, randomCards: !!session.randomCards, randomRoyals: !!session.randomRoyals }}
           onRestart={(o) => { setShowSettings(false); onRestart(o); }}
           onClose={() => setShowSettings(false)}
-        />
+        >
+          {online && (
+            <div className="flex items-center justify-between gap-3 rounded-lg border px-3 py-2 text-sm">
+              <span className="text-muted-foreground">Game code</span>
+              <span className="font-bold tracking-[0.2em]">{session.code}</span>
+              <button type="button" onClick={copyCode} className="text-muted-foreground hover:text-foreground" title="Copy the code">
+                {copied ? <Check className="size-4" /> : <Copy className="size-4" />}
+              </button>
+            </div>
+          )}
+          <div className="grid grid-cols-2 gap-2">
+            {[
+              ['log', 'Log', () => setShowLog(true)],
+              ['rules', 'Rules', () => setShowRules(true)],
+              ...(online ? [] : [['go-again', 'Start over', restart]]),
+              ['resign', 'Resign', resign],
+              ['leave-game', 'Leave game', leave],
+            ].map(([icon, label, run]) => (
+              <Button key={label} variant="outline" className="justify-start gap-2" onClick={() => { setShowSettings(false); run(); }}><Pic name={icon} size={20} /> {label}</Button>
+            ))}
+          </div>
+        </GameSettings>
       )}
 
       <Dialog open={showLog} onOpenChange={setShowLog}>

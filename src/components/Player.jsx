@@ -1,3 +1,4 @@
+import { useLayoutEffect, useRef, useState } from 'react';
 import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { BorderBeam } from '@/components/ui/border-beam';
@@ -29,6 +30,20 @@ const TokenStat = ({ p, big }) => {
 
 export default function Player({ S, idx, dispatch, onInspect, colW = 52, viewer = null, onOpen = null, zoomed = false, wide = false, summary = false, expanded = false, horizontal = false, compact = false }) {
   const p = S.players[idx];
+  const fitRef = useRef(null);
+  const [fit, setFit] = useState(1);
+  useLayoutEffect(() => {
+    const el = fitRef.current;
+    const box = el?.parentElement;
+    if (!el || !box) return;
+    const k = box.getBoundingClientRect().height / (box.offsetHeight || 1);
+    const cs = getComputedStyle(box);
+    const avail = box.getBoundingClientRect().height - (parseFloat(cs.paddingTop) + parseFloat(cs.paddingBottom)) * k;
+    const used = el.getBoundingClientRect().height;
+    if (!avail || !used) return;
+    const next = Math.max(0.45, Math.min(1, fit * (avail / used) * 0.985));
+    if (Math.abs(next - fit) > 0.01) setFit(next);
+  });
   const counters = useCounters();
   const count = (n) => counters && n > 0 && <span className="countbadge" title={`${n} cards`}>{n}</span>;
   const active = idx === S.cur && !S.awaitingFirst;
@@ -65,7 +80,7 @@ export default function Player({ S, idx, dispatch, onInspect, colW = 52, viewer 
         </div>
     );
     return (
-      <Card data-dest-tokens={idx} data-dest-cards={idx} data-dest-res={idx} className={cn('handboard min-h-0 flex-1 flex-row items-stretch gap-4 overflow-hidden px-4 py-2', active && 'outline outline-2 -outline-offset-4 outline-primary/70')}>
+      <Card data-dest-tokens={idx} data-dest-cards={idx} data-dest-res={idx} className={cn('handboard min-h-0 flex-1 flex-row items-stretch gap-4 overflow-hidden px-4 py-2', active && 'outline outline-[3px] -outline-offset-3 outline-[#ffd25e]')}>
         <div className="flex shrink-0 flex-col justify-center gap-1">
           <h3 className="text-base font-bold">{p.name}</h3>
           <div className="flex flex-wrap items-center gap-x-3">
@@ -111,7 +126,8 @@ export default function Player({ S, idx, dispatch, onInspect, colW = 52, viewer 
     const cw = Math.round(124 * z);
     const ch = Math.round(189 * z);
     return (
-      <Card data-dest-tokens={idx} data-dest-cards={idx} data-dest-res={idx} className={cn('handboard min-h-0 flex-1 gap-0 overflow-hidden p-3', active && 'outline outline-2 -outline-offset-4 outline-primary/70')}>
+      <Card data-dest-tokens={idx} data-dest-cards={idx} data-dest-res={idx} className={cn('handboard min-h-0 flex-1 gap-0 overflow-hidden p-3', active && 'outline outline-[3px] -outline-offset-3 outline-[#ffd25e]')}>
+        <div ref={fitRef} style={{ zoom: fit }}>
         <h3 className="text-base font-bold">{p.name}</h3>
         <div className="mt-1 flex flex-wrap items-center gap-x-3">
           <Stat title="Prestige points"><span>{pts(p)}</span></Stat>
@@ -150,6 +166,7 @@ export default function Player({ S, idx, dispatch, onInspect, colW = 52, viewer 
             if (!c) return <div key={`slot${i}`} className="slot" />;
             return reserved(c, i);
           })}
+        </div>
         </div>
       </Card>
     );
@@ -194,8 +211,8 @@ export default function Player({ S, idx, dispatch, onInspect, colW = 52, viewer 
             <div key={k} className="flex shrink-0 flex-col items-center gap-2" style={{ width: colW }}>
               {zoomed && (
                 <div className="flex items-center gap-2" title={`${k}: ${p.tok[k]} tokens`}>
-                  <TokenArt kind={k} size={Math.max(34, Math.round(colW * 0.5))} />
-                  <span className="font-extrabold leading-none" style={{ fontSize: Math.max(24, Math.round(colW * 0.34)) }}>{p.tok[k]}</span>
+                  <TokenArt kind={k} size={Math.max(30, Math.round(colW * 0.36))} />
+                  <span className="font-extrabold leading-none" style={{ fontSize: Math.max(22, Math.round(colW * 0.28)) }}>{p.tok[k]}</span>
                 </div>
               )}
               <div title={canReturn ? `Return a ${k} token to the bag` : `${k}: ${p.tok[k]}`} onClick={click} className={cn('flex flex-col-reverse items-center', click && 'pile click')} style={{ minHeight: zoomed ? 0 : tok }}>
