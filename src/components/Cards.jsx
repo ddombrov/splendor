@@ -1,5 +1,5 @@
 import { CF_TEXT, ROYAL_TEXT } from '../engine/data.js';
-import { classicCardFile, useCounters, useLook } from '../lib/look.js';
+import { classicCardFile, maaikeCfPhoto, maaikePhoto, maaikeRoyalPhoto, useCounters, useLook } from '../lib/look.js';
 import { centrePicture, cfPicture } from '../lib/cardTypes.js';
 import { PAL, Gem, Crown, AbilityIcon, Mini } from './Art.jsx';
 
@@ -58,17 +58,19 @@ export function JewelCard({ card, onClick, selected, afford, look: forced }) {
   const wild = card.bonus === 'wild';
   const kind = wild ? 'wild' : card.bonus;
   const abil = card.ability;
-  const centre = card.bonus === 'wild' ? '/modern/icons/any-color-gem.png' : centrePicture(card); // the rainbow bug stands in for wild cards
+  const photo = look === 'maaike' ? maaikePhoto(card) : null;
+  const centre = photo ? null : card.bonus === 'wild' ? '/modern/icons/any-color-gem.png' : centrePicture(card); // the rainbow bug stands in for wild cards
   const title = [wild && 'Wild bonus: copies one of your colours', card.ability && AB_LABEL[card.ability]].filter(Boolean).join(' + ');
   return (
     <div
       data-card-id={card.id}
-      className={`card jewel l${card.level} k-${kind} ${selected ? 'sel' : ''} ${afford ? 'afford' : ''}`}
+      className={`card jewel l${card.level} k-${kind} ${photo ? 'photo' : ''} ${selected ? 'sel' : ''} ${afford ? 'afford' : ''}`}
       style={{ '--tint': PAL[kind].glow }}
       onClick={onClick}
       title={title}
     >
-      <div className="art">{centre ? <img src={centre} alt="" draggable={false} className="jewelart" /> : kind !== 'none' && <Gem kind={kind} size={62} />}</div>
+      {photo && <><img src={photo} alt="" draggable={false} className="photofill" /><div className="photoscrim" /></>}
+      <div className="art">{photo ? null : centre ? <img src={centre} alt="" draggable={false} className="jewelart" /> : kind !== 'none' && <Gem kind={kind} size={62} />}</div>
       <div className="ptsrow">
         <div className="pts">{card.pts || ''}</div>
         <div className="crownrow">{Array.from({ length: card.crowns }, (_, i) => <Crown key={i} size={22} />)}</div>
@@ -91,11 +93,13 @@ export function JewelCard({ card, onClick, selected, afford, look: forced }) {
 export function CfCard({ card, onClick, selected, afford, look: forced }) {
   const current = useLook();
   const look = forced ?? current;
-  const piece = cfPicture(card);
+  const photo = look === 'maaike' ? maaikeCfPhoto(card) : null;
+  const piece = photo ? null : cfPicture(card);
   const file = look === 'classic' ? classicCardFile(card) : null;
   if (file) return <PrintedCard card={card} file={file} onClick={onClick} selected={selected} afford={afford} />;
   return (
-    <div data-card-id={card.id} className={`card cfcard k-cf ${selected ? 'sel' : ''} ${afford ? 'afford' : ''}`} onClick={onClick}>
+    <div data-card-id={card.id} className={`card cfcard k-cf ${photo ? 'photo' : ''} ${selected ? 'sel' : ''} ${afford ? 'afford' : ''}`} onClick={onClick}>
+      {photo && <><img src={photo} alt="" draggable={false} className="photofill" /><div className="photoscrim" /></>}
       {piece && <div className="art cfart"><img src={piece} alt="" draggable={false} className="jewelart" /></div>}
       {card.crowns > 0 && <div className="ptsrow"><div className="crownrow"><Crown size={20} /><Crown size={20} /></div></div>}
       {card.ab === 'crowns2' ? null : CF_ICON[card.ab] ? (() => { const [pic, num, sub] = CF_ICON[card.ab](card); return (
@@ -122,9 +126,11 @@ export function RoyalCard({ card, onClick, glow, look: forced }) {
   const look = forced ?? current;
   const file = look === 'classic' ? classicCardFile(card) : null;
   if (file) return <PrintedCard card={card} file={file} onClick={onClick} afford={glow} />;
-  const art = ROYAL_ART[card.ab ?? 'none'] ?? null;
+  const photo = look === 'maaike' ? maaikeRoyalPhoto(card) : null;
+  const art = photo ? null : ROYAL_ART[card.ab ?? 'none'] ?? null;
   return (
-    <div data-card-id={card.id} className={`card royal ${glow ? 'afford' : ''}`} onClick={onClick}>
+    <div data-card-id={card.id} className={`card royal ${photo ? 'photo' : ''} ${glow ? 'afford' : ''}`} onClick={onClick}>
+      {photo && <><img src={photo} alt="" draggable={false} className="photofill" /><div className="photoscrim" /></>}
       <div className="ptsrow"><div className="pts">{card.pts}</div></div>
       {art && <div className="royal-crown pic"><img src={`/modern/cards/royals/${art}.png`} alt="" draggable={false} className="royal-art" /></div>}
       {card.ab && (

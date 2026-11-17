@@ -11,3 +11,6 @@ GLOSSARY.md
 CONTEXT.md
 docs/adr/
 .scratch/
+
+# photos for the Maaike version: uploaded with the site, but never committed to git
+public/maaike/

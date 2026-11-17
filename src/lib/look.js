@@ -8,14 +8,41 @@ import { CLASSIC_FILES } from './classicFiles.js';
 const KEY = 'sd-look';
 const listeners = new Set();
 
-const read = () => { try { return localStorage.getItem(KEY) === 'classic' ? 'classic' : 'modern'; } catch { return 'modern'; } };
+// The Maaike version uses personal photos from public/maaike. They are uploaded with the site but kept out of git.
+const LOOKS = ['classic', 'maaike'];
+const read = () => { try { const v = localStorage.getItem(KEY); return LOOKS.includes(v) ? v : 'modern'; } catch { return 'modern'; } };
 let look = read();
 const apply = () => { if (typeof document !== 'undefined') document.documentElement.dataset.look = look; };
 apply();
 
 export const getLook = () => look;
+export const MAAIKE_AVAILABLE = true;
+
+const MAAIKE_ROYAL_PHOTOS = 12; // the four base royals, then the eight expansion royals
+/** The photo for a royal card in the Maaike version, or null. */
+export function maaikeRoyalPhoto(card) {
+  const m = /^([be])(\d+)$/.exec(String(card.id));
+  if (card.kind !== 'royal' || !m) return null;
+  const i = (m[1] === 'b' ? 0 : 4) + Number(m[2]) - 1;
+  return i < MAAIKE_ROYAL_PHOTOS ? `/maaike/royals/${String(i).padStart(2, '0')}.jpg` : null;
+}
+const MAAIKE_CF_PHOTOS = 17; // every counterfeiter card has a photo
+export const MAAIKE_TOKENS = new Set(['blue', 'white', 'green', 'black', 'red', 'pearl', 'glass', 'gold']);
+/** The photo for a counterfeiter card in the Maaike version, or null. */
+export function maaikeCfPhoto(card) {
+  const i = Number(String(card.id).replace(/\D/g, ''));
+  return card.kind === 'cf' && Number.isInteger(i) && i < MAAIKE_CF_PHOTOS ? `/maaike/cf/${String(i).padStart(2, '0')}.jpg` : null;
+}
+const MAAIKE_PHOTOS = 67; // one photo for each of the 67 development cards, in printed order
+const LEVEL_START = [0, 30, 54];
+/** The photo for a development card in the Maaike version, or null when there are not enough photos. */
+export function maaikePhoto(card) {
+  const i = Number(String(card.id).split('-').pop());
+  const n = LEVEL_START[(card.level || 1) - 1] + i;
+  return card.kind === 'jewel' && Number.isInteger(n) && n < MAAIKE_PHOTOS ? `/maaike/cards/${String(n).padStart(2, '0')}.jpg` : null;
+}
 export function setLook(next) {
-  look = next === 'classic' ? 'classic' : 'modern';
+  look = LOOKS.includes(next) ? next : 'modern';
   try { localStorage.setItem(KEY, look); } catch { /* ignore */ }
   apply();
   listeners.forEach((fn) => fn());
