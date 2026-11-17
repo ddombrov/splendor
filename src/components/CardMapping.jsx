@@ -39,8 +39,7 @@ const BACKS = [
   ['Level 2 (yellow)', '/classic/backs/level-2.jpg', '/modern/cards/backs/yellow.svg', '/maaike/backs/1.jpg'],
   ['Level 3 (blue)', '/classic/backs/level-3.jpg', '/modern/cards/backs/blue.svg', '/maaike/backs/2.jpg'],
   ['Counterfeiter', '/classic/backs/counterfeiter.png', '/modern/cards/backs/purple.svg', '/maaike/backs/3.jpg'],
-  ['Hidden reserved card', null, '/modern/cards/backs/rainbow.svg', null],
-  ['Royal (not shown in game yet)', '/classic/backs/royal.png', null, null],
+  ['Hidden reserved card', '/classic/backs/hidden.png', '/modern/cards/backs/rainbow.svg', '/maaike/backs/4.jpg'],
 ];
 const Back = ({ src }) => (src
   ? <div style={{ width: 124 * 0.62, height: 189 * 0.62, borderRadius: 6, background: `url(${src}) center / 100% 100% no-repeat` }} />
