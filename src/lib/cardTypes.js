@@ -37,18 +37,3 @@ export function centrePicture(card) {
 const CF_PIECES = ['solitaire-ring', 'bezel-stud-earrings', 'prong-stud-earrings', 'cushion-ring', 'round-gem-ring', 'three-stone-band'];
 /** Counterfeiter cards wear amethyst jewellery, one piece per power. */
 export const cfPicture = (card) => `/modern/jewelry/${CF_PIECES[Number(String(card.id).replace(/\D/g, '')) % CF_PIECES.length]}/amethyst.png`;
-
-// A piece is drawn the same size on every card that shows it. Its size is the biggest one that clears the cost
-// rows of every printed card with that piece (the cost rows run up the left side, starting at costTop).
-import { jewelCards } from '../engine/cards.js';
-const costTop = (card) => 182 - Object.keys(card.cost).length * 19 - (Object.keys(card.cost).length - 1) * 3;
-const keyOf = (card) => { const t = cardType(card); return t.piece === 'neutral' ? t.neutral : t.piece; };
-const SIZE = {};
-for (const level of [1, 2, 3]) {
-  for (const card of jewelCards(level)) {
-    const k = keyOf(card);
-    SIZE[k] = Math.min(SIZE[k] ?? 104, costTop(card) - 34);
-  }
-}
-/** The size in pixels for the picture on this card (104 means full size). */
-export const pieceSize = (card) => SIZE[keyOf(card)] ?? Math.min(104, costTop(card) - 34);

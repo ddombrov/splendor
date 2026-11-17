@@ -1,6 +1,6 @@
 import { CF_TEXT, ROYAL_TEXT } from '../engine/data.js';
 import { classicCardFile, useCounters, useLook } from '../lib/look.js';
-import { centrePicture, cfPicture, pieceSize } from '../lib/cardTypes.js';
+import { centrePicture, cfPicture } from '../lib/cardTypes.js';
 import { PAL, Gem, Crown, AbilityIcon, Mini } from './Art.jsx';
 
 // Royal abilities that have a picture; the first three need no words, the rest keep their text.
@@ -58,8 +58,6 @@ export function JewelCard({ card, onClick, selected, afford, look: forced }) {
   const wild = card.bonus === 'wild';
   const kind = wild ? 'wild' : card.bonus;
   const abil = card.ability;
-  const size = pieceSize(card); // the same piece is the same size on every card
-  const small = size < 100;
   const centre = card.bonus === 'wild' ? '/modern/icons/any-color-gem.png' : centrePicture(card); // the rainbow bug stands in for wild cards
   const title = [wild && 'Wild bonus: copies one of your colours', card.ability && AB_LABEL[card.ability]].filter(Boolean).join(' + ');
   return (
@@ -70,7 +68,7 @@ export function JewelCard({ card, onClick, selected, afford, look: forced }) {
       onClick={onClick}
       title={title}
     >
-      <div className={`art${small ? ' high' : ''}`}>{centre ? <img src={centre} alt="" draggable={false} className="jewelart" style={small ? { width: size, height: size } : undefined} /> : kind !== 'none' && <Gem kind={kind} size={62} />}</div>
+      <div className="art">{centre ? <img src={centre} alt="" draggable={false} className="jewelart" /> : kind !== 'none' && <Gem kind={kind} size={62} />}</div>
       <div className="ptsrow">
         <div className="pts">{card.pts || ''}</div>
         <div className="crownrow">{Array.from({ length: card.crowns }, (_, i) => <Crown key={i} size={22} />)}</div>
@@ -98,7 +96,7 @@ export function CfCard({ card, onClick, selected, afford, look: forced }) {
   if (file) return <PrintedCard card={card} file={file} onClick={onClick} selected={selected} afford={afford} />;
   return (
     <div data-card-id={card.id} className={`card cfcard k-cf ${selected ? 'sel' : ''} ${afford ? 'afford' : ''}`} onClick={onClick}>
-      {piece && <div className="art cfart"><img src={piece} alt="" draggable={false} className="jewelart" style={Object.keys(card.cost).length >= 3 ? { width: 52, height: 52 } : undefined} /></div>}
+      {piece && <div className="art cfart"><img src={piece} alt="" draggable={false} className="jewelart" /></div>}
       {card.crowns > 0 && <div className="ptsrow"><div className="crownrow"><Crown size={20} /><Crown size={20} /></div></div>}
       {card.ab === 'crowns2' ? null : CF_ICON[card.ab] ? (() => { const [pic, num, sub] = CF_ICON[card.ab](card); return (
         <div className="note iconly">

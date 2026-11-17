@@ -17,6 +17,7 @@ import { JewelCard, CfCard, RoyalCard, CardBack } from './components/Cards.jsx';
 import Player from './components/Player.jsx';
 import Rules from './components/Rules.jsx';
 import GameSettings from './components/GameSettings.jsx';
+import GameLog from './components/GameLog.jsx';
 import { classicCardFile, useLook } from './lib/look.js';
 import { TokenArt, Scroll, Gem, Mini, CompleteIcon, Pic } from './components/Art.jsx';
 import { computeLayout } from './layout.js';
@@ -573,13 +574,9 @@ function Board({ session, onExit, onRestart, init, onReplaced }) {
       )}
 
       <Dialog open={showLog} onOpenChange={setShowLog}>
-        <DialogContent className="sm:max-w-lg">
-          <DialogHeader><DialogTitle>Game log</DialogTitle><DialogDescription>Most recent first.</DialogDescription></DialogHeader>
-          <ScrollArea className="h-[50vh] pr-3">
-            <ul className="space-y-1.5 text-sm">
-              {S.log.map((l, i) => <li key={i} className={i === 0 ? 'text-foreground' : 'text-muted-foreground'}>{l}</li>)}
-            </ul>
-          </ScrollArea>
+        <DialogContent className="sm:max-w-lg" aria-describedby={undefined}>
+          <DialogHeader><DialogTitle>Game log</DialogTitle></DialogHeader>
+          <GameLog S={S} />
         </DialogContent>
       </Dialog>
 

@@ -61,9 +61,8 @@
 .royal-crown { position: absolute; left: 0; right: 0; top: 36px; display: flex; justify-content: center; }
 .royal-crown.pic { top: 8px; }
 .royal-art { width: 72px; height: 72px; object-fit: contain; }
-.cfart { padding-top: 96px; }
-.cfart .jewelart { width: 62px; height: 62px; margin-left: 14px; }
-.card.jewel .art.high { align-items: flex-start; padding-top: 30px; }
+.cfart { padding-top: 78px; }
+.cfart .jewelart { width: 84px; height: 84px; }
 .jewelart { width: 104px; height: 104px; object-fit: contain; filter: drop-shadow(0 4px 5px rgba(0, 0, 0, 0.35)); }
 .card.jewel.k-none { background: url(/modern/cards/fronts/gray.svg) center / 100% 100% no-repeat; }
 .card.k-none { --edge: #9aa3b5; }
@@ -218,7 +217,13 @@ html[data-look=classic] .stage .board-wrap, html[data-look=classic] .stage .boar
 html[data-look=classic] .woodbtn { background: #e1cfb0; border: 2px solid #8f6c50; color: #3a2616; }
 html[data-look=classic] .woodbtn.go { background: #e0b64a; }
 html[data-look=classic] .boardscrolls { gap: calc(var(--cell) * 0.12); }
-html[data-look=classic] .woodbtn:disabled { opacity: 1; background: #cdbd9f; color: #8a7a62; border-color: #9a8466; }
-.woodbtn:disabled { opacity: 1; color: #a39682; }
 
 .deckcount { position: absolute; top: 4px; left: 50%; transform: translateX(-50%); min-width: 22px; padding: 1px 6px; border-radius: 9px; background: rgba(0, 0, 0, 0.6); color: #fff; font-size: 13px; font-weight: 800; line-height: 1.2; text-align: center; pointer-events: none; }
+
+/* board buttons are always solid; pressing and hovering show as a tint and a small lift, and disabled ones are just muted */
+.woodbtn, html[data-look=classic] .woodbtn { background: #e1cfb0; border: 2px solid #8f6c50; color: #3a2616; transition: transform 0.1s, background 0.1s; }
+.woodbtn.go, html[data-look=classic] .woodbtn.go { background: #e0b64a; color: #2a1706; }
+.woodbtn:hover:not(:disabled) { background: #ecdcbc; transform: translateY(-2px); }
+.woodbtn.go:hover:not(:disabled) { background: #ecc55a; }
+.woodbtn:active:not(:disabled) { transform: translateY(0); background: #d4bf99; }
+.woodbtn:disabled, html[data-look=classic] .woodbtn:disabled { opacity: 1; background: #cdbd9f; color: #8a7a62; border-color: #9a8466; cursor: default; }

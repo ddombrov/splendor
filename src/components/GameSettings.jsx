@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { Info } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Switch } from '@/components/ui/switch';
@@ -20,7 +21,6 @@ export default function GameSettings({ onClose, inGame = false, current, locked 
 
   const rows = [
     { key: 'exp', title: 'Counterfeiters expansion', game: true },
-    { key: 'randomCards', title: 'Random cards', game: true, needsModern: true },
     { key: 'look', title: 'Original look' },
     { key: 'counters', title: 'Card counters' },
   ];
@@ -59,7 +59,7 @@ export default function GameSettings({ onClose, inGame = false, current, locked 
               {rows.map((r) => (
                 <label key={r.key} className={`flex items-center justify-between gap-4 ${disabled(r) ? 'opacity-50' : 'cursor-pointer'}`}>
                   <span>
-                    <span className="block font-semibold">{r.title}</span>
+                    <span className="flex items-center gap-1.5 font-semibold">{r.title}{r.key === 'look' && <button type="button" title="See card mapping" className="text-muted-foreground hover:text-foreground" onClick={(e) => { e.preventDefault(); window.open('/?mapping=1', '_blank'); }}><Info className="size-4" /></button>}</span>
                     {note(r) && <span className="block text-sm text-muted-foreground">{note(r)}</span>}
                   </span>
                   <Switch checked={value(r)} disabled={disabled(r)} onCheckedChange={(on) => change(r, on)} />
@@ -68,7 +68,6 @@ export default function GameSettings({ onClose, inGame = false, current, locked 
             </div>
             <div className="flex flex-col items-center gap-2 [&_button]:w-52 [&_button]:justify-center">
               {children}
-              <Button variant="outline" onClick={() => window.open('/?mapping=1', '_blank')}>See card mapping</Button>
             </div>
             <DialogFooter><Button onClick={onClose}>Done</Button></DialogFooter>
           </>

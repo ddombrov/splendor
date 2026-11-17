@@ -317,13 +317,13 @@ function doBuy(S, color) {
   else S.crow.splice(s.i, 1);
   if (card.kind === 'cf') {
     p.cf.push(card);
-    log(S, `${p.name} buys a counterfeiter card.`);
+    log(S, `${p.name} buys a counterfeiter card. {card:${card.id}}`);
     finishMain(S);
     return;
   }
   card.color = card.bonus === 'wild' ? color : card.bonus === 'none' ? null : card.bonus;
   p.cards.push(card);
-  log(S, `${p.name} buys a level ${card.level} card (${card.pts} pts${card.crowns ? `, ${card.crowns} crown` : ''}).`);
+  log(S, `${p.name} buys a level ${card.level} card (${card.pts} pts${card.crowns ? `, ${card.crowns} crown` : ''}). {card:${card.id}}`);
   const steps = [];
   if (card.ability === 'match') steps.push(`match:${card.color}`);
   else if (card.ability) steps.push(card.ability);
@@ -461,7 +461,7 @@ const handlers = {
       else if (src === 'cdeck' && S.cdeck.length) c = S.cdeck.pop();
       if (!c) return;
       p.cf.push(c);
-      log(S, `${p.name} takes a free counterfeiter card.`);
+      log(S, `${p.name} takes a free counterfeiter card. {card:${c.id}}`);
       S.pending = null; runQueue(S);
       return;
     }
@@ -504,7 +504,7 @@ const handlers = {
     const r = S.royals.splice(i, 1)[0];
     if (pd.replace && S.rdeck.length) S.royals.push(S.rdeck.pop());
     p.royals.push(r);
-    log(S, `${p.name} claims a royal card (${r.pts} pts).`);
+    log(S, `${p.name} claims a royal card (${r.pts} pts). {card:${r.id}}`);
     S.pending = null;
     S.queue.unshift(...(r.ab && !r.ab.startsWith('w9') ? [r.ab] : []), 'royal');
     runQueue(S);
