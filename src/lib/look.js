@@ -18,6 +18,14 @@ apply();
 export const getLook = () => look;
 export const MAAIKE_AVAILABLE = !!import.meta.env?.DEV;
 
+const MAAIKE_ROYAL_PHOTOS = 10; // the four base royals, then the first six expansion royals
+/** The photo for a royal card in the Maaike version, or null. */
+export function maaikeRoyalPhoto(card) {
+  const m = /^([be])(\d+)$/.exec(String(card.id));
+  if (card.kind !== 'royal' || !m) return null;
+  const i = (m[1] === 'b' ? 0 : 4) + Number(m[2]) - 1;
+  return i < MAAIKE_ROYAL_PHOTOS ? `/maaike/royals/${String(i).padStart(2, '0')}.jpg` : null;
+}
 const MAAIKE_CF_PHOTOS = 15; // the first 15 counterfeiter cards have a photo
 export const MAAIKE_TOKENS = new Set(['blue', 'green', 'black', 'red', 'pearl', 'glass', 'gold']); // white has no photo yet
 /** The photo for a counterfeiter card in the Maaike version, or null. */
