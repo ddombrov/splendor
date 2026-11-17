@@ -1,0 +1,27 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 250 380.79" width="518" height="789">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#26272c"/>
+      <stop offset="1" stop-color="#121316"/>
+    </linearGradient>
+    <pattern id="lattice" width="20" height="20" patternUnits="userSpaceOnUse">
+      <path d="M10 0 L20 10 L10 20 L0 10 Z" fill="none" stroke="#4a4c55" stroke-width="0.6"/>
+    </pattern>
+    <radialGradient id="glow" cx="50%" cy="42%" r="55%">
+      <stop offset="0" stop-color="#ffffff" stop-opacity="0.10"/>
+      <stop offset="1" stop-color="#ffffff" stop-opacity="0"/>
+    </radialGradient>
+    <radialGradient id="vignette" cx="50%" cy="50%" r="70%">
+      <stop offset="0.6" stop-color="#000" stop-opacity="0"/>
+      <stop offset="1" stop-color="#000" stop-opacity="0.35"/>
+    </radialGradient>
+    <clipPath id="card"><rect x="1" y="1" width="248" height="378.79" rx="16"/></clipPath>
+  </defs>
+  <g clip-path="url(#card)">
+    <rect width="250" height="380.79" fill="url(#bg)"/>
+    <rect width="250" height="380.79" fill="url(#lattice)" opacity="0.35"/>
+    <rect width="250" height="380.79" fill="url(#glow)"/>
+    <rect width="250" height="380.79" fill="url(#vignette)"/>
+  </g>
+  <rect x="1" y="1" width="248" height="378.79" rx="16" fill="none" stroke="#3e4049" stroke-width="2"/>
+</svg>

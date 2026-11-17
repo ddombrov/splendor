@@ -1,115 +1,272 @@
+import { useLayoutEffect, useRef, useState } from 'react';
 import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { NumberTicker } from '@/components/ui/number-ticker';
 import { BorderBeam } from '@/components/ui/border-beam';
 import { cn } from '@/lib/utils';
-import { COLORS, CF_TEXT } from '../data.js';
-import { JewelCard, CardBack } from './Cards.jsx';
+import { COLORS, CF_TEXT } from '../engine/data.js';
+import { JewelCard, RoyalCard, CardBack } from './Cards.jsx';
 import { TokenArt, Gem, Scroll, Crown } from './Art.jsx';
-import { bonuses, colorPts, crowns, kinds, plan, pts, total } from '../engine.js';
+import { bonuses, colorPts, crowns, kinds, limitCount, plan, pts, resCap, roomLeft } from '../engine/engine.js';
 
 const Label = ({ children }) => (
-  <div className="mt-3 mb-1 text-[11px] font-semibold uppercase tracking-widest text-muted-foreground">{children}</div>
+  <div className="mt-2 mb-1 text-[10px] font-semibold uppercase tracking-widest text-muted-foreground">{children}</div>
 );
-const Stat = ({ label, children }) => (
-  <div className="flex flex-col items-center gap-0.5">
-    <div className="flex h-7 items-center gap-1 text-2xl font-extrabold leading-none">{children}</div>
-    <span className="text-xs text-muted-foreground">{label}</span>
-  </div>
+const Stat = ({ title, big, children }) => (
+  <div title={title} className={cn('flex items-center gap-1 font-extrabold leading-none', big ? 'h-12 gap-2 text-5xl' : 'h-7 text-xl')}>{children}</div>
 );
 
-export default function Player({ S, idx, dispatch }) {
+// Past this many cards of one colour, the small views show the latest few and an ellipsis; the opened view shows them all.
+const MAX_STACK = 5;
+
+const TokenStat = ({ p, big }) => {
+  const n = limitCount(p);
+  return (
+    <Stat big={big} title="Tokens held, out of the limit of 10">
+      <span className={n >= 10 ? 'text-amber-300' : undefined}>{n}/10</span>
+    </Stat>
+  );
+};
+
+export default function Player({ S, idx, dispatch, onInspect, colW = 52, viewer = null, onOpen = null, zoomed = false, wide = false, summary = false, expanded = false, horizontal = false, compact = false }) {
   const p = S.players[idx];
-  const active = idx === S.cur;
+  const fitRef = useRef(null);
+  const [fit, setFit] = useState(1);
+  useLayoutEffect(() => {
+    const el = fitRef.current;
+    const box = el?.parentElement;
+    if (!el || !box) return;
+    const k = box.getBoundingClientRect().height / (box.offsetHeight || 1);
+    const cs = getComputedStyle(box);
+    const slots = box.querySelector('[data-zone=res]');
+    const avail = box.getBoundingClientRect().height - (parseFloat(cs.paddingTop) + parseFloat(cs.paddingBottom)) * k - (slots ? slots.getBoundingClientRect().height : 0);
+    const used = el.getBoundingClientRect().height;
+    if (!avail || !used) return;
+    const next = Math.max(0.45, Math.min(1, fit * (avail / used) * 0.985));
+    if (Math.abs(next - fit) > 0.01) setFit(next);
+  });
+  const active = idx === S.cur && !S.awaitingFirst;
   const pd = S.pending;
-  const canDisc = pd?.type === 'discard' && active;
-  const canSteal = pd?.type === 'steal' && !active;
+  const mine = viewer == null || viewer === S.cur;
+  const showReserved = viewer == null ? active : idx === viewer;
+  const canDisc = pd?.type === 'discard' && active && mine;
+  const canSteal = pd?.type === 'steal' && !active && mine;
+  const canReturn = active && mine && !S.main && !pd && roomLeft(p) === 0;
   const b = bonuses(p);
-  const tokens = [...kinds(S), 'gold'].filter((k) => p.tok[k] > 0);
+  const all = [...kinds(S), 'gold'];
+  const ownedOf = (k) => p.cards.filter((x) => (k === 'gold' ? x.bonus === 'none' : x.color === k));
+  const royals = (z) => p.royals.length > 0 && (
+    <div className="compact-cards flex flex-wrap gap-1" style={{ '--z': z }}>
+      {p.royals.map((r) => <RoyalCard key={r.id} card={r} onClick={() => onInspect?.(r)} />)}
+    </div>
+  );
+  const reserved = (c, i) => (showReserved ? (
+    <JewelCard key={c.id} card={c} selected={S.selCard?.src === 'res' && S.selCard.i === i} afford={!S.main && !!plan(S, p, c)} onClick={() => { onInspect?.(c); dispatch({ type: 'card', src: 'res', i }); }} />
+  ) : (
+    <CardBack key={c.id} level="hidden" />
+  ));
+
+  if (summary && horizontal) {
+    const cw = 34;
+    const ch = 52;
+    const slots = (
+      <div data-zone="res" className="compact-cards flex shrink-0 items-center gap-1.5" style={{ '--z': 0.26 }}>
+          {Array.from({ length: resCap(p) }, (_, i) => {
+            const c = p.res[i];
+            if (!c) return <div key={`slot${i}`} className="slot" />;
+            return reserved(c, i);
+          })}
+        </div>
+    );
+    return (
+      <Card data-dest-tokens={idx} data-dest-cards={idx} data-dest-res={idx} className={cn('handboard min-h-0 flex-1 flex-row items-stretch gap-4 overflow-hidden px-4 py-2', active && 'outline outline-[3px] -outline-offset-3 outline-[#ffd25e]')}>
+        <div className="flex shrink-0 flex-col justify-center gap-1">
+          <h3 className="text-base font-bold">{p.name}</h3>
+          <div className="flex flex-wrap items-center gap-x-3">
+            <Stat title="Prestige points"><span>{pts(p)}</span></Stat>
+            <Stat title="Crowns"><span>{crowns(p)}</span><Crown size={20} /></Stat>
+            <Stat title="Scrolls"><span>{p.priv}</span><Scroll size={22} /></Stat>
+            <TokenStat p={p} />
+          </div>
+          {compact && <div className="mt-1">{slots}</div>}
+        </div>
+        <div className="flex min-w-0 flex-1 items-start justify-center gap-2 pt-1">
+          {all.map((k) => {
+            const owned = ownedOf(k);
+            const shown = owned.slice(-MAX_STACK);
+            const step = shown.length > 1 ? Math.min(16, Math.floor(56 / (shown.length - 1))) : 0;
+            return (
+              <div key={k} title={`${k}: ${p.tok[k]} tokens${owned.length ? `, ${owned.length} cards` : ''}`} className="flex flex-col items-center gap-0.5" style={{ width: cw }}>
+                <TokenArt kind={k} size={26} />
+                <span className="text-base font-extrabold leading-none">{p.tok[k]}</span>
+                {shown.length > 0 && (
+                  <div className="compact-cards relative mt-0.5" style={{ '--z': cw / 124, width: cw, height: ch + step * (shown.length - 1) }}>
+                    {shown.map((card, i) => (
+                      <div key={card.id} className="absolute left-0 cursor-zoom-in overflow-hidden rounded-[4px]" style={{ top: i * step, width: cw, height: ch, zIndex: i }} onClick={() => onInspect?.(card)}>
+                        <JewelCard card={card} />
+                      </div>
+                    ))}
+                  </div>
+                )}
+                
+                {owned.length > MAX_STACK && <span className="text-sm font-extrabold leading-none text-muted-foreground" title="Open this player to see every card">…</span>}
+              </div>
+            );
+          })}
+        </div>
+        {p.royals.length > 0 && <div className="flex shrink-0 items-start pt-1">{royals(0.22)}</div>}
+        {!compact && slots}
+      </Card>
+    );
+  }
+
+  if (summary) {
+    const z = expanded ? 0.5 : 0.22;
+    const cw = Math.round(124 * z);
+    const ch = Math.round(189 * z);
+    return (
+      <Card data-dest-tokens={idx} data-dest-cards={idx} data-dest-res={idx} className={cn('handboard min-h-0 flex-1 gap-0 overflow-hidden p-3', active && 'outline outline-[3px] -outline-offset-3 outline-[#ffd25e]')}>
+        <div ref={fitRef} className="shrink-0" style={{ zoom: fit }}>
+        <h3 className="text-base font-bold">{p.name}</h3>
+        <div className="mt-1 flex flex-wrap items-center gap-x-3">
+          <Stat title="Prestige points"><span>{pts(p)}</span></Stat>
+          <Stat title="Crowns"><span>{crowns(p)}</span><Crown size={20} /></Stat>
+          <Stat title="Scrolls"><span>{p.priv}</span><Scroll size={22} /></Stat>
+          <TokenStat p={p} />
+        </div>
+        <div className={cn('mt-2 flex flex-col', expanded ? 'gap-3' : 'gap-0.5')}>
+          {all.map((k) => {
+            const owned = ownedOf(k);
+            const shown = owned.slice(-MAX_STACK);
+            const step = shown.length > 1 ? Math.min(cw, Math.floor((expanded ? 100 : 70) / (shown.length - 1))) : 0;
+            return (
+              <div key={k} title={`${k}: ${p.tok[k]} tokens${owned.length ? `, ${owned.length} cards` : ''}`} className="flex items-center gap-2">
+                <TokenArt kind={k} size={expanded ? 36 : 26} />
+                <span className="w-6 text-lg font-extrabold leading-none">{p.tok[k]}</span>
+                {shown.length > 0 && (
+                  <div className="compact-cards relative shrink-0" style={{ '--z': z, width: cw + step * (shown.length - 1), height: ch }}>
+                    {shown.map((card, i) => (
+                      <div key={card.id} className="absolute top-0 cursor-zoom-in overflow-hidden rounded-[4px]" style={{ left: i * step, width: cw, height: ch, zIndex: i }} onClick={() => onInspect?.(card)}>
+                        <JewelCard card={card} />
+                      </div>
+                    ))}
+                  </div>
+                )}
+                
+                {owned.length > MAX_STACK && <span className="text-lg font-extrabold leading-none text-muted-foreground" title="Open this player to see every card">…</span>}
+              </div>
+            );
+          })}
+        </div>
+        {p.royals.length > 0 && <div className="mt-2">{royals(0.22)}</div>}
+        </div>
+        <div data-zone="res" className="compact-cards mt-auto flex gap-1.5 pt-2" style={{ '--z': 0.24 }}>
+          {Array.from({ length: resCap(p) }, (_, i) => {
+            const c = p.res[i];
+            if (!c) return <div key={`slot${i}`} className="slot" />;
+            return reserved(c, i);
+          })}
+        </div>
+      </Card>
+    );
+  }
 
   return (
-    <Card className={cn('relative gap-0 overflow-hidden p-4', active && 'border-primary/50')}>
-      {active && <BorderBeam size={140} duration={9} borderWidth={2} colorFrom="#d9b15a" colorTo="#d9b15a00" />}
-      <div className="flex flex-wrap items-center justify-between gap-2">
-        <div className="flex items-center gap-3">
-          <h3 className="text-lg font-bold">{p.name}</h3>
-          {active && <Badge>Your turn</Badge>}
+    <Card
+      onClick={onOpen ? (e) => { if (!e.target.closest('[data-card-id], .pile')) onOpen(); } : undefined}
+      className={cn('relative min-h-0 flex-1 gap-0 overflow-hidden border-transparent bg-transparent p-3 shadow-none', active && !zoomed && 'border-primary/50', onOpen && 'cursor-zoom-in')}
+    >
+      {active && !zoomed && <BorderBeam size={120} duration={9} borderWidth={2} colorFrom="#d9b15a" colorTo="#d9b15a00" />}
+      <div className="flex flex-wrap items-center justify-between gap-x-2 gap-y-1">
+        <div className="flex items-center gap-2">
+          <h3 className={cn('font-bold', zoomed ? 'text-3xl' : 'text-base')}>{p.name}</h3>
         </div>
-        <div className="flex items-center gap-5">
-          <Stat label="Prestige"><NumberTicker value={pts(p)} className="tracking-normal text-foreground dark:text-foreground" /></Stat>
-          <Stat label="Crowns">
-            <NumberTicker value={crowns(p)} className="tracking-normal text-foreground dark:text-foreground" />
-            <Crown size={16} />
+        <div className={cn('flex items-center', zoomed ? 'gap-8' : 'gap-3')}>
+          <Stat big={zoomed} title="Prestige points">
+            <span>{pts(p)}</span>
           </Stat>
-          <Stat label="Scrolls">
-            {p.priv ? Array.from({ length: p.priv }, (_, i) => <Scroll key={i} size={18} />) : <span className="text-muted-foreground/60">0</span>}
+          <Stat big={zoomed} title="Crowns">
+            <span>{crowns(p)}</span>
+            <Crown size={zoomed ? 46 : 22} />
           </Stat>
+          <Stat big={zoomed} title="Scrolls">
+            <span>{p.priv}</span>
+            <Scroll size={zoomed ? 50 : 24} />
+          </Stat>
+          <TokenStat p={p} big={zoomed} />
         </div>
       </div>
 
-      <Label>Tokens ({total(p)})</Label>
-      <div className="flex min-h-11 flex-wrap items-center gap-4">
-        {tokens.length === 0 && <span className="text-sm text-muted-foreground">None</span>}
-        {tokens.map((k) => {
-          const click = canDisc ? () => dispatch({ type: 'disc', c: k }) : canSteal && k !== 'gold' ? () => dispatch({ type: 'steal', c: k }) : null;
+      <div className={wide ? cn('flex items-start gap-6', zoomed && 'flex-wrap') : 'contents'}>
+      <div data-dest-tokens={idx} data-dest-cards={idx} className="mt-3 flex items-start gap-3" title="Tokens, with the cards of each colour under them">
+        {all.map((k) => {
+          const click = canReturn ? () => dispatch({ type: 'giveBack', c: k }) : canDisc ? () => dispatch({ type: 'disc', c: k }) : canSteal && k !== 'gold' ? () => dispatch({ type: 'steal', c: k }) : null;
+          const owned = ownedOf(k);
+          const z = colW / 124;
+          const full = Math.round(colW * 1.525);
+          const strip = owned.length > 1 ? Math.max(10, Math.min(Math.round((zoomed ? 62 : 40) * z), Math.floor((colW * 4.2 - full) / (owned.length - 1)))) : 0;
+          const tok = zoomed ? Math.min(colW - 6, 80) : 32;
           return (
-            <div key={k} title={k} onClick={click} className={cn('relative leading-none', click && 'pile click')}>
-              <TokenArt kind={k} size={40} />
-              <span className="absolute -right-1.5 -bottom-1 flex h-5 min-w-5 items-center justify-center rounded-full bg-primary px-1 text-xs font-bold text-primary-foreground">
-                {p.tok[k]}
-              </span>
+            <div key={k} className="flex shrink-0 flex-col items-center gap-2" style={{ width: colW }}>
+              {zoomed && (
+                <div className="flex items-center gap-2" title={`${k}: ${p.tok[k]} tokens`}>
+                  <TokenArt kind={k} size={Math.max(30, Math.round(colW * 0.36))} />
+                  <span className="font-extrabold leading-none" style={{ fontSize: Math.max(22, Math.round(colW * 0.28)) }}>{p.tok[k]}</span>
+                </div>
+              )}
+              <div title={canReturn ? `Return a ${k} token to the bag` : `${k}: ${p.tok[k]}`} onClick={click} className={cn('flex flex-col-reverse items-center', click && 'pile click')} style={{ minHeight: zoomed ? 0 : tok }}>
+                {Array.from({ length: p.tok[k] }, (_, i) => (
+                  <div key={i} className="leading-none" style={{ marginBottom: i ? (zoomed ? -Math.round(tok * 0.57) : -18) : 0 }}><TokenArt kind={k} size={tok} /></div>
+                ))}
+              </div>
+              {owned.length > 0 && (
+                <div className="compact-cards relative shrink-0" style={{ width: colW, height: (owned.length - 1) * strip + full, '--z': z }}>
+                  {owned.map((card, i) => (
+                    <div key={card.id} className="absolute left-0 cursor-zoom-in" style={{ top: i * strip, width: colW, zIndex: i }} onClick={() => onInspect?.(card)}>
+                      <JewelCard card={card} />
+                    </div>
+                  ))}
+                </div>
+              )}
+              {owned.length > 0 && (
+                <div className="flex items-center gap-2">
+                  {COLORS.includes(k) && <div title={`Points from ${k} cards`} className={cn('font-extrabold leading-none', zoomed ? 'text-3xl' : 'text-lg')}>{colorPts(p, k)}</div>}
+                  
+                </div>
+              )}
             </div>
           );
         })}
       </div>
 
-      <Label>Bonuses</Label>
-      <div className="flex flex-wrap gap-2">
-        {COLORS.filter((c) => b[c]).map((c) => (
-          <Badge key={c} variant="outline" className="gap-1.5 py-1 text-sm">
-            <Gem kind={c} size={16} />
-            {b[c]}
-            {colorPts(p, c) ? <span className="text-muted-foreground">· {colorPts(p, c)} pts</span> : null}
-          </Badge>
-        ))}
-        {!COLORS.some((c) => b[c]) && <span className="text-sm text-muted-foreground">None</span>}
-      </div>
-
       {p.royals.length > 0 && (
-        <>
+        <div>
           <Label>Royal cards</Label>
-          <div className="text-sm">{p.royals.map((r) => `${r.pts} pts`).join(', ')}</div>
-        </>
+          {royals(zoomed ? 0.6 : 0.4)}
+        </div>
       )}
       {p.cf.length > 0 && (
-        <>
+        <div>
           <Label>Counterfeiters</Label>
-          <div className="flex flex-col gap-1.5">
+          <div className="flex flex-col gap-1">
             {p.cf.map((c) => (
-              <span key={c.id} className={cn('border-l-[3px] border-violet-400 pl-2 text-xs', S.used[c.id] && active && 'opacity-45')}>
+              <span key={c.id} className={cn('border-l-2 border-violet-400 pl-1.5 text-[10px] leading-tight', S.used[c.id] && active && 'opacity-45')}>
                 {CF_TEXT[c.ab](c)}
               </span>
             ))}
           </div>
-        </>
+        </div>
       )}
 
-      <Label>Reserved ({p.res.length})</Label>
-      <div className="rowline wrap">
-        {p.res.length === 0 && <span className="text-sm text-muted-foreground">None</span>}
-        {p.res.map((c, i) =>
-          active ? (
-            <JewelCard
-              key={c.id}
-              card={c}
-              selected={S.selCard?.src === 'res' && S.selCard.i === i}
-              afford={!S.main && !!plan(S, p, c)}
-              onClick={() => dispatch({ type: 'card', src: 'res', i })}
-            />
-          ) : (
-            <CardBack key={c.id} level={c.level} label="?" count="" />
-          ),
-        )}
+      </div>
+
+      <div className="compact-cards mt-auto pt-4" style={{ '--z': zoomed ? 0.9 : wide ? 0.68 : 0.52 }}>
+        <div className="rowline wrap">
+          {Array.from({ length: resCap(p) }, (_, i) => {
+            const c = p.res[i];
+            if (!c) return <div key={`slot${i}`} className="slot" />;
+            return reserved(c, i);
+          })}
+        </div>
       </div>
     </Card>
   );

@@ -1,0 +1,19 @@
+name = "splendor-duel"
+main = "src/index.js"
+compatibility_date = "2025-09-01"
+
+# The built game, served from the same address as the API so there is one link to share.
+[assets]
+directory = "../dist"
+not_found_handling = "single-page-application"
+run_worker_first = ["/api/*"]
+
+# The weekly cleanup of games nobody has touched for seven days: Mondays at 04:00 UTC.
+[triggers]
+crons = ["0 4 * * 1"]
+
+# The real database. Local development ignores the id and uses a database in the .wrangler folder.
+[[d1_databases]]
+binding = "DB"
+database_name = "splendor-duel"
+database_id = "a2c5ec94-ff44-4f03-8559-c8578bb38649"

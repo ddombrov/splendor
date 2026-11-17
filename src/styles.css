@@ -13,16 +13,15 @@
 .board { display: grid; grid-template-columns: repeat(5, 62px); gap: 6px; }
 .cell {
   width: 62px; height: 62px; border-radius: 50%; display: flex; align-items: center; justify-content: center;
-  background: #12151c; box-shadow: inset 0 2px 5px rgba(0, 0, 0, 0.6);
+  background: #12151c;
 }
-.cell:nth-child(13) { box-shadow: inset 0 2px 5px rgba(0, 0, 0, 0.6), 0 0 0 1.5px var(--gold); }
-.tok { cursor: pointer; line-height: 0; transition: transform 0.12s; filter: drop-shadow(0 2px 2px rgba(0, 0, 0, 0.5)); }
+.tok { cursor: pointer; line-height: 0; transition: transform 0.12s; }
 .tok:hover { transform: translateY(-2px) scale(1.05); }
-.tok.sel { transform: translateY(-3px) scale(1.08); filter: drop-shadow(0 0 0 transparent); outline: 2px solid var(--gold); outline-offset: 2px; border-radius: 50%; }
+.tok.sel { transform: translateY(-3px) scale(1.08); outline: 2px solid var(--gold); outline-offset: 2px; border-radius: 50%; }
 .tok.hl { outline: 2px solid var(--good); outline-offset: 2px; border-radius: 50%; }
 .tok.dim { opacity: 0.3; }
 .pile { transition: transform 0.12s; }
-.pile.click { cursor: pointer; outline: 2px solid var(--good); outline-offset: 2px; border-radius: 50%; }
+.pile.click { cursor: pointer; }
 
 /* card rows */
 .rowline { display: flex; gap: 12px; flex-wrap: nowrap; overflow-x: auto; padding: 8px 4px 10px; }
@@ -31,32 +30,24 @@
 /* cards */
 .card {
   --tint: 120, 130, 160; --lvl: #4b5563;
-  position: relative; isolation: isolate; flex: 0 0 auto; width: 124px; aspect-ratio: 5 / 7; border-radius: 10px; cursor: pointer; overflow: hidden; color: #eef0f6;
+  position: relative; isolation: isolate; flex: 0 0 auto; width: 124px; aspect-ratio: 360 / 549; border-radius: 8px; cursor: pointer; overflow: hidden; color: #eef0f6;
   background: linear-gradient(180deg, rgba(var(--tint), 0.2) 0%, rgba(var(--tint), 0.06) 55%), #1a1f2b;
-  border: 1px solid var(--line); border-top: 4px solid var(--lvl);
-  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.45); transition: transform 0.12s, box-shadow 0.12s;
+  border: 0; /* the card art draws its own outline */
+  transition: transform 0.12s;
 }
-.card:hover { transform: translateY(-3px); box-shadow: 0 8px 14px rgba(0, 0, 0, 0.5); }
+.card:hover { transform: translateY(-3px); }
 .card.l1 { --lvl: #4aa174; } .card.l2 { --lvl: #d0a248; } .card.l3 { --lvl: #5b8bd6; }
-.card.afford { box-shadow: 0 0 0 2px var(--good), 0 2px 6px rgba(0, 0, 0, 0.45); }
-.card.sel { transform: translateY(-6px); box-shadow: 0 0 0 2px var(--gold), 0 10px 16px rgba(0, 0, 0, 0.5); }
+.card.afford { box-shadow: 0 0 0 2px var(--good); }
+.card.sel { transform: translateY(-6px); box-shadow: 0 0 0 2px var(--gold); }
 .card .art { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; padding-bottom: 6px; opacity: 0.9; }
-.card .pts { text-shadow: 0 1px 3px rgba(0, 0, 0, 0.85); }
-.card .pts { position: absolute; left: 9px; top: 5px; font-size: 26px; font-weight: 800; line-height: 1.1; letter-spacing: -0.02em; }
-.card .crownrow { position: absolute; left: 9px; top: 38px; display: flex; flex-direction: column; gap: 2px; }
-.card .bonus { position: absolute; right: 8px; top: 8px; filter: drop-shadow(0 1px 2px rgba(0,0,0,.7)); display: flex; flex-direction: column; align-items: center; }
-.card .bonus b { font-size: 11px; font-weight: 700; }
+.card .ptsrow { position: absolute; left: 9px; top: 5px; display: flex; align-items: center; gap: 4px; }
+.card .pts { font-size: 26px; font-weight: 800; line-height: 1.1; letter-spacing: -0.02em; }
+.card .crownrow { display: flex; align-items: center; gap: 0; }
+.card .bonus { position: absolute; right: 8px; top: 8px; display: flex; flex-direction: row; align-items: center; gap: 1px; }
 .card .costs { position: absolute; left: 7px; bottom: 7px; display: flex; flex-direction: column-reverse; gap: 3px; }
-.costpill {
-  display: inline-flex; align-items: center; gap: 5px; padding: 2px 8px 2px 5px; border-radius: 999px;
-  background: rgba(10, 12, 18, 0.72); border: 1px solid rgba(255, 255, 255, 0.14);
-}
+.costpill { display: inline-flex; align-items: center; gap: 5px; }
 .costpill b { font-size: 13px; font-weight: 700; line-height: 1; min-width: 8px; text-align: center; }
-.card .abil {
-  position: absolute; right: 7px; bottom: 7px; width: 46px; padding: 4px 2px; border-radius: 8px; text-align: center; color: var(--gold);
-  display: flex; flex-direction: column; align-items: center; gap: 2px; background: rgba(10, 12, 18, 0.72); border: 1px solid rgba(255, 255, 255, 0.14);
-}
-.card .abil small { font-size: 8.5px; line-height: 1; text-transform: uppercase; letter-spacing: 0.05em; color: #e9d9ac; font-weight: 600; }
+.card .abil { position: absolute; right: 6px; bottom: 6px; line-height: 0; }
 .note {
   position: absolute; left: 9px; right: 9px; top: 38px; padding: 6px 7px; border-radius: 6px; font-size: 10.5px; line-height: 1.3; font-weight: 500;
   background: rgba(10, 12, 18, 0.6); border: 1px solid rgba(255, 255, 255, 0.12);
@@ -64,17 +55,33 @@
 .cfcard { --lvl: #9b7bd6; --tint: 155, 123, 214; }
 .cfcard .note { left: 44px; right: 8px; top: 34px; font-size: 9px; padding: 4px 5px; }
 .cfhead { position: absolute; left: 9px; right: 9px; top: 7px; display: flex; align-items: center; gap: 5px; font-size: 9.5px; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase; color: #cdbbee; }
-.cfcrowns { top: auto; bottom: 8px; left: auto; right: 8px; flex-direction: row; }
+.card .cfcrowns { position: absolute; top: auto; bottom: 8px; left: auto; right: 8px; }
 .royal { --lvl: var(--gold); --tint: 217, 177, 90; }
-.royal.afford { box-shadow: 0 0 0 2px var(--gold), 0 2px 6px rgba(0, 0, 0, 0.45); }
-.royal-crown { position: absolute; left: 0; right: 0; top: 40px; display: flex; justify-content: center; }
-.royaltext { top: auto; bottom: 9px; text-align: center; }
+.royal.afford { box-shadow: 0 0 0 2px var(--gold); }
+.royal-crown { position: absolute; left: 0; right: 0; top: 36px; display: flex; justify-content: center; }
+.royal-crown.pic { top: 8px; }
+.royal-art { width: 72px; height: 72px; object-fit: contain; }
+.cfart { padding-top: 78px; }
+.cfart .jewelart { width: 84px; height: 84px; }
+.jewelart { width: 104px; height: 104px; object-fit: contain; filter: drop-shadow(0 4px 5px rgba(0, 0, 0, 0.35)); }
+.card.jewel.k-none { background: url(/modern/cards/fronts/gray.svg) center / 100% 100% no-repeat; }
+.card.k-none { --edge: #9aa3b5; }
+.royaltext { top: auto; bottom: 56px; text-align: center; }
+.rmark { position: absolute; bottom: 6px; z-index: 2; width: 46px; height: 40px; display: grid; place-items: center; }
+.rmark > * { grid-area: 1 / 1; }
+.rmark img { position: absolute; inset: 0; margin: auto; opacity: 0.35; width: 44px; height: 44px; }
+.gem-img { object-fit: contain; pointer-events: none; }
+.rmark b { position: relative; top: 2px; font-size: 18px; font-weight: 800; }
+.rmark.l { left: 5px; }
+.rmark.r { right: 5px; }
+.powerimg { display: block; width: 104px; height: auto; margin: 0 auto 4px; }
+.countbadge { display: inline-flex; align-items: center; justify-content: center; flex: 0 0 auto; min-width: 20px; height: 20px; padding: 0 5px; border-radius: 10px; background: rgba(0, 0, 0, 0.55); border: 1px solid rgba(255, 255, 255, 0.35); font-size: 12px; font-weight: 800; line-height: 1; color: #fff; }
 .card.back { cursor: default; display: flex; align-items: center; justify-content: center; border-top-width: 1px; }
 .card.back[class*='lv'] { cursor: pointer; }
-.back.lv1 { background: #1f4a37; border-color: #2f6b50; }
-.back.lv2 { background: #5b4519; border-color: #84652a; }
-.back.lv3 { background: #1f3b69; border-color: #2f5a9c; }
-.back.lvcf { background: #3a2a58; border-color: #5d45a0; }
+.back.lv1 { background: url(/modern/cards/backs/green.svg) center / 100% 100% no-repeat; border-color: transparent; }
+.back.lv2 { background: url(/modern/cards/backs/yellow.svg) center / 100% 100% no-repeat; border-color: transparent; }
+.back.lv3 { background: url(/modern/cards/backs/blue.svg) center / 100% 100% no-repeat; border-color: transparent; }
+.back.lvcf { background: url(/modern/cards/backs/purple.svg) center / 100% 100% no-repeat; border-color: transparent; }
 .card.back .emblem { display: flex; flex-direction: column; align-items: center; gap: 8px; }
 .card.back .emblem b { font-size: 22px; font-weight: 800; letter-spacing: 0.02em; }
 .card.back .dots { display: flex; gap: 5px; }
@@ -90,3 +97,133 @@
 .preview { zoom: 1.5; }
 .preview .card { cursor: default; }
 .preview .card:hover { transform: none; }
+
+/* One-page layout: the whole game lives on a fixed-size stage that is scaled to fit the window. */
+.compact-cards .card { zoom: var(--z, 0.75); }
+.compact-cards .rowline { gap: 6px; padding: 2px; overflow: visible; }
+.compact-cards .rowline.wrap { flex-wrap: wrap; }
+.stage .board-wrap { padding: 9px; border-radius: 12px; }
+.stage .board { grid-template-columns: repeat(5, var(--cell, 92px)); gap: 6px; }
+.stage .cell { width: var(--cell, 92px); height: var(--cell, 92px); }
+.stage .crownmark { width: 46px; height: 38px; }
+.stage .crownmark b { font-size: 20px; }
+.stage .crownmark svg { width: 38px; height: 30px; }
+.stage .preview { zoom: 0.78; }
+
+/* the royal ability text now sits beside a small picture */
+.royaltext { display: flex; align-items: center; justify-content: center; gap: 6px; }
+.cell { border-radius: 50%; }
+
+/* a power that is only a picture gets a box that hugs the picture */
+.note.iconly { left: 50%; right: auto; transform: translateX(-50%); width: fit-content; padding: 0; line-height: 0; background: none; border: 0; }
+/* empty places for reserved cards, the same size as a reserved card */
+.compact-cards .slot { zoom: var(--z, 0.75); flex: 0 0 auto; width: 124px; aspect-ratio: 360 / 549; border: 1.5px dashed rgba(255, 255, 255, 0.2); border-radius: 10px; }
+
+.card.back .emblem { padding: 6px 10px; border-radius: 10px; background: rgba(10, 12, 18, 0.72); }
+.card.back .count { background: rgba(10, 12, 18, 0.8); }
+
+/* card fronts for the five gem colours; wild cards keep the plain tinted look */
+.card.jewel.k-white, .card.jewel.k-blue, .card.jewel.k-black, .card.jewel.k-red, .card.jewel.k-green { background-size: 100% 100%; background-repeat: no-repeat; background-position: center; }
+.card.jewel.k-white { background-image: url(/modern/cards/fronts/white.svg); }
+.card.jewel.k-blue { background-image: url(/modern/cards/fronts/blue.svg); }
+.card.jewel.k-black { background-image: url(/modern/cards/fronts/black.svg); }
+.card.jewel.k-red { background-image: url(/modern/cards/fronts/red.svg); }
+.card.jewel.k-green { background-image: url(/modern/cards/fronts/green.svg); }
+
+/* every card gets a border in its own colour; the level is shown by its row */
+.card.k-red { --edge: #c4384a; } .card.k-blue { --edge: #3a73d6; } .card.k-green { --edge: #2ea263; }
+.card.k-black { --edge: #7d8599; } .card.k-white { --edge: #c3d0e0; } .card.k-wild { --edge: #b78bf0; }
+.card.cfcard { --edge: #9b6bd6; } .card.royal { --edge: #d9b15a; }
+.card.jewel.k-wild { background: url(/modern/cards/fronts/rainbow.svg) center / 100% 100% no-repeat; }
+.card.cfcard { background: url(/modern/cards/fronts/purple.svg) center / 100% 100% no-repeat; }
+.back.lvhidden { background: url(/modern/cards/backs/rainbow.svg) center / 100% 100% no-repeat; border-color: transparent; }
+.iconcount { position: absolute; right: -8px; bottom: -6px; color: #fff; font-size: 20px; font-weight: 800; line-height: 1; -webkit-text-stroke: 4px #12151c; paint-order: stroke fill; }
+.iconsub { position: absolute; left: -10px; bottom: -6px; line-height: 0; }
+.iconsub.xmark { left: auto; right: -12px; bottom: -8px; }
+.iconsub.eye { left: 44%; top: 34%; bottom: auto; transform: translate(-50%, -50%); }
+.card.royal { background: url(/modern/cards/fronts/yellow.svg) center / 100% 100% no-repeat; }
+
+/* the board is the supplied wooden picture: its 5 by 5 sockets line up with the token cells */
+.stage .board-wrap { position: relative; padding: calc(var(--cell) * 0.327) calc(var(--cell) * 0.327) calc(var(--cell) * 1.0385); border: 0; border-radius: 0; background: url(/modern/boards/board-4-buttons.svg) center / 100% 100% no-repeat; }
+.stage .board { gap: calc(var(--cell) * 0.0769); }
+.stage .cell { background: transparent; box-shadow: none; }
+
+/* tokens about to be taken: a solid gold frame on the square */
+.stage .cell.picked { position: relative; background: rgba(250, 204, 21, 0.5); outline: 4px solid #facc15; outline-offset: -3px; border-radius: 10px; box-shadow: 0 0 10px 2px rgba(250, 204, 21, 0.5); }
+.stage .cell.picked .tok.sel { outline: none; transform: none; filter: drop-shadow(0 0 6px #facc15); }
+
+/* the coin that decides who goes first */
+.coinbox { perspective: 700px; display: flex; justify-content: center; padding: 8px 0; }
+.coin { position: relative; width: 104px; height: 104px; transform-style: preserve-3d; animation: coinflip 1.7s cubic-bezier(0.2, 0.6, 0.3, 1) forwards; }
+.coinface { position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; border-radius: 50%; backface-visibility: hidden; background: #f2c230; border: 7px solid #b98a12; color: #5a3d00; font-weight: 800; }
+.coinface b { font-size: 44px; line-height: 1; }
+.coinface small { font-size: 10px; letter-spacing: 0.1em; text-transform: uppercase; }
+.coinface.back { transform: rotateY(180deg); background: #e7e9ee; border-color: #8e95a5; color: #3b4252; }
+@keyframes coinflip { from { transform: rotateY(0deg); } to { transform: rotateY(var(--end)); } }
+
+
+/* a card dealt from the deck turns over to show its face */
+.dealt { position: relative; transform-style: preserve-3d; animation: dealflip 0.9s 0.3s ease-in-out both; }
+.dealt > .card { backface-visibility: hidden; }
+.dealtback { position: absolute; inset: 0; transform: rotateY(180deg); backface-visibility: hidden; }
+@keyframes dealflip { from { transform: perspective(800px) rotateY(180deg); } to { transform: perspective(800px) rotateY(0deg); } }
+
+/* original look: printed card faces and photographed card backs */
+.card.imgcard { border: 0; background: #111; }
+.card.imgcard img { display: block; width: 100%; height: 100%; object-fit: fill; }
+html[data-look=classic] .back.lv1 { background: url(/classic/backs/level-1.jpg) center / 100% 100% no-repeat; }
+html[data-look=classic] .back.lv2 { background: url(/classic/backs/level-2.jpg) center / 100% 100% no-repeat; }
+html[data-look=classic] .back.lvcf { background: url(/classic/backs/counterfeiter.png) center / 100% 100% no-repeat; }
+html[data-look=classic] .card.cfcard { border: 0; }
+html[data-look=classic] .back.lv3 { background: url(/classic/backs/level-3.jpg) center / 100% 100% no-repeat; }
+
+/* the felt tray a hand is shown on when it is hovered or opened */
+.handboard { background-image: url(/shared/felt/felt-hand.svg); background-size: 100% 100%; background-repeat: no-repeat; background-position: center; border: 2px solid var(--hand-edge); border-radius: 12px; box-shadow: none; }
+
+/* buttons and scrolls sit in the slots carved into the bottom of the board */
+.boardbtns { position: absolute; left: calc(var(--cell) * 0.327); top: calc(var(--cell) * 5.846); width: calc(var(--cell) * 3.173); height: calc(var(--cell) * 0.5); display: grid; grid-template-columns: repeat(4, 1fr); gap: calc(var(--cell) * 0.0865); }
+.boardscrolls { position: absolute; left: calc(var(--cell) * 3.942); top: calc(var(--cell) * 5.846); width: calc(var(--cell) * 1.692); height: calc(var(--cell) * 0.5); display: flex; align-items: center; justify-content: center; }
+.woodbtn { display: flex; align-items: center; justify-content: center; gap: 4px; min-width: 0; border-radius: 6px; background: transparent; color: #4a2612; font-weight: 700; line-height: 1.05; text-align: center; cursor: pointer; }
+.woodbtn:hover:not(:disabled) { background: rgba(94, 50, 28, 0.16); }
+.woodbtn.go { background: #e0b64a; color: #2a1706; }
+.stage .board-wrap.two { background-image: url(/modern/boards/board-2-buttons.svg); }
+.boardbtns.two { grid-template-columns: repeat(2, 1fr); gap: calc(var(--cell) * 0.0962); }
+.stage .board-wrap.three { background-image: url(/modern/boards/board-3-buttons.svg); }
+.boardbtns.three { grid-template-columns: repeat(3, 1fr); gap: calc(var(--cell) * 0.0962); }
+
+/* the felt box the hints are written on */
+.hintbox { background-image: url(/shared/felt/felt-hint.svg); background-size: 100% 100%; background-repeat: no-repeat; border: 2px solid var(--hint-edge); border-radius: 12px; }
+:root { --hand-edge: #2f8576; --hint-edge: #6b7487; }
+
+/* the flipped coin is the coin picture itself */
+.coinbox .coin { width: 150px; height: 150px; }
+.coinface { background: none; border: 0; border-radius: 0; object-fit: contain; width: 100%; height: 100%; }
+.coinface.back { background: none; border: 0; transform: rotateY(180deg) scaleX(-1); }
+
+/* gold is player 1, silver is player 2; the number is printed on the face */
+.coinface { position: absolute; inset: 0; }
+.coinface img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: contain; }
+.coinface b { position: relative; font-size: 56px; font-weight: 800; line-height: 1; color: #4a3100; text-shadow: 0 1px 0 rgba(255, 255, 255, 0.5); }
+.coinface.back b { color: #2f3947; }
+.coinface.back { transform: rotateY(180deg); }
+
+html[data-look=classic] .back.lvroyal { background: url(/classic/backs/royal.png) center / 100% 100% no-repeat; border-color: transparent; }
+
+/* original look: the printed board, drawn with the same square positions as the modern one */
+html[data-look=classic] .stage .board-wrap { border-radius: 10px; }
+
+/* original look: plain wood under the squares, with the buttons drawn as their own cream pads, and scrolls with room between them */
+html[data-look=classic] .stage .board-wrap, html[data-look=classic] .stage .board-wrap.two, html[data-look=classic] .stage .board-wrap.three { background-image: url(/classic/board/plain.png); }
+html[data-look=classic] .woodbtn { background: #e1cfb0; border: 2px solid #8f6c50; color: #3a2616; }
+html[data-look=classic] .woodbtn.go { background: #e0b64a; }
+html[data-look=classic] .boardscrolls { gap: calc(var(--cell) * 0.12); }
+
+.deckcount { position: absolute; top: 4px; left: 50%; transform: translateX(-50%); min-width: 22px; padding: 1px 6px; border-radius: 9px; background: rgba(0, 0, 0, 0.6); color: #fff; font-size: 13px; font-weight: 800; line-height: 1.2; text-align: center; pointer-events: none; }
+
+/* board buttons are always solid; pressing and hovering show as a tint and a small lift, and disabled ones are just muted */
+.woodbtn, html[data-look=classic] .woodbtn { background: #e1cfb0; border: 2px solid #8f6c50; color: #3a2616; transition: transform 0.1s, background 0.1s; }
+.woodbtn.go, html[data-look=classic] .woodbtn.go { background: #e0b64a; color: #2a1706; }
+.woodbtn:hover:not(:disabled) { background: #ecdcbc; transform: translateY(-2px); }
+.woodbtn.go:hover:not(:disabled) { background: #ecc55a; }
+.woodbtn:active:not(:disabled) { transform: translateY(0); background: #d4bf99; }
+.woodbtn:disabled, html[data-look=classic] .woodbtn:disabled { opacity: 1; background: #cdbd9f; color: #8a7a62; border-color: #9a8466; cursor: default; }

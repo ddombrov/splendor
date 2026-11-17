@@ -5,3 +5,9 @@ dist
 .env
 .env.*
 .wrangler
+
+# documents made by the AI Hero skills stay local
+GLOSSARY.md
+CONTEXT.md
+docs/adr/
+.scratch/

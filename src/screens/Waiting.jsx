@@ -1,0 +1,104 @@
+import { useEffect, useRef, useState } from 'react';
+import { Bot, Check, Copy, Loader2 } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { api, savedName } from '../net/api.js';
+import { CodeBoxes, GemRow, NameChoice } from './parts.jsx';
+
+const Shell = ({ children }) => (
+  <div className="fixed inset-0 flex items-center justify-center overflow-auto p-6">
+    <div className="flex w-full max-w-md flex-col items-center gap-6 text-center">{children}</div>
+  </div>
+);
+
+/** The host waits here until someone joins with the code. */
+export function Lobby({ code, onCancel, onOpponentJoined }) {
+  const [copied, setCopied] = useState(false);
+  useEffect(() => {
+    let live = true;
+    const check = async () => {
+      const room = await api.getRoom(code);
+      if (live && room?.seated) onOpponentJoined();
+    };
+    check();
+    const id = setInterval(check, 1500);
+    return () => { live = false; clearInterval(id); };
+  }, [code, onOpponentJoined]);
+  const copy = () => {
+    try { navigator.clipboard.writeText(code); } catch { /* ignore */ }
+    setCopied(true);
+    setTimeout(() => setCopied(false), 1500);
+  };
+  return (
+    <Shell>
+      <GemRow size={34} />
+      <div className="space-y-1">
+        <h1 className="text-2xl font-bold">Your game is ready</h1>
+        <p className="text-sm text-muted-foreground">Send this code to your friend. They choose Join with a code.</p>
+      </div>
+      <CodeBoxes code={code} big />
+      <Button variant="outline" onClick={copy}>{copied ? <Check /> : <Copy />}{copied ? 'Copied' : 'Copy code'}</Button>
+      <p className="flex items-center gap-2 text-sm text-muted-foreground"><Loader2 className="size-4 animate-spin" /> Waiting for your opponent to join</p>
+      <Button variant="ghost" onClick={onCancel}>Cancel game</Button>
+    </Shell>
+  );
+}
+
+/** Quick match: wait in line to be paired. After a minute, offer the computer instead. */
+export function QuickMatch({ onMatched, onCancel, onPlayComputer }) {
+  const [name, setName] = useState(savedName);
+  const [ready, setReady] = useState(false);
+  const [seconds, setSeconds] = useState(0);
+  const ticket = useRef(null);
+  const done = useRef(false);
+  useEffect(() => {
+    if (!ready) return undefined;
+    let live = true;
+    const poll = async () => {
+      if (!ticket.current || done.current) return;
+      const res = await api.quickStatus(ticket.current);
+      if (live && res && !done.current) { done.current = true; onMatched(res); }
+    };
+    api.quickJoin(name.trim()).then((id) => {
+      if (!live) { api.quickLeave(id); return; }
+      ticket.current = id;
+      poll();
+    });
+    const id = setInterval(() => { setSeconds((s) => s + 1); poll(); }, 1000);
+    return () => { live = false; clearInterval(id); if (ticket.current && !done.current) api.quickLeave(ticket.current); };
+    // the name is only read once, when the search starts
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [onMatched, ready]);
+  if (!ready) {
+    return (
+      <Shell>
+        <GemRow size={34} />
+        <h1 className="text-2xl font-bold">Quick match</h1>
+        <div className="w-full space-y-4">
+          <NameChoice autoFocus value={name} onChange={setName} onEnter={() => name.trim() && setReady(true)} />
+          <div className="flex justify-center gap-2">
+            <Button variant="outline" onClick={onCancel}>Cancel</Button>
+            <Button onClick={() => setReady(true)} disabled={!name.trim()}>Find an opponent</Button>
+          </div>
+        </div>
+      </Shell>
+    );
+  }
+  const slow = seconds >= 60;
+  return (
+    <Shell>
+      <GemRow size={34} />
+      <div className="space-y-1">
+        <h1 className="text-2xl font-bold">{slow ? 'No one has joined yet' : 'Looking for an opponent'}</h1>
+        {slow && <p className="text-sm text-muted-foreground">You can keep waiting, or play the computer now.</p>}
+      </div>
+      <div className="flex items-center gap-3 text-3xl font-extrabold tabular-nums">
+        <Loader2 className="size-7 animate-spin text-primary" />
+        {String(Math.floor(seconds / 60)).padStart(1, '0')}:{String(seconds % 60).padStart(2, '0')}
+      </div>
+      <div className="flex flex-wrap justify-center gap-2">
+        {slow && <Button onClick={onPlayComputer}><Bot /> Play the computer</Button>}
+        <Button variant="outline" onClick={onCancel}>Cancel</Button>
+      </div>
+    </Shell>
+  );
+}
