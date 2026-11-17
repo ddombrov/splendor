@@ -33,6 +33,19 @@ const Section = ({ title, children }) => (
   </section>
 );
 
+// Card backs: the original picture and the picture that replaces it in the look being compared.
+const BACKS = [
+  ['Level 1 (green)', '/classic/backs/level-1.jpg', '/modern/cards/backs/green.svg', '/maaike/backs/0.jpg'],
+  ['Level 2 (yellow)', '/classic/backs/level-2.jpg', '/modern/cards/backs/yellow.svg', '/maaike/backs/1.jpg'],
+  ['Level 3 (blue)', '/classic/backs/level-3.jpg', '/modern/cards/backs/blue.svg', '/maaike/backs/2.jpg'],
+  ['Counterfeiter', '/classic/backs/counterfeiter.png', '/modern/cards/backs/purple.svg', '/maaike/backs/3.jpg'],
+  ['Hidden reserved card', null, '/modern/cards/backs/rainbow.svg', null],
+  ['Royal (not shown in game yet)', '/classic/backs/royal.png', null, null],
+];
+const Back = ({ src }) => (src
+  ? <div style={{ width: 124 * 0.62, height: 189 * 0.62, borderRadius: 6, background: `url(${src}) center / 100% 100% no-repeat` }} />
+  : <div style={{ width: 124 * 0.62, height: 189 * 0.62, borderRadius: 6, border: '1px dashed rgba(255,255,255,0.3)' }} className="grid place-items-center text-[10px] text-white/50">none</div>);
+
 const costText = (c) => Object.entries(c.cost).map(([k, n]) => `${n} ${k}`).join(', ');
 
 export default function CardMapping() {
@@ -43,6 +56,9 @@ export default function CardMapping() {
       </div>
       <Section title="Tokens">
         {TOKENS.map((k) => <Pair key={k} label={k}><TokenArt kind={k} size={56} look="classic" /><TokenArt kind={k} size={56} look={RIGHT} /></Pair>)}
+      </Section>
+      <Section title="Card backs">
+        {BACKS.map(([label, classic, modern, maaike]) => <Pair key={label} label={label}><Back src={classic} /><Back src={RIGHT === 'maaike' ? (maaike ?? modern) : modern} /></Pair>)}
       </Section>
       <Section title={`Royal cards (${ROYALS.length})`}>
         {ROYALS.map((r) => <Pair key={r.id} label={`${r.pts} pt \u00b7 ${r.ab ?? 'no ability'}`}><Small><RoyalCard card={r} look="classic" /></Small><Small><RoyalCard card={r} look={RIGHT} /></Small></Pair>)}
