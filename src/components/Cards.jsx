@@ -24,7 +24,7 @@ export const CF_ICON = {
 export const ICON_COUNT = { rtake3: 3, rtake4: 4, rbag2: 2, w9c: '−1', w9k: '−1' };
 export const ROYAL_ICON = { privilege: 'privilege', extra: 'extra', steal: 'steal', take1: 'match', rtake3: 'match', rtake4: 'match', rbag2: 'bag', rcounter: 'takecard', rreserve: 'takecard', rgold: 'gold', w9c: 'wild', w9k: 'crown' };
 
-const COST_ORDER = ['blue', 'white', 'green', 'black', 'red', 'pearl', 'glass'];
+const COST_ORDER = ['blue', 'white', 'green', 'black', 'red', 'pearl', 'glass', 'gold'];
 const AB_LABEL = { extra: 'Extra turn', privilege: 'Privilege', match: 'Match', steal: 'Steal', wild: 'Wild' };
 
 export function Costs({ cost }) {

@@ -9,7 +9,7 @@ import { Pic } from '@/components/Art.jsx';
 import { Field, GemRow, NameChoice, Segmented } from './parts.jsx';
 import { loadSave } from '../lib/saves.js';
 import GameSettings from '@/components/GameSettings.jsx';
-import { cardsPref, expPref, royalsPref, useLook } from '../lib/look.js';
+import { cardsPref, expPref, useLook } from '../lib/look.js';
 
 const MODES = [
   { key: 'device', pic: 'friends', title: 'Play on this device' },
@@ -121,8 +121,7 @@ export default function Home({ onStart, onJoined, onQuick, onResume }) {
   const exp = expPref.use();
   // The printed look has no pictures for made-up cards or the extra royal, so those options are left out with it.
   const randomCards = cardsPref.use() && !classic && !exp;
-  const randomRoyals = royalsPref.use() && !classic && !exp;
-  const start = (o) => onStart({ ...o, randomCards, randomRoyals });
+  const start = (o) => onStart({ ...o, randomCards, randomRoyals: randomCards });
   // Playing on one device has nothing to choose, so it starts straight away.
   const begin = (key) => (key === 'device' ? start({ mode: 'device', exp, source: 'random' }) : setOpen(key));
   // Starting a game on this device or against the computer first offers to resume the unfinished one.

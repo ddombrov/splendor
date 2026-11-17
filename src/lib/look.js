@@ -39,7 +39,6 @@ function makePref(key) {
 export const countersPref = makePref('sd-counters');
 export const expPref = makePref('sd-exp');
 export const cardsPref = makePref('sd-random-cards');
-export const royalsPref = makePref('sd-random-royals');
 export const useCounters = countersPref.use;
 
 /** The picture used for each token kind. */

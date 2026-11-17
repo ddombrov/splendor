@@ -2,9 +2,9 @@ import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Switch } from '@/components/ui/switch';
-import { cardsPref, countersPref, expPref, royalsPref, setLook, useLook } from '../lib/look.js';
+import { cardsPref, countersPref, expPref, setLook, useLook } from '../lib/look.js';
 
-const PREF = { exp: expPref, randomCards: cardsPref, randomRoyals: royalsPref };
+const PREF = { exp: expPref, randomCards: cardsPref };
 
 /**
  * The game options, the same list on the home page and inside a game. Looks change at once. Options that
@@ -13,15 +13,14 @@ const PREF = { exp: expPref, randomCards: cardsPref, randomRoyals: royalsPref };
 export default function GameSettings({ onClose, inGame = false, current, locked = false, onRestart, title = 'Game settings', children }) {
   const look = useLook();
   const counters = countersPref.use();
-  const stored = { exp: expPref.use(), randomCards: cardsPref.use(), randomRoyals: royalsPref.use() };
+  const stored = { exp: expPref.use(), randomCards: cardsPref.use() };
   const shown = inGame ? current : stored;
   const classic = look === 'classic';
   const [pending, setPending] = useState(null);
 
   const rows = [
     { key: 'exp', title: 'Counterfeiters expansion', text: 'Adds glassware tokens, counterfeiter cards and more royals.', game: true },
-    { key: 'randomCards', title: 'Random cards', text: 'Deal made-up cards instead of the 67 printed ones.', game: true, needsModern: true },
-    { key: 'randomRoyals', title: 'Random royal cards', text: 'Draw the royals from a pool of each 2 point power-up plus one 3 point royal.', game: true, needsModern: true },
+    { key: 'randomCards', title: 'Random cards', text: 'Deal made-up cards instead of the 67 printed ones, and draw the royals from a bigger pool.', game: true, needsModern: true },
     { key: 'look', title: 'Original look', text: 'The printed card pictures, tokens, card backs and board. Random cards and royals are off while this is on.' },
     { key: 'counters', title: 'Card counters', text: 'Show how many cards are in each stack in a hand.' },
   ];
@@ -37,9 +36,9 @@ export default function GameSettings({ onClose, inGame = false, current, locked 
   };
   const confirm = () => {
     PREF[pending.key].set(pending.on);
-    const next = { exp: current.exp, randomCards: current.randomCards, randomRoyals: current.randomRoyals, [pending.key]: pending.on };
-    if (next.exp || classic) { next.randomCards = false; next.randomRoyals = false; }
-    onRestart(next);
+    const next = { exp: current.exp, randomCards: current.randomCards, [pending.key]: pending.on };
+    if (next.exp || classic) next.randomCards = false;
+    onRestart({ ...next, randomRoyals: next.randomCards });
   };
 
   return (
