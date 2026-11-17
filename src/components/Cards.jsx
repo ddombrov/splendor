@@ -121,7 +121,7 @@ export function RoyalCard({ card, onClick, glow }) {
   return (
     <div data-card-id={card.id} className={`card royal ${glow ? 'afford' : ''}`} onClick={onClick}>
       <div className="ptsrow"><div className="pts">{card.pts}</div></div>
-      <div className={art ? 'royal-crown pic' : 'royal-crown'}>{art ? <img src={`/royals/${art}.png`} alt="" draggable={false} className="royal-art" /> : <Crown size={42} />}</div>
+      <div className={art ? 'royal-crown pic' : 'royal-crown'}>{art ? <img src={`/cards/royals/${art}.png`} alt="" draggable={false} className="royal-art" /> : <Crown size={42} />}</div>
       {card.ab && (
         <div className={`note royaltext ${ICON_ONLY.includes(card.ab) ? 'iconly' : ''}`}>
           {ROYAL_ICON[card.ab] && (

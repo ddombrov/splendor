@@ -1,4 +1,4 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 250 350" width="250" height="350">
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 250 380.79" width="518" height="789">
   <defs>
     <linearGradient id="bg" x1="0" y1="0" x2="0" y2="1">
       <stop offset="0" stop-color="#4a2330"/>
@@ -15,13 +15,13 @@
       <stop offset="0.6" stop-color="#000" stop-opacity="0"/>
       <stop offset="1" stop-color="#000" stop-opacity="0.35"/>
     </radialGradient>
-    <clipPath id="card"><rect x="1" y="1" width="248" height="348" rx="16"/></clipPath>
+    <clipPath id="card"><rect x="1" y="1" width="248" height="378.79" rx="16"/></clipPath>
   </defs>
   <g clip-path="url(#card)">
-    <rect width="250" height="350" fill="url(#bg)"/>
-    <rect width="250" height="350" fill="url(#lattice)" opacity="0.35"/>
-    <rect width="250" height="350" fill="url(#glow)"/>
-    <rect width="250" height="350" fill="url(#vignette)"/>
+    <rect width="250" height="380.79" fill="url(#bg)"/>
+    <rect width="250" height="380.79" fill="url(#lattice)" opacity="0.35"/>
+    <rect width="250" height="380.79" fill="url(#glow)"/>
+    <rect width="250" height="380.79" fill="url(#vignette)"/>
   </g>
-  <rect x="1" y="1" width="248" height="348" rx="16" fill="none" stroke="#663040" stroke-width="2"/>
+  <rect x="1" y="1" width="248" height="378.79" rx="16" fill="none" stroke="#663040" stroke-width="2"/>
 </svg>

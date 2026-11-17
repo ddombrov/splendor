@@ -152,7 +152,6 @@ export default function Home({ onStart, onJoined, onQuick, onResume }) {
           ))}
         </div>
         <div className="flex items-center gap-4">
-          <Button variant="ghost" onClick={() => setShowRules(true)}><Pic name="rules" size={22} /> Rules</Button>
           <Button variant="ghost" onClick={() => setShowSettings(true)}><Pic name="settings" size={22} /> Settings</Button>
         </div>
       </div>
@@ -172,7 +171,11 @@ export default function Home({ onStart, onJoined, onQuick, onResume }) {
         </Dialog>
       )}
       {open && <GameDialog mode={open} exp={exp} onClose={() => setOpen(null)} onStart={start} onJoined={onJoined} />}
-      {showSettings && <GameSettings onClose={() => setShowSettings(false)} />}
+      {showSettings && (
+        <GameSettings onClose={() => setShowSettings(false)}>
+          <Button variant="outline" className="w-full justify-start gap-2" onClick={() => { setShowSettings(false); setShowRules(true); }}><Pic name="rules" size={20} /> Rules and summary</Button>
+        </GameSettings>
+      )}
       {showRules && <Rules exp={exp} onClose={() => setShowRules(false)} />}
     </div>
   );

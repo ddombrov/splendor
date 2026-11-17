@@ -81,5 +81,6 @@ export function classicCardFile(card) {
     ];
     name = `${parts.join('_')}.jpg`;
   }
-  return name && CLASSIC_FILES.has(name) ? `cards/${name}` : null;
+  if (!name || !CLASSIC_FILES.has(name)) return null;
+  return card.kind === 'royal' ? `royals/${name}` : `cards/level-${card.level}/${name}`;
 }

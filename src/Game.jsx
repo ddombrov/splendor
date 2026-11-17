@@ -549,7 +549,7 @@ function Board({ session, onExit, onRestart, init, onReplaced }) {
           <div className="grid grid-cols-2 gap-2">
             {[
               ['log', 'Log', () => setShowLog(true)],
-              ['rules', 'Rules', () => setShowRules(true)],
+              ['rules', 'Rules and summary', () => setShowRules(true)],
               ...(online ? [] : [['go-again', 'Start over', restart]]),
               ['resign', 'Resign', resign],
               ['leave-game', 'Leave game', leave],
