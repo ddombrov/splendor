@@ -185,7 +185,6 @@ html[data-look=classic] .back.lv3 { background: url(/classic/backs/level-3.jpg) 
 .boardscrolls { position: absolute; left: calc(var(--cell) * 3.942); top: calc(var(--cell) * 5.846); width: calc(var(--cell) * 1.692); height: calc(var(--cell) * 0.5); display: flex; align-items: center; justify-content: center; }
 .woodbtn { display: flex; align-items: center; justify-content: center; gap: 4px; min-width: 0; border-radius: 6px; background: transparent; color: #4a2612; font-weight: 700; line-height: 1.05; text-align: center; cursor: pointer; }
 .woodbtn:hover:not(:disabled) { background: rgba(94, 50, 28, 0.16); }
-.woodbtn:disabled { opacity: 0.35; cursor: default; }
 .woodbtn.go { background: #e0b64a; color: #2a1706; }
 .stage .board-wrap.two { background-image: url(/modern/boards/board-2-buttons.svg); }
 .boardbtns.two { grid-template-columns: repeat(2, 1fr); gap: calc(var(--cell) * 0.0962); }
@@ -218,4 +217,5 @@ html[data-look=classic] .stage .board-wrap, html[data-look=classic] .stage .boar
 html[data-look=classic] .woodbtn { background: #e1cfb0; border: 2px solid #8f6c50; color: #3a2616; }
 html[data-look=classic] .woodbtn.go { background: #e0b64a; }
 html[data-look=classic] .boardscrolls { gap: calc(var(--cell) * 0.12); }
-html[data-look=classic] .woodbtn:disabled { opacity: 0.6; }
+html[data-look=classic] .woodbtn:disabled { opacity: 1; background: #cdbd9f; color: #8a7a62; border-color: #9a8466; }
+.woodbtn:disabled { opacity: 1; color: #a39682; }
