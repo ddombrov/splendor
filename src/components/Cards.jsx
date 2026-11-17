@@ -63,8 +63,9 @@ function centreArt(card) {
   return gem ? `/modern/jewelry/${gem}/${pickFrom(card, PIECES)}.png` : null;
 }
 
-export function JewelCard({ card, onClick, selected, afford }) {
-  const look = useLook();
+export function JewelCard({ card, onClick, selected, afford, look: forced }) {
+  const current = useLook();
+  const look = forced ?? current;
   const file = look === 'classic' ? classicCardFile(card) : null;
   if (file) return <PrintedCard card={card} file={file} onClick={onClick} selected={selected} afford={afford} />;
   const wild = card.bonus === 'wild';
@@ -100,8 +101,9 @@ export function JewelCard({ card, onClick, selected, afford }) {
   );
 }
 
-export function CfCard({ card, onClick, selected, afford }) {
-  const look = useLook();
+export function CfCard({ card, onClick, selected, afford, look: forced }) {
+  const current = useLook();
+  const look = forced ?? current;
   const piece = `/modern/jewelry/amethyst/${pickFrom(card, PIECES)}.png`;
   const file = look === 'classic' ? classicCardFile(card) : null;
   if (file) return <PrintedCard card={card} file={file} onClick={onClick} selected={selected} afford={afford} />;
@@ -128,8 +130,9 @@ export function CfCard({ card, onClick, selected, afford }) {
 // The base royals each have a picture of their own; the expansion royals keep the crown.
 const ROYAL_ART = { steal: 'cloak', privilege: 'beret', extra: 'sunhat', none: 'necklace', rreserve: 'tassel', rgold: 'scarf', w9c: 'butterfly', rcounter: 'cloak-blue', rtake4: 'snake', rbag2: 'hairclip', rtake3: 'turban' };
 
-export function RoyalCard({ card, onClick, glow }) {
-  const look = useLook();
+export function RoyalCard({ card, onClick, glow, look: forced }) {
+  const current = useLook();
+  const look = forced ?? current;
   const file = look === 'classic' ? classicCardFile(card) : null;
   if (file) return <PrintedCard card={card} file={file} onClick={onClick} afford={glow} />;
   const art = ROYAL_ART[card.ab ?? 'none'] ?? null;

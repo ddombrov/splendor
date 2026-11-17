@@ -23,8 +23,9 @@ const RIM = { blue: '#3b82f6', white: '#e4ebf5', green: '#22c55e', black: '#7b84
 const DISC = { blue: '#173a82', white: '#6c7d96', green: '#0f5a31', black: '#2b313d', red: '#7d1622', pearl: '#7a5a92', glass: '#4a1d82', gold: '#8a6205' };
 
 /** A flat token: a vibrant rim, a dimmed disc of the same colour, and the gem on top. No gloss and no shadow. */
-export function TokenArt({ kind, size = 52 }) {
-  const look = useLook();
+export function TokenArt({ kind, size = 52, look: forced }) {
+  const current = useLook();
+  const look = forced ?? current;
   if (look === 'classic' && CLASSIC_TOKEN[kind]) {
     return <img className="tokart classic" src={`/classic/tokens/${CLASSIC_TOKEN[kind]}`} width={size} height={size} alt="" draggable={false} style={{ width: size, height: size, objectFit: 'contain' }} />;
   }

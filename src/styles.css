@@ -211,7 +211,11 @@ html[data-look=classic] .back.lv3 { background: url(/classic/backs/level-3.jpg) 
 html[data-look=classic] .back.lvroyal { background: url(/classic/backs/royal.png) center / 100% 100% no-repeat; border-color: transparent; }
 
 /* original look: the printed board, drawn with the same square positions as the modern one */
-html[data-look=classic] .stage .board-wrap { background-image: url(/classic/board/4-buttons.png); }
-html[data-look=classic] .stage .board-wrap.three { background-image: url(/classic/board/3-buttons.png); }
-html[data-look=classic] .stage .board-wrap.two { background-image: url(/classic/board/2-buttons.png); }
 html[data-look=classic] .stage .board-wrap { border-radius: 10px; }
+
+/* original look: plain wood under the squares, with the buttons drawn as their own cream pads, and scrolls with room between them */
+html[data-look=classic] .stage .board-wrap, html[data-look=classic] .stage .board-wrap.two, html[data-look=classic] .stage .board-wrap.three { background-image: url(/classic/board/plain.png); }
+html[data-look=classic] .woodbtn { background: #e1cfb0; border: 2px solid #8f6c50; color: #3a2616; }
+html[data-look=classic] .woodbtn.go { background: #e0b64a; }
+html[data-look=classic] .boardscrolls { gap: calc(var(--cell) * 0.12); }
+html[data-look=classic] .woodbtn:disabled { opacity: 0.6; }
