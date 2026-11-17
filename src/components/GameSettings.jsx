@@ -1,5 +1,4 @@
 import { useState } from 'react';
-import CardMapping from './CardMapping.jsx';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Switch } from '@/components/ui/switch';
@@ -18,7 +17,6 @@ export default function GameSettings({ onClose, inGame = false, current, locked 
   const shown = inGame ? current : stored;
   const classic = look === 'classic';
   const [pending, setPending] = useState(null);
-  const [mapping, setMapping] = useState(false);
 
   const rows = [
     { key: 'exp', title: 'Counterfeiters expansion', text: 'Adds glassware tokens, counterfeiter cards and more royals.', game: true },
@@ -69,8 +67,7 @@ export default function GameSettings({ onClose, inGame = false, current, locked 
               ))}
             </div>
             {children}
-            <Button variant="outline" className="w-full" onClick={() => setMapping(true)}>See card mapping</Button>
-            {mapping && <CardMapping onClose={() => setMapping(false)} />}
+            <Button variant="outline" className="w-full" onClick={() => window.open('/?mapping=1', '_blank')}>See card mapping</Button>
             <DialogFooter><Button onClick={onClose}>Done</Button></DialogFooter>
           </>
         )}

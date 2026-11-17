@@ -1,5 +1,6 @@
 import { CF_TEXT, ROYAL_TEXT } from '../engine/data.js';
 import { classicCardFile, useLook } from '../lib/look.js';
+import { centrePicture, cfPicture } from '../lib/cardTypes.js';
 import { PAL, Gem, Crown, AbilityIcon, Mini } from './Art.jsx';
 
 // Royal abilities that have a picture; the first three need no words, the rest keep their text.
@@ -49,20 +50,6 @@ function PrintedCard({ card, file, onClick, selected, afford }) {
   );
 }
 
-// The picture in the middle of a modern card: a piece of jewellery set with the card's gem. A card with no colour
-// shows a lamp, chalice or lantern, and a wild card shows the five-gem picture. The gem in the top right corner
-// says which colour the card is.
-const GEM_VARIANT = { blue: 'sapphire', white: 'diamond', green: 'emerald', black: 'obsidian', red: 'ruby' };
-const PIECES = ['solitaire-ring', 'signet-ring', 'stud-earring', 'teardrop-pendant', 'heart-necklace', 'silver-ring', 'shadow-amulet', 'stone-tablet'];
-const NEUTRAL_PIECES = ['lamp', 'chalice', 'lantern'];
-const pickFrom = (card, list) => list[((Number(String(card.id).replace(/^.*-/, '').replace(/\D/g, '')) || 0) + (card.level || 0)) % list.length];
-function centreArt(card) {
-  if (card.bonus === 'wild') return '/shared/icons/any-color-gem.png'; // the rainbow bug; the five-gem picture is the corner marker
-  if (card.bonus === 'none') return `/modern/jewelry/neutral/${pickFrom(card, NEUTRAL_PIECES)}.png`;
-  const gem = GEM_VARIANT[card.bonus];
-  return gem ? `/modern/jewelry/${gem}/${pickFrom(card, PIECES)}.png` : null;
-}
-
 export function JewelCard({ card, onClick, selected, afford, look: forced }) {
   const current = useLook();
   const look = forced ?? current;
@@ -71,7 +58,7 @@ export function JewelCard({ card, onClick, selected, afford, look: forced }) {
   const wild = card.bonus === 'wild';
   const kind = wild ? 'wild' : card.bonus;
   const abil = card.ability;
-  const centre = centreArt(card);
+  const centre = card.bonus === 'wild' ? '/shared/icons/any-color-gem.png' : centrePicture(card); // the rainbow bug stands in for wild cards
   const title = [wild && 'Wild bonus: copies one of your colours', card.ability && AB_LABEL[card.ability]].filter(Boolean).join(' + ');
   return (
     <div
@@ -104,7 +91,7 @@ export function JewelCard({ card, onClick, selected, afford, look: forced }) {
 export function CfCard({ card, onClick, selected, afford, look: forced }) {
   const current = useLook();
   const look = forced ?? current;
-  const piece = `/modern/jewelry/amethyst/${pickFrom(card, PIECES)}.png`;
+  const piece = cfPicture(card);
   const file = look === 'classic' ? classicCardFile(card) : null;
   if (file) return <PrintedCard card={card} file={file} onClick={onClick} selected={selected} afford={afford} />;
   return (
