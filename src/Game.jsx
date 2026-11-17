@@ -594,10 +594,10 @@ function Board({ session, onExit, onRestart, init, onReplaced }) {
       </Dialog>
 
       <Dialog open={S.awaitingFirst && !S.over} onOpenChange={() => {}}>
-        <DialogContent className="sm:max-w-md" showCloseButton={false}>
+        <DialogContent className="sm:max-w-md" showCloseButton={false} aria-describedby={undefined}>
           <DialogHeader>
             <DialogTitle>Who goes first?</DialogTitle>
-            <DialogDescription className="sr-only">Choose who goes first</DialogDescription>
+            <p className="flex items-center gap-1.5 text-sm text-muted-foreground"><Scroll size={20} /> The player who goes second gets a scroll.</p>
           </DialogHeader>
           {online && seat !== 0 ? (
             <p className="flex items-center gap-2 text-sm text-muted-foreground"><Loader2 className="size-4 animate-spin" /> Waiting for Player 1 to choose.</p>
@@ -607,11 +607,8 @@ function Board({ session, onExit, onRestart, init, onReplaced }) {
             <div className="space-y-3">
               <div className="grid gap-3 sm:grid-cols-2">
                 {[0, 1].map((i) => (
-                  <Button key={i} variant="outline" className="h-auto flex-col gap-2 py-4" onClick={() => dispatch({ type: 'chooseFirst', player: i })}>
+                  <Button key={i} variant="outline" className="h-auto py-4" onClick={() => dispatch({ type: 'chooseFirst', player: i })}>
                     <span className="text-base font-semibold">{S.players[i].name} goes first</span>
-                    <span className="flex items-center gap-1.5 text-xs font-normal text-muted-foreground">
-                      <Scroll size={22} /> {S.players[1 - i].name} gets a scroll
-                    </span>
                   </Button>
                 ))}
               </div>
