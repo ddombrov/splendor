@@ -17,6 +17,7 @@ import { JewelCard, CfCard, RoyalCard, CardBack } from './components/Cards.jsx';
 import Player from './components/Player.jsx';
 import Rules from './components/Rules.jsx';
 import GameSettings from './components/GameSettings.jsx';
+import { classicCardFile, useLook } from './lib/look.js';
 import { TokenArt, Scroll, Gem, Mini, CompleteIcon, Pic } from './components/Art.jsx';
 import { computeLayout } from './layout.js';
 import { clearSave, loadSave, writeSave } from './lib/saves.js';
@@ -139,6 +140,7 @@ export default function Game({ session, onExit, onRestart }) {
 }
 
 function Board({ session, onExit, onRestart, init, onReplaced }) {
+  const lookMode = useLook();
   const vp = useViewport();
   const { exp } = session;
   const online = session.mode === 'online';
@@ -347,7 +349,7 @@ function Board({ session, onExit, onRestart, init, onReplaced }) {
               : { left: -10, top: -10, height: 'calc(100% + 20px)', width: sideW + 12 + boardColW + 20, backgroundColor: '#17403a' }}
         >
           <div className="flex h-full flex-col" style={{ width: tall ? '100%' : strip ? padX + boardColW : sideW + 12 + boardColW - 12 }}>
-            <Player S={S} idx={shownHand} dispatch={pdispatch} onInspect={setInspect} colW={Math.floor(((tall ? w - 20 : strip ? padX + boardColW + 12 : sideW + 12 + boardColW) - 12 - 6 * 12) / 7)} viewer={seat} zoomed wide />
+            <Player S={S} idx={shownHand} dispatch={pdispatch} onInspect={setInspect} colW={Math.floor(((tall ? w - 20 : strip ? padX + boardColW + 12 : sideW + 12 + boardColW) - 12 - (kinds(S).length) * 12) / (kinds(S).length + 1))} viewer={seat} zoomed wide />
             {pd?.type === 'steal' && prompt && (
               <div className="hintbox mt-3 flex min-h-[90px] shrink-0 items-center px-8 py-5 font-bold leading-snug text-white" style={{ fontSize: cell * 0.125 }}>{prompt}</div>
             )}
@@ -516,6 +518,16 @@ function Board({ session, onExit, onRestart, init, onReplaced }) {
       {previewCard && createPortal(
         <div className="pointer-events-none fixed right-3 z-[70]" style={{ top: 64 }}>
           {(() => {
+            const printed = lookMode === 'classic' ? classicCardFile(previewCard) : null;
+            if (previewCard.kind === 'cf' && printed) {
+              // printed sideways: turn the upright picture back a quarter
+              const sc = Math.min(2.6, (vp.vh * 0.5) / 124, (vp.vw * 0.5) / 189);
+              return (
+                <div style={{ position: 'relative', width: 189 * sc, height: 124 * sc }}>
+                  <img src={`/classic/${printed}`} alt="" draggable={false} style={{ position: 'absolute', width: 124 * sc, height: 189 * sc, left: ((189 - 124) / 2) * sc, top: ((124 - 189) / 2) * sc, transform: 'rotate(90deg)', borderRadius: 10 * sc }} />
+                </div>
+              );
+            }
             const sc = Math.min(2.6, (vp.vh * 0.5) / 189, (vp.vw * 0.5) / 124);
             const Big = previewCard.kind === 'cf' ? CfCard : previewCard.kind === 'royal' ? RoyalCard : JewelCard;
             return (

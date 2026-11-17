@@ -61,7 +61,7 @@
 .royal-crown { position: absolute; left: 0; right: 0; top: 36px; display: flex; justify-content: center; }
 .royal-crown.pic { top: 8px; }
 .royal-art { width: 72px; height: 72px; object-fit: contain; }
-.card.jewel.k-none { background: url(/cards/fronts/gray.svg) center / 100% 100% no-repeat; }
+.card.jewel.k-none { background: url(/modern/cards/fronts/gray.svg) center / 100% 100% no-repeat; }
 .card.k-none { --edge: #9aa3b5; }
 .royaltext { top: auto; bottom: 42px; text-align: center; }
 .rmark { position: absolute; bottom: 6px; z-index: 2; width: 46px; height: 40px; display: grid; place-items: center; }
@@ -75,10 +75,10 @@
 .countbadge { display: inline-flex; align-items: center; justify-content: center; flex: 0 0 auto; min-width: 20px; height: 20px; padding: 0 5px; border-radius: 10px; background: rgba(0, 0, 0, 0.55); border: 1px solid rgba(255, 255, 255, 0.35); font-size: 12px; font-weight: 800; line-height: 1; color: #fff; }
 .card.back { cursor: default; display: flex; align-items: center; justify-content: center; border-top-width: 1px; }
 .card.back[class*='lv'] { cursor: pointer; }
-.back.lv1 { background: url(/cards/backs/green.svg) center / 100% 100% no-repeat; border-color: transparent; }
-.back.lv2 { background: url(/cards/backs/yellow.svg) center / 100% 100% no-repeat; border-color: transparent; }
-.back.lv3 { background: url(/cards/backs/blue.svg) center / 100% 100% no-repeat; border-color: transparent; }
-.back.lvcf { background: url(/cards/backs/purple.svg) center / 100% 100% no-repeat; border-color: transparent; }
+.back.lv1 { background: url(/modern/cards/backs/green.svg) center / 100% 100% no-repeat; border-color: transparent; }
+.back.lv2 { background: url(/modern/cards/backs/yellow.svg) center / 100% 100% no-repeat; border-color: transparent; }
+.back.lv3 { background: url(/modern/cards/backs/blue.svg) center / 100% 100% no-repeat; border-color: transparent; }
+.back.lvcf { background: url(/modern/cards/backs/purple.svg) center / 100% 100% no-repeat; border-color: transparent; }
 .card.back .emblem { display: flex; flex-direction: column; align-items: center; gap: 8px; }
 .card.back .emblem b { font-size: 22px; font-weight: 800; letter-spacing: 0.02em; }
 .card.back .dots { display: flex; gap: 5px; }
@@ -121,27 +121,27 @@
 
 /* card fronts for the five gem colours; wild cards keep the plain tinted look */
 .card.jewel.k-white, .card.jewel.k-blue, .card.jewel.k-black, .card.jewel.k-red, .card.jewel.k-green { background-size: 100% 100%; background-repeat: no-repeat; background-position: center; }
-.card.jewel.k-white { background-image: url(/cards/fronts/white.svg); }
-.card.jewel.k-blue { background-image: url(/cards/fronts/blue.svg); }
-.card.jewel.k-black { background-image: url(/cards/fronts/black.svg); }
-.card.jewel.k-red { background-image: url(/cards/fronts/red.svg); }
-.card.jewel.k-green { background-image: url(/cards/fronts/green.svg); }
+.card.jewel.k-white { background-image: url(/modern/cards/fronts/white.svg); }
+.card.jewel.k-blue { background-image: url(/modern/cards/fronts/blue.svg); }
+.card.jewel.k-black { background-image: url(/modern/cards/fronts/black.svg); }
+.card.jewel.k-red { background-image: url(/modern/cards/fronts/red.svg); }
+.card.jewel.k-green { background-image: url(/modern/cards/fronts/green.svg); }
 
 /* every card gets a border in its own colour; the level is shown by its row */
 .card.k-red { --edge: #c4384a; } .card.k-blue { --edge: #3a73d6; } .card.k-green { --edge: #2ea263; }
 .card.k-black { --edge: #7d8599; } .card.k-white { --edge: #c3d0e0; } .card.k-wild { --edge: #b78bf0; }
 .card.cfcard { --edge: #9b6bd6; } .card.royal { --edge: #d9b15a; }
-.card.jewel.k-wild { background: url(/cards/fronts/rainbow.svg) center / 100% 100% no-repeat; }
-.card.cfcard { background: url(/cards/fronts/purple.svg) center / 100% 100% no-repeat; }
-.back.lvhidden { background: url(/cards/backs/rainbow.svg) center / 100% 100% no-repeat; border-color: transparent; }
+.card.jewel.k-wild { background: url(/modern/cards/fronts/rainbow.svg) center / 100% 100% no-repeat; }
+.card.cfcard { background: url(/modern/cards/fronts/purple.svg) center / 100% 100% no-repeat; }
+.back.lvhidden { background: url(/modern/cards/backs/rainbow.svg) center / 100% 100% no-repeat; border-color: transparent; }
 .iconcount { position: absolute; right: -8px; bottom: -6px; color: #fff; font-size: 20px; font-weight: 800; line-height: 1; -webkit-text-stroke: 4px #12151c; paint-order: stroke fill; }
 .iconsub { position: absolute; left: -10px; bottom: -6px; line-height: 0; }
 .iconsub.xmark { left: auto; right: -12px; bottom: -8px; }
 .iconsub.eye { left: 44%; top: 34%; bottom: auto; transform: translate(-50%, -50%); }
-.card.royal { background: url(/cards/fronts/yellow.svg) center / 100% 100% no-repeat; }
+.card.royal { background: url(/modern/cards/fronts/yellow.svg) center / 100% 100% no-repeat; }
 
 /* the board is the supplied wooden picture: its 5 by 5 sockets line up with the token cells */
-.stage .board-wrap { position: relative; padding: calc(var(--cell) * 0.327) calc(var(--cell) * 0.327) calc(var(--cell) * 1.0385); border: 0; border-radius: 0; background: url(/boards/board-4-buttons.svg) center / 100% 100% no-repeat; }
+.stage .board-wrap { position: relative; padding: calc(var(--cell) * 0.327) calc(var(--cell) * 0.327) calc(var(--cell) * 1.0385); border: 0; border-radius: 0; background: url(/modern/boards/board-4-buttons.svg) center / 100% 100% no-repeat; }
 .stage .board { gap: calc(var(--cell) * 0.0769); }
 .stage .cell { background: transparent; box-shadow: none; }
 
@@ -175,7 +175,7 @@ html[data-look=classic] .card.cfcard { border: 0; }
 html[data-look=classic] .back.lv3 { background: url(/classic/backs/level-3.jpg) center / 100% 100% no-repeat; }
 
 /* the felt tray a hand is shown on when it is hovered or opened */
-.handboard { background-image: url(/boards/felt-hand.svg); background-size: 100% 100%; background-repeat: no-repeat; background-position: center; border: 2px solid var(--hand-edge); border-radius: 12px; box-shadow: none; }
+.handboard { background-image: url(/shared/felt/felt-hand.svg); background-size: 100% 100%; background-repeat: no-repeat; background-position: center; border: 2px solid var(--hand-edge); border-radius: 12px; box-shadow: none; }
 
 /* buttons and scrolls sit in the slots carved into the bottom of the board */
 .boardbtns { position: absolute; left: calc(var(--cell) * 0.327); top: calc(var(--cell) * 5.846); width: calc(var(--cell) * 3.173); height: calc(var(--cell) * 0.5); display: grid; grid-template-columns: repeat(4, 1fr); gap: calc(var(--cell) * 0.0865); }
@@ -184,13 +184,13 @@ html[data-look=classic] .back.lv3 { background: url(/classic/backs/level-3.jpg) 
 .woodbtn:hover:not(:disabled) { background: rgba(94, 50, 28, 0.16); }
 .woodbtn:disabled { opacity: 0.35; cursor: default; }
 .woodbtn.go { background: #e0b64a; color: #2a1706; }
-.stage .board-wrap.two { background-image: url(/boards/board-2-buttons.svg); }
+.stage .board-wrap.two { background-image: url(/modern/boards/board-2-buttons.svg); }
 .boardbtns.two { grid-template-columns: repeat(2, 1fr); gap: calc(var(--cell) * 0.0962); }
-.stage .board-wrap.three { background-image: url(/boards/board-3-buttons.svg); }
+.stage .board-wrap.three { background-image: url(/modern/boards/board-3-buttons.svg); }
 .boardbtns.three { grid-template-columns: repeat(3, 1fr); gap: calc(var(--cell) * 0.0962); }
 
 /* the felt box the hints are written on */
-.hintbox { background-image: url(/boards/felt-hint.svg); background-size: 100% 100%; background-repeat: no-repeat; border: 2px solid var(--hint-edge); border-radius: 12px; }
+.hintbox { background-image: url(/shared/felt/felt-hint.svg); background-size: 100% 100%; background-repeat: no-repeat; border: 2px solid var(--hint-edge); border-radius: 12px; }
 :root { --hand-edge: #2f8576; --hint-edge: #6b7487; }
 
 /* the flipped coin is the coin picture itself */
@@ -206,3 +206,9 @@ html[data-look=classic] .back.lv3 { background: url(/classic/backs/level-3.jpg) 
 .coinface.back { transform: rotateY(180deg); }
 
 html[data-look=classic] .back.lvroyal { background: url(/classic/backs/royal.png) center / 100% 100% no-repeat; border-color: transparent; }
+
+/* original look: the printed board, drawn with the same square positions as the modern one */
+html[data-look=classic] .stage .board-wrap { background-image: url(/classic/board/4-buttons.png); }
+html[data-look=classic] .stage .board-wrap.three { background-image: url(/classic/board/3-buttons.png); }
+html[data-look=classic] .stage .board-wrap.two { background-image: url(/classic/board/2-buttons.png); }
+html[data-look=classic] .stage .board-wrap { border-radius: 10px; }

@@ -14,7 +14,7 @@ export const PAL = {
 
 /** A gem picture, cut out so it keeps its own shape. The wild bonus uses the rainbow gem icon. */
 export function Gem({ kind, size = 28, className = '' }) {
-  const src = kind === 'wild' ? '/icons/any-color-gem.png' : `/gems/${kind}.png`;
+  const src = kind === 'wild' ? '/shared/icons/any-color-gem.png' : `/modern/tokens/${kind}.png`;
   return <img src={src} width={size} height={size} alt="" draggable={false} className={`gem-img ${className}`} />;
 }
 
@@ -32,7 +32,7 @@ export function TokenArt({ kind, size = 52 }) {
     <svg className="tokart" width={size} height={size} viewBox="0 0 100 100">
       <circle cx="50" cy="50" r="48" fill={RIM[kind]} />
       <circle cx="50" cy="50" r="39" fill={DISC[kind]} />
-      <image href={`/gems/${kind}.png`} x="14" y="14" width="72" height="72" preserveAspectRatio="xMidYMid meet" />
+      <image href={`/modern/tokens/${kind}.png`} x="14" y="14" width="72" height="72" preserveAspectRatio="xMidYMid meet" />
     </svg>
   );
 }
@@ -40,12 +40,12 @@ export function TokenArt({ kind, size = 52 }) {
 /** The privilege scroll. */
 export function Scroll({ size = 20 }) {
   const look = useLook();
-  return <img src={look === 'classic' ? '/classic/privilege.png' : '/icons/scroll.png'} height={size} alt="" draggable={false} className="shrink-0" style={{ width: 'auto', height: size }} />;
+  return <img src={look === 'classic' ? '/classic/icons/privilege.png' : '/shared/icons/scroll.png'} height={size} alt="" draggable={false} className="shrink-0" style={{ width: 'auto', height: size }} />;
 }
 
 /** The crown picture, the same one the royal cards use, at any size. */
 export function Crown({ size = 16 }) {
-  return <img src="/gems/crown.png" width={size} height={size} alt="" draggable={false} className="gem-img shrink-0" />;
+  return <img src="/shared/icons/crown.png" width={size} height={size} alt="" draggable={false} className="gem-img shrink-0" />;
 }
 
 /** The small icon used in cost pills and chips: the same pictures as the gems. */
@@ -62,15 +62,15 @@ export function AbilityIcon({ ab, size = 24 }) {
   if (ab.startsWith('gem:')) return <Gem kind={ab.slice(4)} size={size} />;
   const name = ABILITY_ICON[ab];
   if (!name) return null;
-  return <img src={`/icons/${name}.png`} alt="" draggable={false} className="shrink-0 object-contain" style={{ width: size, height: size }} />;
+  return <img src={`/shared/icons/${name}.png`} alt="" draggable={false} className="shrink-0 object-contain" style={{ width: size, height: size }} />;
 }
 
 /** The green tick, used wherever something is done or complete. */
 export function CompleteIcon({ size = 16 }) {
-  return <img src="/icons/complete.png" alt="" draggable={false} className="shrink-0 object-contain" style={{ width: size, height: size }} />;
+  return <img src="/shared/icons/complete.png" alt="" draggable={false} className="shrink-0 object-contain" style={{ width: size, height: size }} />;
 }
 
 /** One of the picture icons in /icons, drawn at any size. */
 export function Pic({ name, size = 24, className = '' }) {
-  return <img src={`/icons/${name}.png`} width={size} height={size} alt="" draggable={false} className={`shrink-0 ${className}`} />;
+  return <img src={`/shared/icons/${name}.png`} width={size} height={size} alt="" draggable={false} className={`shrink-0 ${className}`} />;
 }

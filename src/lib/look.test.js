@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest';
 import { existsSync } from 'node:fs';
 import { createGame } from '../engine/engine.js';
 import { baseRoyals, expRoyals } from '../engine/data.js';
-import { CLASSIC_POWER, CLASSIC_TOKEN, classicCardFile } from './look.js';
+import { CLASSIC_COUNTERFEITERS, CLASSIC_TOKEN, classicCardFile } from './look.js';
 
 globalThis.localStorage = { getItem: () => null, setItem: () => {}, removeItem: () => {} };
 
@@ -27,7 +27,9 @@ describe('the original look', () => {
 
   it('has a picture for every expansion royal and counterfeiter power', () => {
     for (const r of expRoyals()) expect(existsSync(cardPath(classicCardFile(r)))).toBe(true);
-    for (const f of Object.values(CLASSIC_POWER)) expect(existsSync(new URL(`../../public/classic/powerups/${f}.png`, import.meta.url))).toBe(true);
+    for (const f of CLASSIC_COUNTERFEITERS) expect(existsSync(cardPath(f))).toBe(true);
+    const S = createGame(true, 5, 0);
+    for (const c of [...S.crow, ...S.cdeck]) expect(classicCardFile(c)).not.toBeNull();
     for (const f of Object.values(CLASSIC_TOKEN)) expect(existsSync(new URL(`../../public/classic/tokens/${f}`, import.meta.url))).toBe(true);
   });
 });

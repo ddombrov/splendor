@@ -120,8 +120,8 @@ export default function Home({ onStart, onJoined, onQuick, onResume }) {
   const classic = useLook() === 'classic';
   const exp = expPref.use();
   // The printed look has no pictures for made-up cards or the extra royal, so those options are left out with it.
-  const randomCards = cardsPref.use() && !classic;
-  const randomRoyals = royalsPref.use() && !classic;
+  const randomCards = cardsPref.use() && !classic && !exp;
+  const randomRoyals = royalsPref.use() && !classic && !exp;
   const start = (o) => onStart({ ...o, randomCards, randomRoyals });
   // Playing on one device has nothing to choose, so it starts straight away.
   const begin = (key) => (key === 'device' ? start({ mode: 'device', exp, source: 'random' }) : setOpen(key));

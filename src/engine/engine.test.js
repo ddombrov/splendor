@@ -1,5 +1,5 @@
 import { describe, expect, it, vi } from 'vitest';
-import { createGame, cur, opp, reduce, limitCount as limit, SPIRAL } from './engine.js';
+import { createGame, cur, opp, plan, reduce, limitCount as limit, SPIRAL } from './engine.js';
 
 const play = (state, ...actions) => actions.reduce((s, a) => reduce(s, a), state);
 const click = (...cells) => cells.map((i) => ({ type: 'tok', i }));
@@ -595,5 +595,28 @@ describe('game options', () => {
     }
     expect(different).toBeGreaterThan(0);
     expect(different).toBeLessThan(40);
+  });
+});
+
+describe('the printed counterfeiter cards', () => {
+  const deck = () => { const S = createGame(true, 5, 0); return [...S.crow, ...S.cdeck]; };
+
+  it('are the 17 printed ones, five of them cutting a colour', () => {
+    const cards = deck();
+    expect(cards).toHaveLength(17);
+    expect(cards.filter((c) => c.ab === 'red2').map((c) => c.rc).sort()).toEqual(['black', 'blue', 'green', 'red', 'white']);
+    expect(cards.every((c) => c.cost.glass >= 1)).toBe(true);
+  });
+
+  it('can cost a gold token, which has to be paid', () => {
+    const S = createGame(true, 5, 0);
+    const card = deck().find((c) => c.ab === 'crowns2');
+    expect(card.cost).toEqual({ glass: 2, gold: 1 });
+    const p = S.players[0];
+    p.tok.glass = 2;
+    p.tok.gold = 0;
+    expect(plan(S, p, card)).toBeNull();
+    p.tok.gold = 1;
+    expect(plan(S, p, card).pay).toMatchObject({ glass: 2, gold: 1 });
   });
 });

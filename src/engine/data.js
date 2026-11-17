@@ -62,7 +62,23 @@ export const CF_TEXT = {
   matchplus: () => 'Match ability: take 2 matching tokens, or any 1 token',
 };
 
+// The 17 printed counterfeiter cards: power, colour for the cost-cutting ones, and cost.
+const PRINTED_CF = [
+  ['red2', 'green', { glass: 1, green: 2 }], ['red2', 'red', { glass: 1, red: 2 }], ['red2', 'blue', { glass: 1, blue: 2 }],
+  ['red2', 'white', { glass: 1, white: 2 }], ['red2', 'black', { glass: 1, black: 2 }],
+  ['any3', null, { glass: 2, pearl: 1 }], ['pearl1', null, { glass: 1, pearl: 1 }], ['any1', null, { glass: 1, blue: 1, black: 1 }],
+  ['royalbuy', null, { glass: 3, gold: 1 }], ['xturn', null, { glass: 2, black: 1, red: 1 }], ['xsteal', null, { glass: 2, pearl: 1 }],
+  ['nolimit', null, { glass: 2, white: 1, pearl: 1 }], ['priv2', null, { glass: 2, green: 1, blue: 1 }], ['crowns2', null, { glass: 2, gold: 1 }],
+  ['reserve5', null, { glass: 1, green: 1, pearl: 1 }], ['matchplus', null, { glass: 1, red: 1, white: 1 }], ['peek', null, { glass: 2 }],
+];
+
+/** The printed counterfeiter deck, shuffled. */
 export function genCounterfeiters(rand) {
+  return shuffleWith(PRINTED_CF.map(([ab, rc, cost], i) => ({ id: `cf${i}`, kind: 'cf', ab, rc, cost, pts: 0, crowns: ab === 'crowns2' ? 2 : 0 })), rand);
+}
+
+/** The optional random counterfeiter deck. */
+export function genRandomCounterfeiters(rand) {
   const rnd = (a, b) => randInt(a, b, rand);
   const shuffle = (a) => shuffleWith(a, rand);
   const abs = ['red2', 'red2', 'red2', 'any1', 'any1', 'any3', 'any3', 'pearl1', 'priv2', 'xturn', 'xsteal', 'royalbuy', 'nolimit', 'crowns2', 'reserve5', 'peek', 'matchplus'];

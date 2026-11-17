@@ -45,12 +45,14 @@ export const useCounters = countersPref.use;
 /** The picture used for each token kind. */
 export const CLASSIC_TOKEN = { blue: 'blue.png', white: 'white.png', green: 'green.png', black: 'black.png', red: 'red.png', gold: 'gold.png', pearl: 'pearl.png', glass: 'glass.png' };
 
-/** The picture of each counterfeiter power, in the order the expansion prints them. */
-export const CLASSIC_POWER = {
-  red2: '01_glassware-reduce-cost-by-2', any1: '02_glassware-reduce-any-color-by-1', any3: '03_2-glassware-reduce-single-color-by-3', pearl1: '04_glassware-reduce-pearl-by-1',
-  priv2: '05_privilege-take-2-tokens', xturn: '06_privilege-glassware-extra-turn', xsteal: '07_privilege-glassware-steal-token', royalbuy: '08_glassware-take-royal-card',
-  nolimit: '09_ignore-glassware-token-limit', crowns2: '10_two-crowns', reserve5: '11_5-reserved-cards', peek: '12_2-glassware-pick-from-top-3', matchplus: '13_take-2-tokens-or-any-token',
+/** The printed counterfeiter cards (they are printed sideways; the pictures are already turned upright). */
+const CF_FILE = {
+  'red2:green': '01_reduce-green-by-2', 'red2:red': '02_reduce-red-by-2', 'red2:blue': '03_reduce-blue-by-2', 'red2:white': '04_reduce-white-by-2', 'red2:black': '05_reduce-black-by-2',
+  any3: '06_2-glassware-reduce-one-color-by-3', pearl1: '07_reduce-pearl-by-1', any1: '08_reduce-any-color-by-1', royalbuy: '09_take-royal-card', xturn: '10_privilege-extra-turn',
+  xsteal: '11_privilege-steal-token', nolimit: '12_ignore-glassware-token-limit', priv2: '13_privilege-take-2-tokens', crowns2: '14_two-crowns', reserve5: '15_5-reserved-cards',
+  matchplus: '16_take-2-tokens-or-any-token', peek: '17_pick-from-top-3',
 };
+export const CLASSIC_COUNTERFEITERS = Object.values(CF_FILE).map((n) => `counterfeiters/counterfeiter_${n}.png`);
 
 const EXP_ROYAL = {
   rreserve: 'royal_01_reserve-any-card', rgold: 'royal_02_take-gold-token', w9c: 'royal_03_9-points-one-color-wins', w9k: 'royal_04_9-crowns-wins',
@@ -65,6 +67,10 @@ const ROYAL_ABILITY = { extra: 'extra-turn', privilege: 'privilege', steal: 'ste
 /** The printed picture of a card, as a path under /classic/, or null when there is none (made-up cards, counterfeiters). */
 export function classicCardFile(card) {
   let name = null;
+  if (card.kind === 'cf') {
+    const f = CF_FILE[card.ab === 'red2' ? `red2:${card.rc}` : card.ab];
+    return f ? `counterfeiters/counterfeiter_${f}.png` : null;
+  }
   if (card.kind === 'royal') {
     if (EXP_ROYAL[card.ab]) return `royals/${EXP_ROYAL[card.ab]}.png`;
     if (card.ab && !ROYAL_ABILITY[card.ab]) return null;

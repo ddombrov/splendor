@@ -15,10 +15,10 @@ export default function CoinFlip({ winner, names, onDone }) {
       <div className="coinbox">
         <div className="coin" style={{ '--end': winner === 0 ? '1800deg' : '1980deg' }}>
           <div className="coinface">
-            <img src="/icons/coin-gold-1.png" alt="" draggable={false} />
+            <img src="/shared/icons/coin-gold-1.png" alt="" draggable={false} />
           </div>
           <div className="coinface back">
-            <img src="/icons/coin-gold-2.png" alt="" draggable={false} />
+            <img src="/shared/icons/coin-gold-2.png" alt="" draggable={false} />
           </div>
         </div>
       </div>

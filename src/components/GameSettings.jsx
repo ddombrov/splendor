@@ -22,12 +22,13 @@ export default function GameSettings({ onClose, inGame = false, current, locked 
     { key: 'exp', title: 'Counterfeiters expansion', text: 'Adds glassware tokens, counterfeiter cards and more royals.', game: true },
     { key: 'randomCards', title: 'Random cards', text: 'Deal made-up cards instead of the 67 printed ones.', game: true, needsModern: true },
     { key: 'randomRoyals', title: 'Random royal cards', text: 'Draw the royals from a pool of each 2 point power-up plus one 3 point royal.', game: true, needsModern: true },
-    { key: 'look', title: 'Original look', text: 'The printed card pictures, tokens and card backs. Made-up cards and the extra royal have no printed picture, so they are off while this is on.' },
+    { key: 'look', title: 'Original look', text: 'The printed card pictures, tokens, card backs and board. Random cards and royals are off while this is on.' },
     { key: 'counters', title: 'Card counters', text: 'Show how many cards are in each stack in a hand.' },
   ];
-  const value = (r) => (r.key === 'look' ? classic : r.key === 'counters' ? counters : !!shown[r.key]);
-  const disabled = (r) => (r.game && inGame && locked) || (r.needsModern && classic);
-  const note = (r) => (r.game && inGame && locked ? 'Fixed for an online game.' : r.needsModern && classic ? 'Not available with the original look.' : r.text);
+  const value = (r) => (r.key === 'look' ? classic : r.key === 'counters' ? counters : r.needsModern && noRandom ? false : !!shown[r.key]);
+  const noRandom = classic || !!shown.exp; // every card of the expansion and the original look is printed
+  const disabled = (r) => (r.game && inGame && locked) || (r.needsModern && noRandom);
+  const note = (r) => (r.game && inGame && locked ? 'Fixed for an online game.' : r.needsModern && noRandom ? (classic ? 'Not available with the original look.' : 'Not available with the expansion.') : r.text);
   const change = (r, on) => {
     if (r.key === 'look') setLook(on ? 'classic' : 'modern');
     else if (r.key === 'counters') countersPref.set(on);
@@ -36,7 +37,9 @@ export default function GameSettings({ onClose, inGame = false, current, locked 
   };
   const confirm = () => {
     PREF[pending.key].set(pending.on);
-    onRestart({ exp: current.exp, randomCards: current.randomCards, randomRoyals: current.randomRoyals, [pending.key]: pending.on });
+    const next = { exp: current.exp, randomCards: current.randomCards, randomRoyals: current.randomRoyals, [pending.key]: pending.on };
+    if (next.exp || classic) { next.randomCards = false; next.randomRoyals = false; }
+    onRestart(next);
   };
 
   return (

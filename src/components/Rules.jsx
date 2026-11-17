@@ -136,8 +136,8 @@ function usePdf(path) {
 }
 
 export default function Rules({ exp, onClose }) {
-  const hasRules = usePdf('/docs/rules.pdf');
-  const hasExp = usePdf('/docs/expansion.pdf');
+  const hasRules = usePdf('/shared/docs/rules.pdf');
+  const hasExp = usePdf('/shared/docs/expansion.pdf');
   return (
     <Dialog open onOpenChange={(o) => !o && onClose()}>
       <DialogContent className="flex h-[86vh] flex-col gap-3 sm:max-w-4xl">
@@ -154,8 +154,8 @@ export default function Rules({ exp, onClose }) {
           </TabsList>
           <TabsContent value="summary" className="min-h-0 flex-1 overflow-y-auto rounded-md border"><Summary /></TabsContent>
           <TabsContent value="expansion" className="min-h-0 flex-1 overflow-y-auto rounded-md border"><ExpansionSummary /></TabsContent>
-          <TabsContent value="rules" className="min-h-0 flex-1"><iframe title="Rulebook" src="/docs/rules.pdf" className="pdf h-full rounded-md" /></TabsContent>
-          <TabsContent value="exp" className="min-h-0 flex-1"><iframe title="Expansion rules" src="/docs/expansion.pdf" className="pdf h-full rounded-md" /></TabsContent>
+          <TabsContent value="rules" className="min-h-0 flex-1"><iframe title="Rulebook" src="/shared/docs/rules.pdf" className="pdf h-full rounded-md" /></TabsContent>
+          <TabsContent value="exp" className="min-h-0 flex-1"><iframe title="Expansion rules" src="/shared/docs/expansion.pdf" className="pdf h-full rounded-md" /></TabsContent>
         </Tabs>
       </DialogContent>
     </Dialog>

@@ -1,4 +1,4 @@
-import { COLORS, genJewels, genRandomJewels, genCounterfeiters, baseRoyals, expRoyals } from './data.js';
+import { COLORS, genJewels, genRandomJewels, genCounterfeiters, genRandomCounterfeiters, baseRoyals, expRoyals } from './data.js';
 import { nextRandom, shuffle } from './rng.js';
 
 /*
@@ -110,8 +110,9 @@ export function plan(S, p, card) {
       pay[k] = use;
       gold += need[k] - use;
     }
-    if (gold > p.tok.gold) continue;
-    pay.gold = gold;
+    const goldCost = card.cost.gold || 0; // a few counterfeiter cards cost a gold token
+    if (gold + goldCost > p.tok.gold) continue;
+    pay.gold = gold + goldCost;
     const spent = Object.values(pay).reduce((a, v) => a + v, 0) + g;
     const score = [spent, gold, g];
     if (!best || score < best.score) best = { pay, g, ids, score };
@@ -165,7 +166,7 @@ export function createGame(exp = false, seed, first = 0, opts = {}) {
     exp, rng: 0, board: Array(25).fill(null), bag,
     players: [mkPlayer('Player 1'), mkPlayer('Player 2')], cur: 0,
     decks: [1, 2, 3].map((l) => (opts.randomCards ? genRandomJewels : genJewels)(l, rand)), pyr: [[], [], []],
-    cdeck: exp ? genCounterfeiters(rand) : [], crow: [],
+    cdeck: exp ? (opts.randomCards ? genRandomCounterfeiters : genCounterfeiters)(rand) : [], crow: [],
     royals: royalPool.splice(0, 4), rdeck: royalPool,
     privBoard: 3, awaitingFirst: false, sel: [], goldSel: null, selCard: null, mode: null, main: false, pending: null,
     queue: [], extra: false, over: null, log: [], used: {}, toast: null,

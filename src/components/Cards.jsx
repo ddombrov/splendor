@@ -1,5 +1,5 @@
 import { CF_TEXT, ROYAL_TEXT } from '../engine/data.js';
-import { CLASSIC_POWER, classicCardFile, useLook } from '../lib/look.js';
+import { classicCardFile, useLook } from '../lib/look.js';
 import { PAL, Gem, Crown, AbilityIcon, Mini } from './Art.jsx';
 
 // Royal abilities that have a picture; the first three need no words, the rest keep their text.
@@ -85,16 +85,12 @@ export function JewelCard({ card, onClick, selected, afford }) {
 
 export function CfCard({ card, onClick, selected, afford }) {
   const look = useLook();
-  const power = look === 'classic' ? CLASSIC_POWER[card.ab] : null;
+  const file = look === 'classic' ? classicCardFile(card) : null;
+  if (file) return <PrintedCard card={card} file={file} onClick={onClick} selected={selected} afford={afford} />;
   return (
     <div data-card-id={card.id} className={`card cfcard k-cf ${selected ? 'sel' : ''} ${afford ? 'afford' : ''}`} onClick={onClick}>
       {card.crowns > 0 && <div className="crownrow cfcrowns"><Crown size={20} /><Crown size={20} /></div>}
-      {power ? (
-        <div className="note iconly">
-          <img src={`/classic/powerups/${power}.png`} alt="" draggable={false} className="powerimg" />
-          {card.ab === 'red2' && <Gem kind={card.rc} size={26} />}
-        </div>
-      ) : CF_ICON[card.ab] ? (() => { const [pic, num, sub] = CF_ICON[card.ab](card); return (
+      {CF_ICON[card.ab] ? (() => { const [pic, num, sub] = CF_ICON[card.ab](card); return (
         <div className="note iconly">
           <span className="relative inline-flex">
             <AbilityIcon ab={pic} size={44} />
@@ -121,7 +117,7 @@ export function RoyalCard({ card, onClick, glow }) {
   return (
     <div data-card-id={card.id} className={`card royal ${glow ? 'afford' : ''}`} onClick={onClick}>
       <div className="ptsrow"><div className="pts">{card.pts}</div></div>
-      <div className={art ? 'royal-crown pic' : 'royal-crown'}>{art ? <img src={`/cards/royals/${art}.png`} alt="" draggable={false} className="royal-art" /> : <Crown size={42} />}</div>
+      {art && <div className="royal-crown pic"><img src={`/modern/cards/royals/${art}.png`} alt="" draggable={false} className="royal-art" /></div>}
       {card.ab && (
         <div className={`note royaltext ${ICON_ONLY.includes(card.ab) ? 'iconly' : ''}`}>
           {ROYAL_ICON[card.ab] && (

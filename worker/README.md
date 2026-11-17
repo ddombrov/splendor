@@ -33,4 +33,4 @@ npx vite build
 npx wrangler deploy --config worker/wrangler.toml
 ```
 
-The rulebook PDF tabs in Rules appear when /docs/rules.pdf and /docs/expansion.pdf are served, which they are in the current deploy.
+The rulebook PDF tabs in Rules appear when /shared/docs/rules.pdf and /shared/docs/expansion.pdf are served, which they are in the current deploy.
