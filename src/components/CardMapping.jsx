@@ -9,6 +9,8 @@ const S = createGame(true, 1, 0);
 const JEWELS = [0, 1, 2].flatMap((l) => [...S.pyr[l], ...S.decks[l]]);
 const CFS = [...S.crow, ...S.cdeck];
 const ROYALS = [...S.royals, ...S.rdeck];
+// The right-hand side is the modern look, or the Maaike version when opened from its info icon.
+const RIGHT = new URLSearchParams(location.search).get('look') === 'maaike' ? 'maaike' : 'modern';
 const TOKENS = ['blue', 'white', 'green', 'black', 'red', 'pearl', 'glass', 'gold'];
 
 const Pair = ({ label, children }) => (
@@ -40,18 +42,18 @@ export default function CardMapping() {
         <h1 className="text-2xl font-bold">Card mapping</h1>
       </div>
       <Section title="Tokens">
-        {TOKENS.map((k) => <Pair key={k} label={k}><TokenArt kind={k} size={56} look="classic" /><TokenArt kind={k} size={56} look="modern" /></Pair>)}
+        {TOKENS.map((k) => <Pair key={k} label={k}><TokenArt kind={k} size={56} look="classic" /><TokenArt kind={k} size={56} look={RIGHT} /></Pair>)}
       </Section>
       <Section title={`Royal cards (${ROYALS.length})`}>
-        {ROYALS.map((r) => <Pair key={r.id} label={`${r.pts} pt \u00b7 ${r.ab ?? 'no ability'}`}><Small><RoyalCard card={r} look="classic" /></Small><Small><RoyalCard card={r} look="modern" /></Small></Pair>)}
+        {ROYALS.map((r) => <Pair key={r.id} label={`${r.pts} pt \u00b7 ${r.ab ?? 'no ability'}`}><Small><RoyalCard card={r} look="classic" /></Small><Small><RoyalCard card={r} look={RIGHT} /></Small></Pair>)}
       </Section>
       <Section title={`Counterfeiter cards (${CFS.length})`}>
-        {CFS.map((c) => <Pair key={c.id} label={`${c.ab}${c.rc ? ` ${c.rc}` : ''} \u00b7 ${costText(c)}`}><Sideways card={c} /><Small><CfCard card={c} look="modern" /></Small></Pair>)}
+        {CFS.map((c) => <Pair key={c.id} label={`${c.ab}${c.rc ? ` ${c.rc}` : ''} \u00b7 ${costText(c)}`}><Sideways card={c} /><Small><CfCard card={c} look={RIGHT} /></Small></Pair>)}
       </Section>
       <Section title={`Development cards (${JEWELS.length})`}>
         {JEWELS.map((c) => {
           const t = cardType(c);
-          return <Pair key={c.id} label={`${t.name} \u2192 ${t.piece === 'neutral' ? t.neutral : t.piece} \u00b7 L${c.level} \u00b7 ${c.pts} pt${c.crowns ? ` \u00b7 ${c.crowns} crown` : ''} \u00b7 ${costText(c)}`}><Small><JewelCard card={c} look="classic" /></Small><Small><JewelCard card={c} look="modern" /></Small></Pair>;
+          return <Pair key={c.id} label={`${t.name} \u2192 ${t.piece === 'neutral' ? t.neutral : t.piece} \u00b7 L${c.level} \u00b7 ${c.pts} pt${c.crowns ? ` \u00b7 ${c.crowns} crown` : ''} \u00b7 ${costText(c)}`}><Small><JewelCard card={c} look="classic" /></Small><Small><JewelCard card={c} look={RIGHT} /></Small></Pair>;
         })}
       </Section>
     </div>

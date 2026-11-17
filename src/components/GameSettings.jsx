@@ -60,7 +60,7 @@ export default function GameSettings({ onClose, inGame = false, current, locked 
               {rows.map((r) => (
                 <label key={r.key} className={`flex items-center justify-between gap-4 ${disabled(r) ? 'opacity-50' : 'cursor-pointer'}`}>
                   <span>
-                    <span className="flex items-center gap-1.5 font-semibold">{r.title}{r.key === 'look' && <button type="button" title="See card mapping" className="text-muted-foreground hover:text-foreground" onClick={(e) => { e.preventDefault(); window.open('/?mapping=1', '_blank'); }}><Info className="size-4" /></button>}</span>
+                    <span className="flex items-center gap-1.5 font-semibold">{r.title}{(r.key === 'look' || r.key === 'maaike') && <button type="button" title="See card mapping" className="text-muted-foreground hover:text-foreground" onClick={(e) => { e.preventDefault(); window.open(r.key === 'maaike' ? '/?mapping=1&look=maaike' : '/?mapping=1', '_blank'); }}><Info className="size-4" /></button>}</span>
                     {note(r) && <span className="block text-sm text-muted-foreground">{note(r)}</span>}
                   </span>
                   <Switch checked={value(r)} disabled={disabled(r)} onCheckedChange={(on) => change(r, on)} />
