@@ -27,7 +27,7 @@ export function maaikeRoyalPhoto(card) {
   return i < MAAIKE_ROYAL_PHOTOS ? `/maaike/royals/${String(i).padStart(2, '0')}.jpg` : null;
 }
 const MAAIKE_CF_PHOTOS = 17; // every counterfeiter card has a photo
-export const MAAIKE_TOKENS = new Set(['blue', 'green', 'black', 'red', 'pearl', 'glass', 'gold']); // white has no photo yet
+export const MAAIKE_TOKENS = new Set(['blue', 'white', 'green', 'black', 'red', 'pearl', 'glass', 'gold']);
 /** The photo for a counterfeiter card in the Maaike version, or null. */
 export function maaikeCfPhoto(card) {
   const i = Number(String(card.id).replace(/\D/g, ''));
