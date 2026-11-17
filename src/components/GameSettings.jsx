@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Switch } from '@/components/ui/switch';
-import { cardsPref, countersPref, expPref, jewelryPref, setLook, useLook } from '../lib/look.js';
+import { cardsPref, countersPref, expPref, setLook, useLook } from '../lib/look.js';
 
 const PREF = { exp: expPref, randomCards: cardsPref };
 
@@ -13,7 +13,6 @@ const PREF = { exp: expPref, randomCards: cardsPref };
 export default function GameSettings({ onClose, inGame = false, current, locked = false, onRestart, title = 'Game settings', children }) {
   const look = useLook();
   const counters = countersPref.use();
-  const jewelry = jewelryPref.use();
   const stored = { exp: expPref.use(), randomCards: cardsPref.use() };
   const shown = inGame ? current : stored;
   const classic = look === 'classic';
@@ -23,17 +22,15 @@ export default function GameSettings({ onClose, inGame = false, current, locked 
     { key: 'exp', title: 'Counterfeiters expansion', text: 'Adds glassware tokens, counterfeiter cards and more royals.', game: true },
     { key: 'randomCards', title: 'Random cards', text: 'Deal made-up cards instead of the 67 printed ones, and draw the royals from a bigger pool.', game: true, needsModern: true },
     { key: 'look', title: 'Original look', text: 'The printed card pictures, tokens, card backs and board. Random cards and royals are off while this is on.' },
-    { key: 'jewelry', title: 'Jewellery pictures', text: 'Show a piece of jewellery in the middle of modern cards. Off shows just the gem.', modernOnly: true },
     { key: 'counters', title: 'Card counters', text: 'Show how many cards are in each stack in a hand.' },
   ];
-  const value = (r) => (r.key === 'look' ? classic : r.key === 'counters' ? counters : r.key === 'jewelry' ? jewelry : r.needsModern && noRandom ? false : !!shown[r.key]);
+  const value = (r) => (r.key === 'look' ? classic : r.key === 'counters' ? counters : r.needsModern && noRandom ? false : !!shown[r.key]);
   const noRandom = classic || !!shown.exp; // every card of the expansion and the original look is printed
-  const disabled = (r) => (r.game && inGame && locked) || (r.needsModern && noRandom) || (r.modernOnly && classic);
-  const note = (r) => (r.game && inGame && locked ? 'Fixed for an online game.' : r.needsModern && noRandom ? (classic ? 'Not available with the original look.' : 'Not available with the expansion.') : r.modernOnly && classic ? 'Only the modern look uses these.' : r.text);
+  const disabled = (r) => (r.game && inGame && locked) || (r.needsModern && noRandom);
+  const note = (r) => (r.game && inGame && locked ? 'Fixed for an online game.' : r.needsModern && noRandom ? (classic ? 'Not available with the original look.' : 'Not available with the expansion.') : r.text);
   const change = (r, on) => {
     if (r.key === 'look') setLook(on ? 'classic' : 'modern');
     else if (r.key === 'counters') countersPref.set(on);
-    else if (r.key === 'jewelry') jewelryPref.set(on);
     else if (inGame) setPending({ key: r.key, on });
     else PREF[r.key].set(on);
   };

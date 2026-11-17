@@ -38,7 +38,6 @@ function makePref(key, fallback = false) {
 // Whether each stack of cards in a hand shows how many cards it holds, and the options for the next game.
 export const countersPref = makePref('sd-counters');
 export const expPref = makePref('sd-exp');
-export const jewelryPref = makePref('sd-jewelry', true); // pieces of jewellery in the middle of modern cards
 export const cardsPref = makePref('sd-random-cards');
 export const useCounters = countersPref.use;
 

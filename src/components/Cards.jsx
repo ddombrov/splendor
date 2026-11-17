@@ -1,5 +1,5 @@
 import { CF_TEXT, ROYAL_TEXT } from '../engine/data.js';
-import { classicCardFile, jewelryPref, useLook } from '../lib/look.js';
+import { classicCardFile, useLook } from '../lib/look.js';
 import { PAL, Gem, Crown, AbilityIcon, Mini } from './Art.jsx';
 
 // Royal abilities that have a picture; the first three need no words, the rest keep their text.
@@ -70,8 +70,7 @@ export function JewelCard({ card, onClick, selected, afford }) {
   const wild = card.bonus === 'wild';
   const kind = wild ? 'wild' : card.bonus;
   const abil = card.ability;
-  const jewelry = jewelryPref.use();
-  const centre = jewelry ? centreArt(card) : null;
+  const centre = centreArt(card);
   const title = [wild && 'Wild bonus: copies one of your colours', card.ability && AB_LABEL[card.ability]].filter(Boolean).join(' + ');
   return (
     <div
@@ -103,14 +102,13 @@ export function JewelCard({ card, onClick, selected, afford }) {
 
 export function CfCard({ card, onClick, selected, afford }) {
   const look = useLook();
-  const jewelry = jewelryPref.use();
-  const piece = jewelry ? `/modern/jewelry/amethyst/${pickFrom(card, PIECES)}.png` : null;
+  const piece = `/modern/jewelry/amethyst/${pickFrom(card, PIECES)}.png`;
   const file = look === 'classic' ? classicCardFile(card) : null;
   if (file) return <PrintedCard card={card} file={file} onClick={onClick} selected={selected} afford={afford} />;
   return (
     <div data-card-id={card.id} className={`card cfcard k-cf ${selected ? 'sel' : ''} ${afford ? 'afford' : ''}`} onClick={onClick}>
       {piece && <div className="art cfart"><img src={piece} alt="" draggable={false} className="jewelart" /></div>}
-      {card.crowns > 0 && <div className="crownrow cfcrowns"><Crown size={20} /><Crown size={20} /></div>}
+      {card.crowns > 0 && <div className="ptsrow"><div className="crownrow"><Crown size={20} /><Crown size={20} /></div></div>}
       {CF_ICON[card.ab] ? (() => { const [pic, num, sub] = CF_ICON[card.ab](card); return (
         <div className="note iconly">
           <span className="relative inline-flex">
