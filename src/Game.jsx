@@ -17,6 +17,7 @@ import { createGame, reduce, cur, opp, plan, canReplenish, endOptions, validLine
 import { JewelCard, CfCard, RoyalCard, CardBack } from './components/Cards.jsx';
 import Player from './components/Player.jsx';
 import Rules from './components/Rules.jsx';
+import GameSettings from './components/GameSettings.jsx';
 import { TokenArt, Scroll, Gem, Mini, CompleteIcon, Pic } from './components/Art.jsx';
 import { computeLayout } from './layout.js';
 import { clearSave, loadSave, writeSave } from './lib/saves.js';
@@ -116,7 +117,7 @@ const freshGame = (session) => {
 };
 
 /** Loads an online game from the server, then hands it to the board. */
-export default function Game({ session, onExit }) {
+export default function Game({ session, onExit, onRestart }) {
   const online = session.mode === 'online';
   const [init, setInit] = useState(() => (online ? null : { S: (session.resume && loadSave(session.mode)?.S) || freshGame(session), rev: 0 }));
   const [gone, setGone] = useState(false);
@@ -135,10 +136,10 @@ export default function Game({ session, onExit }) {
   if (!init) {
     return <div className="fixed inset-0 flex items-center justify-center"><Loader2 className="size-8 animate-spin text-muted-foreground" /></div>;
   }
-  return <Board session={session} onExit={onExit} init={init} onReplaced={() => setGone('replaced')} />;
+  return <Board session={session} onExit={onExit} onRestart={onRestart} init={init} onReplaced={() => setGone('replaced')} />;
 }
 
-function Board({ session, onExit, init, onReplaced }) {
+function Board({ session, onExit, onRestart, init, onReplaced }) {
   const vp = useViewport();
   const { exp } = session;
   const online = session.mode === 'online';
@@ -247,6 +248,7 @@ function Board({ session, onExit, init, onReplaced }) {
 
   const myTurn = seat == null || (S.awaitingFirst ? seat === 0 : S.cur === seat);
   const [showRules, setShowRules] = useState(false);
+  const [showSettings, setShowSettings] = useState(false);
   const [showLog, setShowLog] = useState(false);
   const [ask, setAsk] = useState(null);
   const [lastAsk, setLastAsk] = useState(null);
@@ -348,7 +350,7 @@ function Board({ session, onExit, init, onReplaced }) {
           <div className="flex h-full flex-col" style={{ width: tall ? '100%' : strip ? padX + boardColW : sideW + 12 + boardColW - 12 }}>
             <Player S={S} idx={shownHand} dispatch={pdispatch} onInspect={setInspect} colW={Math.floor(((tall ? w - 20 : strip ? padX + boardColW + 12 : sideW + 12 + boardColW) - 12 - 6 * 12) / 7)} viewer={seat} zoomed wide />
             {pd?.type === 'steal' && prompt && (
-              <div className="hintbox mt-3 flex min-h-[90px] shrink-0 items-center px-8 py-5 text-base font-bold leading-snug text-white">{prompt}</div>
+              <div className="hintbox mt-3 flex min-h-[90px] shrink-0 items-center px-8 py-5 font-bold leading-snug text-white" style={{ fontSize: cell * 0.125 }}>{prompt}</div>
             )}
           </div>
         </div>
@@ -426,7 +428,7 @@ function Board({ session, onExit, init, onReplaced }) {
                 <DropdownMenuTrigger asChild>
                   <Button variant="ghost" className="h-11 gap-2.5 px-5 text-base text-white hover:bg-white/10 hover:text-white"><Pic name="settings" size={26} /> Settings <ChevronDown className="size-5 opacity-60" /></Button>
                 </DropdownMenuTrigger>
-                <DropdownMenuContent align="end" className="w-72">
+                <DropdownMenuContent align="end" className="z-[90] w-72">
                   {online && (
                     <>
                       <div className="flex items-center justify-between gap-3 px-2 py-2 text-sm">
@@ -439,6 +441,7 @@ function Board({ session, onExit, init, onReplaced }) {
                       <DropdownMenuSeparator />
                     </>
                   )}
+                  <DropdownMenuItem onSelect={() => setShowSettings(true)} className="gap-2 py-2.5"><Pic name="settings" size={20} /> Game settings</DropdownMenuItem>
                   <DropdownMenuItem onSelect={() => setShowLog(true)} className="gap-2 py-2.5"><Pic name="log" size={20} /> Log</DropdownMenuItem>
                   <DropdownMenuItem onSelect={() => setShowRules(true)} className="gap-2 py-2.5"><Pic name="rules" size={20} /> Rules</DropdownMenuItem>
                   <DropdownMenuSeparator />
@@ -479,7 +482,7 @@ function Board({ session, onExit, init, onReplaced }) {
                 </div>
 
                 {(perk || prompt) && (
-                  <div className={cn('hintbox flex min-h-[76px] shrink-0 items-center px-8 py-4 text-base font-bold leading-snug', S.toast && !perk ? 'text-amber-300' : 'text-white')} style={{ width: cell * 5.9615 }}>
+                  <div className={cn('hintbox flex min-h-[76px] shrink-0 items-center px-8 py-4 font-bold leading-snug', S.toast && !perk ? 'text-amber-300' : 'text-white')} style={{ width: cell * 5.9615, fontSize: cell * 0.125 }}>
                     {perk ?? prompt}
                   </div>
                 )}
@@ -539,10 +542,10 @@ function Board({ session, onExit, init, onReplaced }) {
       {previewCard && createPortal(
         <div className="pointer-events-none fixed right-3 z-[70]" style={{ top: 64 }}>
           {(() => {
-            const sc = Math.min(2.6, (vp.vh * 0.5) / 174, (vp.vw * 0.5) / 124);
+            const sc = Math.min(2.6, (vp.vh * 0.5) / 189, (vp.vw * 0.5) / 124);
             const Big = previewCard.kind === 'cf' ? CfCard : previewCard.kind === 'royal' ? RoyalCard : JewelCard;
             return (
-              <div style={{ width: 124 * sc, height: 174 * sc }}>
+              <div style={{ width: 124 * sc, height: 189 * sc }}>
                 <div style={{ width: 124, transform: `scale(${sc})`, transformOrigin: 'top left' }}><Big card={previewCard} /></div>
               </div>
             );
@@ -551,6 +554,15 @@ function Board({ session, onExit, init, onReplaced }) {
         document.body,
       )}
       {showRules && <Rules exp={exp} onClose={() => setShowRules(false)} />}
+      {showSettings && (
+        <GameSettings
+          inGame
+          locked={online}
+          current={{ exp: !!session.exp, randomCards: !!session.randomCards, randomRoyals: !!session.randomRoyals }}
+          onRestart={(o) => { setShowSettings(false); onRestart(o); }}
+          onClose={() => setShowSettings(false)}
+        />
+      )}
 
       <Dialog open={showLog} onOpenChange={setShowLog}>
         <DialogContent className="sm:max-w-lg">

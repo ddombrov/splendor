@@ -23,19 +23,27 @@ export function setLook(next) {
 const subscribe = (fn) => { listeners.add(fn); return () => listeners.delete(fn); };
 export const useLook = () => useSyncExternalStore(subscribe, getLook);
 
-// Whether each stack of cards in a hand shows how many cards it holds.
-const COUNTERS = 'sd-counters';
-let counters = (() => { try { return localStorage.getItem(COUNTERS) === '1'; } catch { return false; } })();
-export const getCounters = () => counters;
-export function setCounters(on) {
-  counters = !!on;
-  try { localStorage.setItem(COUNTERS, counters ? '1' : '0'); } catch { /* ignore */ }
-  listeners.forEach((fn) => fn());
+/** A true/false option remembered in this browser, readable anywhere and as a hook. */
+function makePref(key) {
+  let value = (() => { try { return localStorage.getItem(key) === '1'; } catch { return false; } })();
+  const get = () => value;
+  const set = (on) => {
+    value = !!on;
+    try { localStorage.setItem(key, value ? '1' : '0'); } catch { /* ignore */ }
+    listeners.forEach((fn) => fn());
+  };
+  return { get, set, use: () => useSyncExternalStore(subscribe, get) };
 }
-export const useCounters = () => useSyncExternalStore(subscribe, getCounters);
 
-/** The photo used for each token kind; pearl and glassware have none and keep the modern picture. */
-export const CLASSIC_TOKEN = { blue: 'blue.jpg', white: 'white.jpg', green: 'green.jpg', black: 'black.jpg', red: 'red.jpg', gold: 'gold.jpg', glass: 'glass.png' };
+// Whether each stack of cards in a hand shows how many cards it holds, and the options for the next game.
+export const countersPref = makePref('sd-counters');
+export const expPref = makePref('sd-exp');
+export const cardsPref = makePref('sd-random-cards');
+export const royalsPref = makePref('sd-random-royals');
+export const useCounters = countersPref.use;
+
+/** The picture used for each token kind. */
+export const CLASSIC_TOKEN = { blue: 'blue.png', white: 'white.png', green: 'green.png', black: 'black.png', red: 'red.png', gold: 'gold.png', pearl: 'pearl.png', glass: 'glass.png' };
 
 /** The picture of each counterfeiter power, in the order the expansion prints them. */
 export const CLASSIC_POWER = {
@@ -60,7 +68,7 @@ export function classicCardFile(card) {
   if (card.kind === 'royal') {
     if (EXP_ROYAL[card.ab]) return `royals/${EXP_ROYAL[card.ab]}.png`;
     if (card.ab && !ROYAL_ABILITY[card.ab]) return null;
-    name = `royal-card_${card.pts}pts${card.ab ? `_${ROYAL_ABILITY[card.ab]}` : ''}.png`;
+    name = `royal-card_${card.pts}pts${card.ab ? `_${ROYAL_ABILITY[card.ab]}` : ''}.jpg`;
   } else if (card.kind === 'jewel') {
     const gem = card.bonus === 'wild' ? 'wild-gem' : card.bonus === 'none' ? 'no-gem' : card.n === 2 ? `2-${card.bonus}-gem` : `${card.bonus}-gem`;
     const parts = [
@@ -71,7 +79,7 @@ export function classicCardFile(card) {
       ...(card.ability ? [ABILITY[card.ability]] : []),
       `cost-${ORDER.filter((k) => card.cost[k]).map((k) => `${card.cost[k]}${k}`).join('-')}`,
     ];
-    name = `${parts.join('_')}.png`;
+    name = `${parts.join('_')}.jpg`;
   }
   return name && CLASSIC_FILES.has(name) ? `cards/${name}` : null;
 }

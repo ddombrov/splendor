@@ -54,7 +54,7 @@ export default function Player({ S, idx, dispatch, onInspect, colW = 52, viewer 
 
   if (summary && horizontal) {
     const cw = 34;
-    const ch = 48;
+    const ch = 52;
     const slots = (
       <div data-zone="res" className="compact-cards flex shrink-0 items-center gap-1.5" style={{ '--z': 0.26 }}>
           {Array.from({ length: resCap(p) }, (_, i) => {
@@ -109,7 +109,7 @@ export default function Player({ S, idx, dispatch, onInspect, colW = 52, viewer 
   if (summary) {
     const z = expanded ? 0.5 : 0.22;
     const cw = Math.round(124 * z);
-    const ch = Math.round(174 * z);
+    const ch = Math.round(189 * z);
     return (
       <Card data-dest-tokens={idx} data-dest-cards={idx} data-dest-res={idx} className={cn('handboard min-h-0 flex-1 gap-0 overflow-hidden p-3', active && 'outline outline-2 -outline-offset-4 outline-primary/70')}>
         <h3 className="text-base font-bold">{p.name}</h3>
@@ -187,15 +187,15 @@ export default function Player({ S, idx, dispatch, onInspect, colW = 52, viewer 
           const click = canReturn ? () => dispatch({ type: 'giveBack', c: k }) : canDisc ? () => dispatch({ type: 'disc', c: k }) : canSteal && k !== 'gold' ? () => dispatch({ type: 'steal', c: k }) : null;
           const owned = ownedOf(k);
           const z = colW / 124;
-          const full = Math.round(colW * 1.4);
+          const full = Math.round(colW * 1.525);
           const strip = owned.length > 1 ? Math.max(10, Math.min(Math.round((zoomed ? 62 : 40) * z), Math.floor((colW * 4.2 - full) / (owned.length - 1)))) : 0;
           const tok = zoomed ? Math.min(colW - 6, 80) : 32;
           return (
             <div key={k} className="flex shrink-0 flex-col items-center gap-2" style={{ width: colW }}>
               {zoomed && (
                 <div className="flex items-center gap-2" title={`${k}: ${p.tok[k]} tokens`}>
-                  <TokenArt kind={k} size={34} />
-                  <span className="text-3xl font-extrabold leading-none">{p.tok[k]}</span>
+                  <TokenArt kind={k} size={Math.max(34, Math.round(colW * 0.5))} />
+                  <span className="font-extrabold leading-none" style={{ fontSize: Math.max(24, Math.round(colW * 0.34)) }}>{p.tok[k]}</span>
                 </div>
               )}
               <div title={canReturn ? `Return a ${k} token to the bag` : `${k}: ${p.tok[k]}`} onClick={click} className={cn('flex flex-col-reverse items-center', click && 'pile click')} style={{ minHeight: zoomed ? 0 : tok }}>

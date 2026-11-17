@@ -30,7 +30,7 @@
 /* cards */
 .card {
   --tint: 120, 130, 160; --lvl: #4b5563;
-  position: relative; isolation: isolate; flex: 0 0 auto; width: 124px; aspect-ratio: 5 / 7; border-radius: 10px; cursor: pointer; overflow: hidden; color: #eef0f6;
+  position: relative; isolation: isolate; flex: 0 0 auto; width: 124px; aspect-ratio: 360 / 549; border-radius: 10px; cursor: pointer; overflow: hidden; color: #eef0f6;
   background: linear-gradient(180deg, rgba(var(--tint), 0.2) 0%, rgba(var(--tint), 0.06) 55%), #1a1f2b;
   border: 2px solid var(--edge, var(--line));
   transition: transform 0.12s;
@@ -114,7 +114,7 @@
 /* a power that is only a picture gets a box that hugs the picture */
 .note.iconly { left: 50%; right: auto; transform: translateX(-50%); width: fit-content; padding: 0; line-height: 0; background: none; border: 0; }
 /* empty places for reserved cards, the same size as a reserved card */
-.compact-cards .slot { zoom: var(--z, 0.75); flex: 0 0 auto; width: 124px; aspect-ratio: 5 / 7; border: 1.5px dashed rgba(255, 255, 255, 0.2); border-radius: 10px; }
+.compact-cards .slot { zoom: var(--z, 0.75); flex: 0 0 auto; width: 124px; aspect-ratio: 360 / 549; border: 1.5px dashed rgba(255, 255, 255, 0.2); border-radius: 10px; }
 
 .card.back .emblem { padding: 6px 10px; border-radius: 10px; background: rgba(10, 12, 18, 0.72); }
 .card.back .count { background: rgba(10, 12, 18, 0.8); }

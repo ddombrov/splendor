@@ -8,7 +8,8 @@ import { api, savedName } from '../net/api.js';
 import { Pic } from '@/components/Art.jsx';
 import { Field, GemRow, NameChoice, Segmented } from './parts.jsx';
 import { loadSave } from '../lib/saves.js';
-import { setCounters, setLook, useCounters, useLook } from '../lib/look.js';
+import GameSettings from '@/components/GameSettings.jsx';
+import { cardsPref, expPref, royalsPref, useLook } from '../lib/look.js';
 
 const MODES = [
   { key: 'device', pic: 'friends', title: 'Play on this device' },
@@ -116,16 +117,11 @@ export default function Home({ onStart, onJoined, onQuick, onResume }) {
   const [showRules, setShowRules] = useState(false);
   const [resuming, setResuming] = useState(null); // a game kind that has an unfinished game saved
   const [showSettings, setShowSettings] = useState(false);
-  // The game options are remembered in this browser.
-  const useOption = (key) => {
-    const [v, setV] = useState(() => { try { return localStorage.getItem(key) === '1'; } catch { return false; } });
-    return [v, (next) => { setV(next); try { localStorage.setItem(key, next ? '1' : '0'); } catch { /* ignore */ } }];
-  };
-  const look = useLook();
-  const counters = useCounters();
-  const [exp, changeExp] = useOption('sd-exp');
-  const [randomCards, changeRandomCards] = useOption('sd-random-cards');
-  const [randomRoyals, changeRandomRoyals] = useOption('sd-random-royals');
+  const classic = useLook() === 'classic';
+  const exp = expPref.use();
+  // The printed look has no pictures for made-up cards or the extra royal, so those options are left out with it.
+  const randomCards = cardsPref.use() && !classic;
+  const randomRoyals = royalsPref.use() && !classic;
   const start = (o) => onStart({ ...o, randomCards, randomRoyals });
   // Playing on one device has nothing to choose, so it starts straight away.
   const begin = (key) => (key === 'device' ? start({ mode: 'device', exp, source: 'random' }) : setOpen(key));
@@ -176,34 +172,7 @@ export default function Home({ onStart, onJoined, onQuick, onResume }) {
         </Dialog>
       )}
       {open && <GameDialog mode={open} exp={exp} onClose={() => setOpen(null)} onStart={start} onJoined={onJoined} />}
-      {showSettings && (
-        <Dialog open onOpenChange={(o) => !o && setShowSettings(false)}>
-          <DialogContent className="sm:max-w-md">
-            <DialogHeader>
-              <DialogTitle>Game settings</DialogTitle>
-              <DialogDescription className="sr-only">Choose what the next game uses</DialogDescription>
-            </DialogHeader>
-            <div className="space-y-4">
-              {[
-                [exp, changeExp, 'Counterfeiters expansion', 'Adds glassware tokens, counterfeiter cards and more royals.'],
-                [randomCards, changeRandomCards, 'Random cards', 'Deal made-up cards instead of the 67 printed ones.'],
-                [randomRoyals, changeRandomRoyals, 'Random royal cards', 'Draw the royals from a pool of each 2 point power-up plus one 3 point royal.'],
-                [look === 'classic', (on) => setLook(on ? 'classic' : 'modern'), 'Original look', 'Photographed tokens and card backs, and the printed card faces. Pearl tokens keep the modern artwork.'],
-                [counters, setCounters, 'Card counters', 'Show how many cards are in each stack in a hand.'],
-              ].map(([on, set, title, text]) => (
-                <label key={title} className="flex cursor-pointer items-center justify-between gap-4">
-                  <span>
-                    <span className="block font-semibold">{title}</span>
-                    <span className="block text-sm text-muted-foreground">{text}</span>
-                  </span>
-                  <Switch checked={on} onCheckedChange={set} />
-                </label>
-              ))}
-            </div>
-            <DialogFooter><Button onClick={() => setShowSettings(false)}>Done</Button></DialogFooter>
-          </DialogContent>
-        </Dialog>
-      )}
+      {showSettings && <GameSettings onClose={() => setShowSettings(false)} />}
       {showRules && <Rules exp={exp} onClose={() => setShowRules(false)} />}
     </div>
   );

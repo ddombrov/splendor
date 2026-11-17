@@ -46,6 +46,6 @@ export default function App() {
   if (view.name === 'quick') {
     return <QuickMatch onMatched={matched} onCancel={home} onPlayComputer={() => start({ mode: 'ai', exp: false, source: 'random', difficulty: 'medium', depth: 'standard' })} />;
   }
-  if (view.name === 'game') return <Game key={view.session.key ?? view.session.code} session={view.session} onExit={home} />;
+  if (view.name === 'game') return <Game key={view.session.key ?? view.session.code} session={view.session} onExit={home} onRestart={(o) => setView({ name: 'game', session: { ...view.session, ...o, key: Date.now(), resume: false } })} />;
   return <Home onStart={start} onResume={resume} onJoined={joined} onQuick={() => setView({ name: 'quick' })} />;
 }
