@@ -98,7 +98,7 @@ export function CfCard({ card, onClick, selected, afford, look: forced }) {
     <div data-card-id={card.id} className={`card cfcard k-cf ${selected ? 'sel' : ''} ${afford ? 'afford' : ''}`} onClick={onClick}>
       {piece && <div className="art cfart"><img src={piece} alt="" draggable={false} className="jewelart" /></div>}
       {card.crowns > 0 && <div className="ptsrow"><div className="crownrow"><Crown size={20} /><Crown size={20} /></div></div>}
-      {CF_ICON[card.ab] ? (() => { const [pic, num, sub] = CF_ICON[card.ab](card); return (
+      {card.ab === 'crowns2' ? null : CF_ICON[card.ab] ? (() => { const [pic, num, sub] = CF_ICON[card.ab](card); return (
         <div className="note iconly">
           <span className="relative inline-flex">
             <AbilityIcon ab={pic} size={44} />

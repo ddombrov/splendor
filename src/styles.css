@@ -61,9 +61,10 @@
 .royal-crown { position: absolute; left: 0; right: 0; top: 36px; display: flex; justify-content: center; }
 .royal-crown.pic { top: 8px; }
 .royal-art { width: 72px; height: 72px; object-fit: contain; }
-.cfart { padding-top: 78px; }
-.cfart .jewelart { width: 84px; height: 84px; }
-.jewelart { width: 104px; height: 104px; object-fit: contain; filter: drop-shadow(0 4px 5px rgba(0, 0, 0, 0.35)); }
+.cfart { padding-top: 92px; padding-left: 40px; }
+.cfart .jewelart { width: 76px; height: 76px; }
+.card .art { padding-left: 40px; }
+.jewelart { width: 82px; height: 82px; object-fit: contain; filter: drop-shadow(0 4px 5px rgba(0, 0, 0, 0.35)); }
 .card.jewel.k-none { background: url(/modern/cards/fronts/gray.svg) center / 100% 100% no-repeat; }
 .card.k-none { --edge: #9aa3b5; }
 .royaltext { top: auto; bottom: 56px; text-align: center; }
