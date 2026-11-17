@@ -58,7 +58,7 @@ export function JewelCard({ card, onClick, selected, afford, look: forced }) {
   const wild = card.bonus === 'wild';
   const kind = wild ? 'wild' : card.bonus;
   const abil = card.ability;
-  const centre = card.bonus === 'wild' ? '/shared/icons/any-color-gem.png' : centrePicture(card); // the rainbow bug stands in for wild cards
+  const centre = card.bonus === 'wild' ? '/modern/icons/any-color-gem.png' : centrePicture(card); // the rainbow bug stands in for wild cards
   const title = [wild && 'Wild bonus: copies one of your colours', card.ability && AB_LABEL[card.ability]].filter(Boolean).join(' + ');
   return (
     <div

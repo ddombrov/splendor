@@ -562,7 +562,7 @@ function Board({ session, onExit, onRestart, init, onReplaced }) {
             {[
               ['log', 'Log', () => setShowLog(true)],
               ['rules', 'Rules and summary', () => setShowRules(true)],
-              ...(online ? [] : [['go-again', 'Start over', restart]]),
+              ...(online ? [] : [['start-over', 'Start over', restart]]),
               ['resign', 'Resign', resign],
               ['leave-game', 'Leave game', leave],
             ].map(([icon, label, run]) => (

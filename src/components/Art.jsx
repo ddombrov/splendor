@@ -14,7 +14,7 @@ export const PAL = {
 
 /** A gem picture, cut out so it keeps its own shape. The wild bonus uses the rainbow gem icon. */
 export function Gem({ kind, size = 28, className = '' }) {
-  const src = kind === 'wild' ? '/shared/icons/any-color-gem.png' : `/modern/tokens/${kind}.png`;
+  const src = kind === 'wild' ? '/modern/icons/any-color-gem.png' : `/modern/tokens/${kind}.png`;
   return <img src={src} width={size} height={size} alt="" draggable={false} className={`gem-img ${className}`} />;
 }
 
@@ -41,7 +41,7 @@ export function TokenArt({ kind, size = 52, look: forced }) {
 /** The privilege scroll. */
 export function Scroll({ size = 20 }) {
   const look = useLook();
-  return <img src={look === 'classic' ? '/classic/icons/privilege.png' : '/shared/icons/scroll.png'} height={size} alt="" draggable={false} className="shrink-0" style={{ width: 'auto', height: size }} />;
+  return <img src={look === 'classic' ? '/classic/icons/privilege.png' : '/modern/icons/scroll.png'} height={size} alt="" draggable={false} className="shrink-0" style={{ width: 'auto', height: size }} />;
 }
 
 /** The crown picture, the same one the royal cards use, at any size. */
@@ -63,7 +63,7 @@ export function AbilityIcon({ ab, size = 24 }) {
   if (ab.startsWith('gem:')) return <Gem kind={ab.slice(4)} size={size} />;
   const name = ABILITY_ICON[ab];
   if (!name) return null;
-  return <img src={`/shared/icons/${name}.png`} alt="" draggable={false} className="shrink-0 object-contain" style={{ width: size, height: size }} />;
+  return <img src={`/modern/icons/${name}.png`} alt="" draggable={false} className="shrink-0 object-contain" style={{ width: size, height: size }} />;
 }
 
 /** The green tick, used wherever something is done or complete. */
