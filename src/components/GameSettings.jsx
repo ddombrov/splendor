@@ -66,7 +66,7 @@ export default function GameSettings({ onClose, inGame = false, current, locked 
                 </label>
               ))}
             </div>
-            <div className="flex flex-col items-start gap-2 [&_button]:w-52 [&_button]:justify-start">
+            <div className="flex flex-col items-center gap-2 [&_button]:w-52 [&_button]:justify-center">
               {children}
               <Button variant="outline" onClick={() => window.open('/?mapping=1', '_blank')}>See card mapping</Button>
             </div>

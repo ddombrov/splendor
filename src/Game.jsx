@@ -558,7 +558,7 @@ function Board({ session, onExit, onRestart, init, onReplaced }) {
               </button>
             </div>
           )}
-          <div className="flex flex-col items-start gap-2">
+          <div className="flex flex-col items-center gap-2">
             {[
               ['log', 'Log', () => setShowLog(true)],
               ['rules', 'Rules and summary', () => setShowRules(true)],
@@ -566,7 +566,7 @@ function Board({ session, onExit, onRestart, init, onReplaced }) {
               ['resign', 'Resign', resign],
               ['leave-game', 'Leave game', leave],
             ].map(([icon, label, run]) => (
-              <Button key={label} variant="outline" className="justify-start gap-2" onClick={() => { setShowSettings(false); run(); }}><Pic name={icon} size={20} /> {label}</Button>
+              <Button key={label} variant="outline" className="gap-2" onClick={() => { setShowSettings(false); run(); }}><Pic name={icon} size={20} /> {label}</Button>
             ))}
           </div>
         </GameSettings>

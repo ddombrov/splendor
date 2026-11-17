@@ -58,7 +58,10 @@ export function JewelCard({ card, onClick, selected, afford, look: forced }) {
   const wild = card.bonus === 'wild';
   const kind = wild ? 'wild' : card.bonus;
   const abil = card.ability;
-  const rows = Object.keys(card.cost).length; // cost rows run up the left side, so a long list needs a smaller piece
+  // The cost rows run up the left side. A piece is only made smaller (and lifted) when its full size would reach them.
+  const costTop = 182 - Object.keys(card.cost).length * 19 - (Object.keys(card.cost).length - 1) * 3;
+  const pieceSize = Math.min(104, costTop - 34);
+  const small = pieceSize < 100;
   const centre = card.bonus === 'wild' ? '/modern/icons/any-color-gem.png' : centrePicture(card); // the rainbow bug stands in for wild cards
   const title = [wild && 'Wild bonus: copies one of your colours', card.ability && AB_LABEL[card.ability]].filter(Boolean).join(' + ');
   return (
@@ -69,7 +72,7 @@ export function JewelCard({ card, onClick, selected, afford, look: forced }) {
       onClick={onClick}
       title={title}
     >
-      <div className={`art${rows >= 3 ? ' high' : ''}`}>{centre ? <img src={centre} alt="" draggable={false} className="jewelart" style={rows >= 3 ? { width: rows >= 4 ? 64 : 72, height: rows >= 4 ? 64 : 72 } : undefined} /> : kind !== 'none' && <Gem kind={kind} size={62} />}</div>
+      <div className={`art${small ? ' high' : ''}`}>{centre ? <img src={centre} alt="" draggable={false} className="jewelart" style={small ? { width: pieceSize, height: pieceSize } : undefined} /> : kind !== 'none' && <Gem kind={kind} size={62} />}</div>
       <div className="ptsrow">
         <div className="pts">{card.pts || ''}</div>
         <div className="crownrow">{Array.from({ length: card.crowns }, (_, i) => <Crown key={i} size={22} />)}</div>
