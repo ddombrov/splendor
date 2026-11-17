@@ -35,7 +35,7 @@ const costText = (c) => Object.entries(c.cost).map(([k, n]) => `${n} ${k}`).join
 
 export default function CardMapping() {
   return (
-    <div className="min-h-screen space-y-6 p-6 text-white">
+    <div className="fixed inset-0 space-y-6 overflow-auto p-6 text-white">
       <div>
         <h1 className="text-2xl font-bold">Card mapping</h1>
         <p className="text-sm text-white/70">Original picture on the left, the modern card or token that replaces it on the right. Temporary page: zoom the browser to see more or less.</p>

@@ -524,7 +524,7 @@ function Board({ session, onExit, onRestart, init, onReplaced }) {
               const sc = Math.min(2.6, (vp.vh * 0.5) / 124, (vp.vw * 0.5) / 189);
               return (
                 <div style={{ position: 'relative', width: 189 * sc, height: 124 * sc }}>
-                  <img src={`/classic/${printed}`} alt="" draggable={false} style={{ position: 'absolute', width: 124 * sc, height: 189 * sc, left: ((189 - 124) / 2) * sc, top: ((124 - 189) / 2) * sc, transform: 'rotate(90deg)', borderRadius: 10 * sc }} />
+                  <img src={`/classic/${printed}`} alt="" draggable={false} style={{ position: 'absolute', width: 124 * sc, height: 189 * sc, left: ((189 - 124) / 2) * sc, top: ((124 - 189) / 2) * sc, transform: 'rotate(-90deg)', borderRadius: 10 * sc }} />
                 </div>
               );
             }
