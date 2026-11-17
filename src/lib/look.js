@@ -24,8 +24,8 @@ const subscribe = (fn) => { listeners.add(fn); return () => listeners.delete(fn)
 export const useLook = () => useSyncExternalStore(subscribe, getLook);
 
 /** A true/false option remembered in this browser, readable anywhere and as a hook. */
-function makePref(key) {
-  let value = (() => { try { return localStorage.getItem(key) === '1'; } catch { return false; } })();
+function makePref(key, fallback = false) {
+  let value = (() => { try { const v = localStorage.getItem(key); return v == null ? fallback : v === '1'; } catch { return fallback; } })();
   const get = () => value;
   const set = (on) => {
     value = !!on;
@@ -38,6 +38,7 @@ function makePref(key) {
 // Whether each stack of cards in a hand shows how many cards it holds, and the options for the next game.
 export const countersPref = makePref('sd-counters');
 export const expPref = makePref('sd-exp');
+export const jewelryPref = makePref('sd-jewelry', true); // pieces of jewellery in the middle of modern cards
 export const cardsPref = makePref('sd-random-cards');
 export const useCounters = countersPref.use;
 

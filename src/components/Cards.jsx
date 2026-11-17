@@ -1,5 +1,5 @@
 import { CF_TEXT, ROYAL_TEXT } from '../engine/data.js';
-import { classicCardFile, useLook } from '../lib/look.js';
+import { classicCardFile, jewelryPref, useLook } from '../lib/look.js';
 import { PAL, Gem, Crown, AbilityIcon, Mini } from './Art.jsx';
 
 // Royal abilities that have a picture; the first three need no words, the rest keep their text.
@@ -49,16 +49,18 @@ function PrintedCard({ card, file, onClick, selected, afford }) {
   );
 }
 
-// The picture in the middle of a modern card: a piece of jewellery set with the card's gem, and a lamp, chalice or
-// lantern when the card is worth no points. The colour of the card is shown by the gem in the top right corner.
-const GEM_VARIANT = { blue: 'sapphire', white: 'diamond', green: 'emerald', black: 'obsidian', red: 'ruby', none: 'gold' };
+// The picture in the middle of a modern card: a piece of jewellery set with the card's gem. A card with no colour
+// shows a lamp, chalice or lantern, and a wild card shows the five-gem picture. The gem in the top right corner
+// says which colour the card is.
+const GEM_VARIANT = { blue: 'sapphire', white: 'diamond', green: 'emerald', black: 'obsidian', red: 'ruby' };
 const PIECES = ['solitaire-ring', 'signet-ring', 'stud-earring', 'teardrop-pendant', 'heart-necklace', 'silver-ring', 'shadow-amulet', 'stone-tablet'];
-const ZERO_PIECES = ['lamp', 'chalice', 'lantern'];
-const pickFrom = (card, list) => list[(Number(String(card.id).split('-').pop()) + card.level) % list.length];
+const NEUTRAL_PIECES = ['lamp', 'chalice', 'lantern'];
+const pickFrom = (card, list) => list[((Number(String(card.id).replace(/^.*-/, '').replace(/\D/g, '')) || 0) + (card.level || 0)) % list.length];
 function centreArt(card) {
-  if (card.pts === 0) return `/modern/jewelry/zero/${pickFrom(card, ZERO_PIECES)}.png`;
+  if (card.bonus === 'wild') return '/shared/icons/any-color-gem.png'; // the rainbow bug; the five-gem picture is the corner marker
+  if (card.bonus === 'none') return `/modern/jewelry/neutral/${pickFrom(card, NEUTRAL_PIECES)}.png`;
   const gem = GEM_VARIANT[card.bonus];
-  return gem ? `/modern/jewelry/${gem}/${pickFrom(card, PIECES)}.png` : null; // a wild card keeps the rainbow gem
+  return gem ? `/modern/jewelry/${gem}/${pickFrom(card, PIECES)}.png` : null;
 }
 
 export function JewelCard({ card, onClick, selected, afford }) {
@@ -68,7 +70,8 @@ export function JewelCard({ card, onClick, selected, afford }) {
   const wild = card.bonus === 'wild';
   const kind = wild ? 'wild' : card.bonus;
   const abil = card.ability;
-  const centre = centreArt(card);
+  const jewelry = jewelryPref.use();
+  const centre = jewelry ? centreArt(card) : null;
   const title = [wild && 'Wild bonus: copies one of your colours', card.ability && AB_LABEL[card.ability]].filter(Boolean).join(' + ');
   return (
     <div
@@ -84,7 +87,9 @@ export function JewelCard({ card, onClick, selected, afford }) {
         <div className="crownrow">{Array.from({ length: card.crowns }, (_, i) => <Crown key={i} size={22} />)}</div>
       </div>
       <div className="bonus">
-        {Array.from({ length: card.n }, (_, i) => <Gem key={i} kind={kind} size={card.n > 1 ? 22 : 26} />)}
+        {Array.from({ length: card.n }, (_, i) => (wild
+          ? <img key={i} src="/modern/jewelry/wild-gems.png" width={28} height={28} alt="" draggable={false} className="gem-img" />
+          : <Gem key={i} kind={kind} size={card.n > 1 ? 22 : 26} />))}
       </div>
       {abil && (
         <div className="abil">
@@ -98,10 +103,13 @@ export function JewelCard({ card, onClick, selected, afford }) {
 
 export function CfCard({ card, onClick, selected, afford }) {
   const look = useLook();
+  const jewelry = jewelryPref.use();
+  const piece = jewelry ? `/modern/jewelry/amethyst/${pickFrom(card, PIECES)}.png` : null;
   const file = look === 'classic' ? classicCardFile(card) : null;
   if (file) return <PrintedCard card={card} file={file} onClick={onClick} selected={selected} afford={afford} />;
   return (
     <div data-card-id={card.id} className={`card cfcard k-cf ${selected ? 'sel' : ''} ${afford ? 'afford' : ''}`} onClick={onClick}>
+      {piece && <div className="art cfart"><img src={piece} alt="" draggable={false} className="jewelart" /></div>}
       {card.crowns > 0 && <div className="crownrow cfcrowns"><Crown size={20} /><Crown size={20} /></div>}
       {CF_ICON[card.ab] ? (() => { const [pic, num, sub] = CF_ICON[card.ab](card); return (
         <div className="note iconly">
