@@ -1,5 +1,5 @@
 import { CF_TEXT, ROYAL_TEXT } from '../engine/data.js';
-import { classicCardFile, maaikePhoto, useCounters, useLook } from '../lib/look.js';
+import { classicCardFile, maaikeCfPhoto, maaikePhoto, useCounters, useLook } from '../lib/look.js';
 import { centrePicture, cfPicture } from '../lib/cardTypes.js';
 import { PAL, Gem, Crown, AbilityIcon, Mini } from './Art.jsx';
 
@@ -93,11 +93,13 @@ export function JewelCard({ card, onClick, selected, afford, look: forced }) {
 export function CfCard({ card, onClick, selected, afford, look: forced }) {
   const current = useLook();
   const look = forced ?? current;
-  const piece = cfPicture(card);
+  const photo = look === 'maaike' ? maaikeCfPhoto(card) : null;
+  const piece = photo ? null : cfPicture(card);
   const file = look === 'classic' ? classicCardFile(card) : null;
   if (file) return <PrintedCard card={card} file={file} onClick={onClick} selected={selected} afford={afford} />;
   return (
-    <div data-card-id={card.id} className={`card cfcard k-cf ${selected ? 'sel' : ''} ${afford ? 'afford' : ''}`} onClick={onClick}>
+    <div data-card-id={card.id} className={`card cfcard k-cf ${photo ? 'photo' : ''} ${selected ? 'sel' : ''} ${afford ? 'afford' : ''}`} onClick={onClick}>
+      {photo && <><img src={photo} alt="" draggable={false} className="photofill" /><div className="photoscrim" /></>}
       {piece && <div className="art cfart"><img src={piece} alt="" draggable={false} className="jewelart" /></div>}
       {card.crowns > 0 && <div className="ptsrow"><div className="crownrow"><Crown size={20} /><Crown size={20} /></div></div>}
       {card.ab === 'crowns2' ? null : CF_ICON[card.ab] ? (() => { const [pic, num, sub] = CF_ICON[card.ab](card); return (

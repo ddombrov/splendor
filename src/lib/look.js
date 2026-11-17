@@ -18,6 +18,13 @@ apply();
 export const getLook = () => look;
 export const MAAIKE_AVAILABLE = !!import.meta.env?.DEV;
 
+const MAAIKE_CF_PHOTOS = 15; // the first 15 counterfeiter cards have a photo
+export const MAAIKE_TOKENS = new Set(['blue', 'green', 'black', 'red', 'pearl', 'glass', 'gold']); // white has no photo yet
+/** The photo for a counterfeiter card in the Maaike version, or null. */
+export function maaikeCfPhoto(card) {
+  const i = Number(String(card.id).replace(/\D/g, ''));
+  return card.kind === 'cf' && Number.isInteger(i) && i < MAAIKE_CF_PHOTOS ? `/maaike/cf/${String(i).padStart(2, '0')}.jpg` : null;
+}
 const MAAIKE_PHOTOS = 67; // one photo for each of the 67 development cards, in printed order
 const LEVEL_START = [0, 30, 54];
 /** The photo for a development card in the Maaike version, or null when there are not enough photos. */
