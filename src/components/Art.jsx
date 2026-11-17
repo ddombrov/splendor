@@ -8,6 +8,7 @@ export const PAL = {
   glass: { h: '#f1dcff', l: '#c78bff', b: '#9b4ee0', d: '#53208f', glow: '168,85,247' },
   gold: { h: '#fff6b8', l: '#ffd84a', b: '#f2b705', d: '#a56d00', glow: '250,204,21' },
   wild: { h: '#fff', l: '#fff', b: '#fff', d: '#999', glow: '255,255,255' },
+  none: { h: '#fff', l: '#ddd', b: '#bbb', d: '#777', glow: '200,200,200' },
 };
 
 /** A gem picture, cut out so it keeps its own shape. The wild bonus uses the rainbow gem icon. */

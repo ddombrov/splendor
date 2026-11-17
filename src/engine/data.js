@@ -1,4 +1,5 @@
 import { randInt, shuffle as shuffleWith } from './rng.js';
+import { jewelCards } from './cards.js';
 
 export const COLORS = ['blue', 'white', 'green', 'black', 'red'];
 
@@ -10,36 +11,7 @@ export const ABILITY_TEXT = {
   wild: 'Wild bonus',
 };
 
-export function genJewels(level, rand) {
-  const rnd = (a, b) => randInt(a, b, rand);
-  const shuffle = (a) => shuffleWith(a, rand);
-  const count = [30, 24, 13][level - 1];
-  const cards = [];
-  for (let i = 0; i < count; i++) {
-    const total = level === 1 ? rnd(2, 5) : level === 2 ? rnd(5, 8) : rnd(8, 11);
-    // A card with a perk (an ability or a wild bonus) always costs exactly one pearl; other cards may cost one.
-    const ability = rand() < [0.35, 0.4, 0.45][level - 1] ? ['extra', 'privilege', 'match', 'steal'][rnd(0, 3)] : null;
-    const wild = level >= 2 && rand() < 0.12;
-    const pearl = ability || wild || rand() < (level === 1 ? 0.25 : 0.5) ? 1 : 0;
-    const colored = total - pearl;
-    const k = Math.min(colored, level === 1 ? rnd(1, 3) : rnd(2, 3));
-    const pool = shuffle([...COLORS]).slice(0, k);
-    const cost = {};
-    pool.forEach((g) => (cost[g] = 1));
-    if (pearl) cost.pearl = 1;
-    for (let t = colored - k; t > 0; t--) {
-      const g = pool[rnd(0, pool.length - 1)];
-      if (cost[g] < 6) cost[g]++;
-      else t++;
-    }
-    const pts = level === 1 ? (rand() < 0.35 ? 1 : 0) : level === 2 ? rnd(1, 3) : rnd(3, 6);
-    const crowns = level === 1 ? (rand() < 0.1 ? 1 : 0) : level === 2 ? (rand() < 0.4 ? 1 : 0) : rnd(1, 2);
-    let n = level === 3 && rand() < 0.3 ? 2 : level === 2 && rand() < 0.1 ? 2 : 1;
-    if (crowns === 2) n = 1; // a card never has both 2 crowns and a bonus worth 2 gems
-    cards.push({ id: `j${level}-${i}`, kind: 'jewel', level, cost, pts, crowns, ability, n, bonus: wild ? 'wild' : COLORS[i % 5], color: null });
-  }
-  return shuffle(cards);
-}
+export const genJewels = (level, rand) => shuffleWith(jewelCards(level), rand);
 
 export const CF_TEXT = {
   red2: (c) => `Spend up to 2 glassware: each cuts ${c.rc} cost by 2`,
@@ -90,7 +62,7 @@ export const baseRoyals = () => [
   { id: 'b1', kind: 'royal', pts: 2, ab: 'privilege' },
   { id: 'b2', kind: 'royal', pts: 2, ab: 'extra' },
   { id: 'b3', kind: 'royal', pts: 2, ab: 'steal' },
-  { id: 'b4', kind: 'royal', pts: 2, ab: 'take1' },
+  { id: 'b4', kind: 'royal', pts: 3, ab: null },
 ];
 export const expRoyals = () => [
   { id: 'e1', kind: 'royal', pts: 2, ab: 'rreserve' },
@@ -115,6 +87,7 @@ export const ROYAL_DETAIL = {
   extra: 'Take another turn immediately after this one ends.',
   steal: 'Take 1 gem or pearl token from your opponent (never gold). If they have none, ignore it.',
   take1: 'Take 1 gem or pearl token of your choice from the board (not gold).',
+  none: 'Just 3 prestige points. No ability.',
   rreserve: 'Reserve any card from any level or deck, even if no gold is on the board, and take no gold. Skip it if your reserve is full.',
   rgold: 'Take 1 gold token from the board if one is available. Do not reserve a card.',
   w9c: 'Victory condition: 9 or more prestige points on cards of one colour wins the game.',
@@ -145,8 +118,9 @@ export const CF_DETAIL = {
 export function perkText(card) {
   if (!card) return null;
   if (card.kind === 'cf') return CF_DETAIL[card.ab]?.(card) ?? null;
-  if (card.kind === 'royal') return ROYAL_DETAIL[card.ab] ?? null;
+  if (card.kind === 'royal') return ROYAL_DETAIL[card.ab ?? 'none'] ?? null;
   const parts = [];
+  if (card.bonus === 'none') parts.push('No bonus colour: it only scores points. It sits under the gold column.');
   if (card.bonus === 'wild') parts.push('Wild bonus: place it on one of your coloured cards and it counts as that colour. You need a card with a bonus to buy it.');
   if (card.ability) parts.push(JEWEL_PERK[card.ability]);
   return parts.length ? parts.join(' ') : null;

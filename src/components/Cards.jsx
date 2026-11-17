@@ -52,7 +52,7 @@ export function JewelCard({ card, onClick, selected, afford }) {
       onClick={onClick}
       title={title}
     >
-      <div className="art"><Gem kind={kind} size={62} /></div>
+      <div className="art">{kind !== 'none' && <Gem kind={kind} size={62} />}</div>
       <div className="ptsrow">
         <div className="pts">{card.pts || ''}</div>
         <div className="crownrow">{Array.from({ length: card.crowns }, (_, i) => <Crown key={i} size={22} />)}</div>
@@ -90,11 +90,15 @@ export function CfCard({ card, onClick, selected, afford }) {
   );
 }
 
+// The base royals each have a picture of their own; the expansion royals keep the crown.
+const ROYAL_ART = { steal: 'cloak', privilege: 'beret', extra: 'sunhat', none: 'necklace' };
+
 export function RoyalCard({ card, onClick, glow }) {
+  const art = card.id.startsWith('b') ? ROYAL_ART[card.ab ?? 'none'] : null;
   return (
     <div data-card-id={card.id} className={`card royal ${glow ? 'afford' : ''}`} onClick={onClick}>
       <div className="ptsrow"><div className="pts">{card.pts}</div></div>
-      <div className="royal-crown"><Crown size={42} /></div>
+      <div className="royal-crown">{art ? <img src={`/royals/${art}.png`} alt="" draggable={false} className="royal-art" /> : <Crown size={42} />}</div>
       <div className={`note royaltext ${ICON_ONLY.includes(card.ab) ? 'iconly' : ''}`}>
         {ROYAL_ICON[card.ab] && (
           <span className="relative inline-flex">

@@ -319,7 +319,7 @@ function doBuy(S, color) {
     finishMain(S);
     return;
   }
-  card.color = card.bonus === 'wild' ? color : card.bonus;
+  card.color = card.bonus === 'wild' ? color : card.bonus === 'none' ? null : card.bonus;
   p.cards.push(card);
   log(S, `${p.name} buys a level ${card.level} card (${card.pts} pts${card.crowns ? `, ${card.crowns} crown` : ''}).`);
   const steps = [];

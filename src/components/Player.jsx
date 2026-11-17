@@ -37,6 +37,7 @@ export default function Player({ S, idx, dispatch, onInspect, colW = 52, viewer 
   const canReturn = active && mine && !S.main && !pd && roomLeft(p) === 0;
   const b = bonuses(p);
   const all = [...kinds(S), 'gold'];
+  const ownedOf = (k) => p.cards.filter((x) => (k === 'gold' ? x.bonus === 'none' : x.color === k));
   const royals = (z) => p.royals.length > 0 && (
     <div className="compact-cards flex flex-wrap gap-1" style={{ '--z': z }}>
       {p.royals.map((r) => <RoyalCard key={r.id} card={r} onClick={() => onInspect?.(r)} />)}
@@ -74,7 +75,7 @@ export default function Player({ S, idx, dispatch, onInspect, colW = 52, viewer 
         </div>
         <div className="flex min-w-0 flex-1 items-start justify-center gap-2 pt-1">
           {all.map((k) => {
-            const owned = p.cards.filter((x) => x.color === k);
+            const owned = ownedOf(k);
             const shown = owned.slice(-MAX_STACK);
             const step = shown.length > 1 ? Math.min(16, Math.floor(56 / (shown.length - 1))) : 0;
             return (
@@ -116,7 +117,7 @@ export default function Player({ S, idx, dispatch, onInspect, colW = 52, viewer 
         </div>
         <div className={cn('mt-2 flex flex-col', expanded ? 'gap-3' : 'gap-0.5')}>
           {all.map((k) => {
-            const owned = p.cards.filter((x) => x.color === k);
+            const owned = ownedOf(k);
             const shown = owned.slice(-MAX_STACK);
             const step = shown.length > 1 ? Math.min(cw, Math.floor((expanded ? 100 : 70) / (shown.length - 1))) : 0;
             return (
@@ -179,7 +180,7 @@ export default function Player({ S, idx, dispatch, onInspect, colW = 52, viewer 
       <div data-dest-tokens={idx} data-dest-cards={idx} className="mt-3 flex items-start gap-3" title="Tokens, with the cards of each colour under them">
         {all.map((k) => {
           const click = canReturn ? () => dispatch({ type: 'giveBack', c: k }) : canDisc ? () => dispatch({ type: 'disc', c: k }) : canSteal && k !== 'gold' ? () => dispatch({ type: 'steal', c: k }) : null;
-          const owned = p.cards.filter((x) => x.color === k);
+          const owned = ownedOf(k);
           const z = colW / 124;
           const full = Math.round(colW * 1.4);
           const strip = owned.length > 1 ? Math.max(10, Math.min(Math.round((zoomed ? 62 : 40) * z), Math.floor((colW * 4.2 - full) / (owned.length - 1)))) : 0;

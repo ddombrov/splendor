@@ -426,25 +426,31 @@ describe('replenishing follows the arrows printed on the board', () => {
   });
 });
 
-describe('random cards', () => {
-  it('never give a card both 2 crowns and a bonus worth 2 gems', () => {
-    for (let seed = 1; seed <= 200; seed++) {
-      const S = createGame(false, seed, 0);
-      const all = [...S.pyr.flat(), ...S.decks.flat()];
-      for (const c of all) expect(c.crowns === 2 && c.n === 2).toBe(false);
+describe('the printed cards', () => {
+  const all = (exp = false) => {
+    const S = createGame(exp, 5, 0);
+    return [0, 1, 2].map((l) => [...S.pyr[l], ...S.decks[l]]);
+  };
+
+  it('are the 30, 24 and 13 cards of the three levels', () => {
+    expect(all().map((level) => level.length)).toEqual([30, 24, 13]);
+    expect(all(true).map((level) => level.length)).toEqual([30, 24, 13]);
+  });
+
+  it('never have more than one pearl in a cost, or 2 crowns with a bonus worth 2 gems', () => {
+    for (const c of all().flat()) {
+      expect(c.cost.pearl ?? 0).toBeLessThanOrEqual(1);
+      expect(c.crowns === 2 && c.n === 2).toBe(false);
     }
   });
 
-  it('cost at most one pearl, and always one when the card has a perk', () => {
-    for (let seed = 1; seed <= 200; seed++) {
-      const S = createGame(false, seed, 0);
-      const all = [...S.pyr.flat(), ...S.decks.flat()];
-      for (const c of all) {
-        expect(c.cost.pearl ?? 0).toBeLessThanOrEqual(1);
-        if (c.ability || c.bonus === 'wild') expect(c.cost.pearl).toBe(1);
-        expect(Object.keys(c.cost).some((k) => k !== 'pearl')).toBe(true);
-      }
-    }
+  it('include the three cards that give points but no colour', () => {
+    expect(all().flat().filter((c) => c.bonus === 'none').map((c) => c.pts).sort()).toEqual([3, 5, 6]);
+  });
+
+  it('count the abilities that were printed', () => {
+    const count = (ab) => all().flat().filter((c) => c.ability === ab).length;
+    expect([count('steal'), count('privilege'), count('extra'), count('match')]).toEqual([5, 5, 6, 5]);
   });
 });
 

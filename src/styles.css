@@ -59,6 +59,9 @@
 .royal { --lvl: var(--gold); --tint: 217, 177, 90; }
 .royal.afford { box-shadow: 0 0 0 2px var(--gold); }
 .royal-crown { position: absolute; left: 0; right: 0; top: 36px; display: flex; justify-content: center; }
+.royal-art { width: 72px; height: 72px; object-fit: contain; margin-top: -4px; }
+.card.jewel.k-none { background: linear-gradient(#1c2230, #141923); }
+.card.k-none { --edge: #9aa3b5; }
 .royaltext { top: auto; bottom: 42px; text-align: center; }
 .rmark { position: absolute; bottom: 8px; z-index: 2; width: 36px; height: 30px; display: flex; align-items: center; justify-content: center; }
 .rmark img { position: absolute; inset: 0; margin: auto; opacity: 0.35; width: 34px; height: 34px; }
