@@ -3,7 +3,7 @@ import { Info } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Switch } from '@/components/ui/switch';
-import { cardsPref, countersPref, expPref, setLook, useLook } from '../lib/look.js';
+import { MAAIKE_AVAILABLE, cardsPref, countersPref, expPref, setLook, useLook } from '../lib/look.js';
 
 const PREF = { exp: expPref, randomCards: cardsPref };
 
@@ -22,14 +22,16 @@ export default function GameSettings({ onClose, inGame = false, current, locked 
   const rows = [
     { key: 'exp', title: 'Counterfeiters expansion', game: true },
     { key: 'look', title: 'Original look' },
+    ...(MAAIKE_AVAILABLE ? [{ key: 'maaike', title: 'Maaike version' }] : []),
     { key: 'counters', title: 'Card counters' },
   ];
-  const value = (r) => (r.key === 'look' ? classic : r.key === 'counters' ? counters : r.needsModern && noRandom ? false : !!shown[r.key]);
+  const value = (r) => (r.key === 'look' ? classic : r.key === 'maaike' ? look === 'maaike' : r.key === 'counters' ? counters : r.needsModern && noRandom ? false : !!shown[r.key]);
   const noRandom = classic || !!shown.exp; // every card of the expansion and the original look is printed
   const disabled = (r) => (r.game && inGame && locked) || (r.needsModern && noRandom);
   const note = (r) => (r.game && inGame && locked ? 'Fixed for an online game.' : r.needsModern && noRandom ? r.text : r.text);
   const change = (r, on) => {
     if (r.key === 'look') setLook(on ? 'classic' : 'modern');
+    else if (r.key === 'maaike') setLook(on ? 'maaike' : 'modern');
     else if (r.key === 'counters') countersPref.set(on);
     else if (inGame) setPending({ key: r.key, on });
     else PREF[r.key].set(on);

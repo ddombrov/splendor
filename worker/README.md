@@ -29,7 +29,7 @@ To publish a new version, from the project folder with Node 22:
 
 ```
 npx vite build
-# then remove dist/images, which holds box art, before uploading; dist/docs (the rulebook PDFs) is uploaded on purpose
+# then remove dist/images (box art) and dist/maaike (private photos), before uploading; dist/docs (the rulebook PDFs) is uploaded on purpose
 npx wrangler deploy --config worker/wrangler.toml
 ```
 

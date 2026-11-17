@@ -8,14 +8,26 @@ import { CLASSIC_FILES } from './classicFiles.js';
 const KEY = 'sd-look';
 const listeners = new Set();
 
-const read = () => { try { return localStorage.getItem(KEY) === 'classic' ? 'classic' : 'modern'; } catch { return 'modern'; } };
+// The Maaike version uses private photos that are only on this computer, so it exists only while developing.
+const LOOKS = import.meta.env?.DEV ? ['classic', 'maaike'] : ['classic'];
+const read = () => { try { const v = localStorage.getItem(KEY); return LOOKS.includes(v) ? v : 'modern'; } catch { return 'modern'; } };
 let look = read();
 const apply = () => { if (typeof document !== 'undefined') document.documentElement.dataset.look = look; };
 apply();
 
 export const getLook = () => look;
+export const MAAIKE_AVAILABLE = !!import.meta.env?.DEV;
+
+const MAAIKE_PHOTOS = 67; // one photo for each of the 67 development cards, in printed order
+const LEVEL_START = [0, 30, 54];
+/** The photo for a development card in the Maaike version, or null when there are not enough photos. */
+export function maaikePhoto(card) {
+  const i = Number(String(card.id).split('-').pop());
+  const n = LEVEL_START[(card.level || 1) - 1] + i;
+  return card.kind === 'jewel' && Number.isInteger(n) && n < MAAIKE_PHOTOS ? `/maaike/cards/${String(n).padStart(2, '0')}.jpg` : null;
+}
 export function setLook(next) {
-  look = next === 'classic' ? 'classic' : 'modern';
+  look = LOOKS.includes(next) ? next : 'modern';
   try { localStorage.setItem(KEY, look); } catch { /* ignore */ }
   apply();
   listeners.forEach((fn) => fn());
