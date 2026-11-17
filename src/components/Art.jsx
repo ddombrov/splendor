@@ -26,7 +26,7 @@ const DISC = { blue: '#173a82', white: '#6c7d96', green: '#0f5a31', black: '#2b3
 export function TokenArt({ kind, size = 52 }) {
   const look = useLook();
   if (look === 'classic' && CLASSIC_TOKEN[kind]) {
-    return <img className="tokart classic" src={`/classic/tokens/${CLASSIC_TOKEN[kind]}.jpg`} width={size} height={size} alt="" draggable={false} style={{ width: size, height: size, borderRadius: '50%', objectFit: 'cover' }} />;
+    return <img className="tokart classic" src={`/classic/tokens/${CLASSIC_TOKEN[kind]}`} width={size} height={size} alt="" draggable={false} style={{ width: size, height: size, borderRadius: '50%', objectFit: 'cover' }} />;
   }
   return (
     <svg className="tokart" width={size} height={size} viewBox="0 0 100 100">

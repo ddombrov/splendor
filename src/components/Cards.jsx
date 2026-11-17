@@ -1,5 +1,5 @@
 import { CF_TEXT, ROYAL_TEXT } from '../engine/data.js';
-import { classicCardFile, useLook } from '../lib/look.js';
+import { CLASSIC_POWER, classicCardFile, useLook } from '../lib/look.js';
 import { PAL, Gem, Crown, AbilityIcon, Mini } from './Art.jsx';
 
 // Royal abilities that have a picture; the first three need no words, the rest keep their text.
@@ -44,7 +44,7 @@ export function Costs({ cost }) {
 function PrintedCard({ card, file, onClick, selected, afford }) {
   return (
     <div data-card-id={card.id} className={`card imgcard ${selected ? 'sel' : ''} ${afford ? 'afford' : ''}`} onClick={onClick}>
-      <img src={`/classic/cards/${file}`} alt="" draggable={false} />
+      <img src={`/classic/${file}`} alt="" draggable={false} />
     </div>
   );
 }
@@ -55,7 +55,7 @@ export function JewelCard({ card, onClick, selected, afford }) {
   if (file) return <PrintedCard card={card} file={file} onClick={onClick} selected={selected} afford={afford} />;
   const wild = card.bonus === 'wild';
   const kind = wild ? 'wild' : card.bonus;
-  const abil = card.ability || (wild ? 'wild' : null);
+  const abil = card.ability;
   const title = [wild && 'Wild bonus: copies one of your colours', card.ability && AB_LABEL[card.ability]].filter(Boolean).join(' + ');
   return (
     <div
@@ -84,10 +84,17 @@ export function JewelCard({ card, onClick, selected, afford }) {
 }
 
 export function CfCard({ card, onClick, selected, afford }) {
+  const look = useLook();
+  const power = look === 'classic' ? CLASSIC_POWER[card.ab] : null;
   return (
     <div data-card-id={card.id} className={`card cfcard k-cf ${selected ? 'sel' : ''} ${afford ? 'afford' : ''}`} onClick={onClick}>
       {card.crowns > 0 && <div className="crownrow cfcrowns"><Crown size={20} /><Crown size={20} /></div>}
-      {CF_ICON[card.ab] ? (() => { const [pic, num, sub] = CF_ICON[card.ab](card); return (
+      {power ? (
+        <div className="note iconly">
+          <img src={`/classic/powerups/${power}.png`} alt="" draggable={false} className="powerimg" />
+          {card.ab === 'red2' && <Gem kind={card.rc} size={26} />}
+        </div>
+      ) : CF_ICON[card.ab] ? (() => { const [pic, num, sub] = CF_ICON[card.ab](card); return (
         <div className="note iconly">
           <span className="relative inline-flex">
             <AbilityIcon ab={pic} size={44} />
@@ -114,7 +121,7 @@ export function RoyalCard({ card, onClick, glow }) {
   return (
     <div data-card-id={card.id} className={`card royal ${glow ? 'afford' : ''}`} onClick={onClick}>
       <div className="ptsrow"><div className="pts">{card.pts}</div></div>
-      <div className={art ? 'royal-crown art' : 'royal-crown'}>{art ? <img src={`/royals/${art}.png`} alt="" draggable={false} className="royal-art" /> : <Crown size={42} />}</div>
+      <div className={art ? 'royal-crown pic' : 'royal-crown'}>{art ? <img src={`/royals/${art}.png`} alt="" draggable={false} className="royal-art" /> : <Crown size={42} />}</div>
       {card.ab && (
         <div className={`note royaltext ${ICON_ONLY.includes(card.ab) ? 'iconly' : ''}`}>
           {ROYAL_ICON[card.ab] && (

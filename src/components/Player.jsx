@@ -4,6 +4,7 @@ import { BorderBeam } from '@/components/ui/border-beam';
 import { cn } from '@/lib/utils';
 import { COLORS, CF_TEXT } from '../engine/data.js';
 import { JewelCard, RoyalCard, CardBack } from './Cards.jsx';
+import { useCounters } from '../lib/look.js';
 import { TokenArt, Gem, Scroll, Crown } from './Art.jsx';
 import { bonuses, colorPts, crowns, kinds, limitCount, plan, pts, resCap, roomLeft } from '../engine/engine.js';
 
@@ -28,6 +29,8 @@ const TokenStat = ({ p, big }) => {
 
 export default function Player({ S, idx, dispatch, onInspect, colW = 52, viewer = null, onOpen = null, zoomed = false, wide = false, summary = false, expanded = false, horizontal = false, compact = false }) {
   const p = S.players[idx];
+  const counters = useCounters();
+  const count = (n) => counters && n > 0 && <span className="countbadge" title={`${n} cards`}>{n}</span>;
   const active = idx === S.cur && !S.awaitingFirst;
   const pd = S.pending;
   const mine = viewer == null || viewer === S.cur;
@@ -91,6 +94,7 @@ export default function Player({ S, idx, dispatch, onInspect, colW = 52, viewer 
                     ))}
                   </div>
                 )}
+                {count(owned.length)}
                 {owned.length > MAX_STACK && <span className="text-sm font-extrabold leading-none text-muted-foreground" title="Open this player to see every card">…</span>}
               </div>
             );
@@ -133,6 +137,7 @@ export default function Player({ S, idx, dispatch, onInspect, colW = 52, viewer 
                     ))}
                   </div>
                 )}
+                {count(owned.length)}
                 {owned.length > MAX_STACK && <span className="text-lg font-extrabold leading-none text-muted-foreground" title="Open this player to see every card">…</span>}
               </div>
             );
@@ -207,8 +212,11 @@ export default function Player({ S, idx, dispatch, onInspect, colW = 52, viewer 
                   ))}
                 </div>
               )}
-              {COLORS.includes(k) && owned.length > 0 && (
-                <div title={`Points from ${k} cards`} className={cn('font-extrabold leading-none', zoomed ? 'text-3xl' : 'text-lg')}>{colorPts(p, k)}</div>
+              {owned.length > 0 && (
+                <div className="flex items-center gap-2">
+                  {COLORS.includes(k) && <div title={`Points from ${k} cards`} className={cn('font-extrabold leading-none', zoomed ? 'text-3xl' : 'text-lg')}>{colorPts(p, k)}</div>}
+                  {count(owned.length)}
+                </div>
               )}
             </div>
           );
