@@ -110,7 +110,7 @@ function useViewport() {
 }
 
 const freshGame = (session) => {
-  const g = createGame(session.exp, newSeed(), null);
+  const g = createGame(session.exp, newSeed(), null, { randomCards: session.randomCards, randomRoyals: session.randomRoyals });
   if (session.mode === 'ai') g.players[1].name = 'Computer';
   return g;
 };

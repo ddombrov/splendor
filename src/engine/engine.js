@@ -1,4 +1,4 @@
-import { COLORS, genJewels, genCounterfeiters, baseRoyals, expRoyals } from './data.js';
+import { COLORS, genJewels, genRandomJewels, genCounterfeiters, baseRoyals, expRoyals } from './data.js';
 import { nextRandom, shuffle } from './rng.js';
 
 /*
@@ -150,7 +150,8 @@ const mkPlayer = (name) => ({
 });
 
 // `first` is 0 or 1 to start with that player, or null to wait until someone is chosen.
-export function createGame(exp = false, seed, first = 0) {
+// opts.randomCards deals made-up cards instead of the printed deck; opts.randomRoyals draws the royals from a bigger pool.
+export function createGame(exp = false, seed, first = 0, opts = {}) {
   if (!Number.isInteger(seed)) throw new Error('createGame needs an integer seed');
   const gen = { rng: seed >>> 0 };
   const rand = () => nextRandom(gen);
@@ -159,11 +160,11 @@ export function createGame(exp = false, seed, first = 0) {
     'pearl', 'pearl', 'gold', 'gold', 'gold',
     ...(exp ? Array(4).fill('glass') : []),
   ], rand);
-  const royalPool = shuffle(exp ? [...baseRoyals(), ...expRoyals()] : baseRoyals(), rand);
+  const royalPool = shuffle(exp ? [...baseRoyals(opts.randomRoyals), ...expRoyals()] : baseRoyals(opts.randomRoyals), rand);
   const S = {
     exp, rng: 0, board: Array(25).fill(null), bag,
     players: [mkPlayer('Player 1'), mkPlayer('Player 2')], cur: 0,
-    decks: [genJewels(1, rand), genJewels(2, rand), genJewels(3, rand)], pyr: [[], [], []],
+    decks: [1, 2, 3].map((l) => (opts.randomCards ? genRandomJewels : genJewels)(l, rand)), pyr: [[], [], []],
     cdeck: exp ? genCounterfeiters(rand) : [], crow: [],
     royals: royalPool.splice(0, 4), rdeck: royalPool,
     privBoard: 3, awaitingFirst: false, sel: [], goldSel: null, selCard: null, mode: null, main: false, pending: null,

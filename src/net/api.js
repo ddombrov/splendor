@@ -27,9 +27,9 @@ export const rememberName = (n) => { try { if (n) localStorage.setItem(NAME, n);
 
 export const api = {
   /** Start an online game and take the first seat. */
-  async createRoom({ exp, source, name }) {
+  async createRoom({ exp, source, name, randomCards, randomRoyals }) {
     rememberName(name);
-    const { code, seat, token } = await request('POST', '/rooms', { exp, source, name });
+    const { code, seat, token } = await request('POST', '/rooms', { exp, source, name, randomCards, randomRoyals });
     saveSeat(code, seat, token);
     return { code, seat };
   },

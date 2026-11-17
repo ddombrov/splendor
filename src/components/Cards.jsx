@@ -98,16 +98,18 @@ export function RoyalCard({ card, onClick, glow }) {
   return (
     <div data-card-id={card.id} className={`card royal ${glow ? 'afford' : ''}`} onClick={onClick}>
       <div className="ptsrow"><div className="pts">{card.pts}</div></div>
-      <div className="royal-crown">{art ? <img src={`/royals/${art}.png`} alt="" draggable={false} className="royal-art" /> : <Crown size={42} />}</div>
-      <div className={`note royaltext ${ICON_ONLY.includes(card.ab) ? 'iconly' : ''}`}>
-        {ROYAL_ICON[card.ab] && (
-          <span className="relative inline-flex">
-            <AbilityIcon ab={ROYAL_ICON[card.ab]} size={ICON_ONLY.includes(card.ab) ? 44 : 24} />
-            {ICON_COUNT[card.ab] && <b className="iconcount">{ICON_COUNT[card.ab]}</b>}
-          </span>
-        )}
-        {!ICON_ONLY.includes(card.ab) && ROYAL_TEXT[card.ab]}
-      </div>
+      <div className={art ? 'royal-crown art' : 'royal-crown'}>{art ? <img src={`/royals/${art}.png`} alt="" draggable={false} className="royal-art" /> : <Crown size={42} />}</div>
+      {card.ab && (
+        <div className={`note royaltext ${ICON_ONLY.includes(card.ab) ? 'iconly' : ''}`}>
+          {ROYAL_ICON[card.ab] && (
+            <span className="relative inline-flex">
+              <AbilityIcon ab={ROYAL_ICON[card.ab]} size={ICON_ONLY.includes(card.ab) ? 44 : 24} />
+              {ICON_COUNT[card.ab] && <b className="iconcount">{ICON_COUNT[card.ab]}</b>}
+            </span>
+          )}
+          {!ICON_ONLY.includes(card.ab) && ROYAL_TEXT[card.ab]}
+        </div>
+      )}
       <div className="rmark l" title="Claim a royal card at 3 crowns"><Crown size={34} /><b>3</b></div>
       <div className="rmark r" title="Claim a royal card at 6 crowns"><Crown size={34} /><b>6</b></div>
     </div>

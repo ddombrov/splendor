@@ -114,10 +114,18 @@ export default function Home({ onStart, onJoined, onQuick, onResume }) {
   const [open, setOpen] = useState(null);
   const [showRules, setShowRules] = useState(false);
   const [resuming, setResuming] = useState(null); // a game kind that has an unfinished game saved
-  const [exp, setExp] = useState(() => { try { return localStorage.getItem('sd-exp') === '1'; } catch { return false; } });
-  const changeExp = (v) => { setExp(v); try { localStorage.setItem('sd-exp', v ? '1' : '0'); } catch { /* ignore */ } };
+  const [showSettings, setShowSettings] = useState(false);
+  // The game options are remembered in this browser.
+  const useOption = (key) => {
+    const [v, setV] = useState(() => { try { return localStorage.getItem(key) === '1'; } catch { return false; } });
+    return [v, (next) => { setV(next); try { localStorage.setItem(key, next ? '1' : '0'); } catch { /* ignore */ } }];
+  };
+  const [exp, changeExp] = useOption('sd-exp');
+  const [randomCards, changeRandomCards] = useOption('sd-random-cards');
+  const [randomRoyals, changeRandomRoyals] = useOption('sd-random-royals');
+  const start = (o) => onStart({ ...o, randomCards, randomRoyals });
   // Playing on one device has nothing to choose, so it starts straight away.
-  const begin = (key) => (key === 'device' ? onStart({ mode: 'device', exp, source: 'random' }) : setOpen(key));
+  const begin = (key) => (key === 'device' ? start({ mode: 'device', exp, source: 'random' }) : setOpen(key));
   // Starting a game on this device or against the computer first offers to resume the unfinished one.
   const pick = (key) => {
     if (key === 'quick') return onQuick();
@@ -146,10 +154,7 @@ export default function Home({ onStart, onJoined, onQuick, onResume }) {
         </div>
         <div className="flex items-center gap-4">
           <Button variant="ghost" onClick={() => setShowRules(true)}><Pic name="rules" size={22} /> Rules</Button>
-          <label className="flex cursor-pointer items-center gap-2 rounded-md px-3 py-2 text-sm font-medium hover:bg-accent">
-            Counterfeiters expansion
-            <Switch checked={exp} onCheckedChange={changeExp} />
-          </label>
+          <Button variant="ghost" onClick={() => setShowSettings(true)}><Pic name="settings" size={22} /> Settings</Button>
         </div>
       </div>
 
@@ -167,7 +172,33 @@ export default function Home({ onStart, onJoined, onQuick, onResume }) {
           </DialogContent>
         </Dialog>
       )}
-      {open && <GameDialog mode={open} exp={exp} onClose={() => setOpen(null)} onStart={onStart} onJoined={onJoined} />}
+      {open && <GameDialog mode={open} exp={exp} onClose={() => setOpen(null)} onStart={start} onJoined={onJoined} />}
+      {showSettings && (
+        <Dialog open onOpenChange={(o) => !o && setShowSettings(false)}>
+          <DialogContent className="sm:max-w-md">
+            <DialogHeader>
+              <DialogTitle>Game settings</DialogTitle>
+              <DialogDescription className="sr-only">Choose what the next game uses</DialogDescription>
+            </DialogHeader>
+            <div className="space-y-4">
+              {[
+                [exp, changeExp, 'Counterfeiters expansion', 'Adds glassware tokens, counterfeiter cards and more royals.'],
+                [randomCards, changeRandomCards, 'Random cards', 'Deal made-up cards instead of the 67 printed ones.'],
+                [randomRoyals, changeRandomRoyals, 'Random royal cards', 'Draw the royals from a pool of each 2 point power-up plus one 3 point royal.'],
+              ].map(([on, set, title, text]) => (
+                <label key={title} className="flex cursor-pointer items-center justify-between gap-4">
+                  <span>
+                    <span className="block font-semibold">{title}</span>
+                    <span className="block text-sm text-muted-foreground">{text}</span>
+                  </span>
+                  <Switch checked={on} onCheckedChange={set} />
+                </label>
+              ))}
+            </div>
+            <DialogFooter><Button onClick={() => setShowSettings(false)}>Done</Button></DialogFooter>
+          </DialogContent>
+        </Dialog>
+      )}
       {showRules && <Rules exp={exp} onClose={() => setShowRules(false)} />}
     </div>
   );

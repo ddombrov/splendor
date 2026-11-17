@@ -24,13 +24,13 @@ export default function App() {
 
   const start = async (opts) => {
     if (opts.mode === 'online') {
-      const { code } = await api.createRoom({ exp: opts.exp, source: opts.source, name: opts.name });
+      const { code } = await api.createRoom({ exp: opts.exp, source: opts.source, name: opts.name, randomCards: opts.randomCards, randomRoyals: opts.randomRoyals });
       setView({ name: 'lobby', code, exp: opts.exp });
     } else {
       setView({ name: 'game', session: { ...opts, key: Date.now() } });
     }
   };
-  const resume = (mode) => { const v = loadSave(mode); if (v) setView({ name: 'game', session: { mode, exp: v.exp, source: v.source, difficulty: v.difficulty, depth: v.depth, resume: true, key: Date.now() } }); };
+  const resume = (mode) => { const v = loadSave(mode); if (v) setView({ name: 'game', session: { mode, exp: v.exp, source: v.source, difficulty: v.difficulty, depth: v.depth, randomCards: v.randomCards, randomRoyals: v.randomRoyals, resume: true, key: Date.now() } }); };
   const joined = ({ code, seat }) => api.getRoom(code).then((room) => setView({ name: 'game', session: { mode: 'online', code, seat, exp: room.exp } }));
   const matched = useCallback(({ code, seat }) => api.getRoom(code).then((room) => setView({ name: 'game', session: { mode: 'online', code, seat, exp: room.exp } })), [setView]);
 

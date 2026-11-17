@@ -59,14 +59,16 @@
 .royal { --lvl: var(--gold); --tint: 217, 177, 90; }
 .royal.afford { box-shadow: 0 0 0 2px var(--gold); }
 .royal-crown { position: absolute; left: 0; right: 0; top: 36px; display: flex; justify-content: center; }
-.royal-art { width: 72px; height: 72px; object-fit: contain; margin-top: -4px; }
-.card.jewel.k-none { background: linear-gradient(#1c2230, #141923); }
+.royal-crown.art { top: 14px; }
+.royal-art { width: 72px; height: 72px; object-fit: contain; }
+.card.jewel.k-none { background: url(/cards/front-gray.svg) center / 100% 100% no-repeat; }
 .card.k-none { --edge: #9aa3b5; }
 .royaltext { top: auto; bottom: 42px; text-align: center; }
-.rmark { position: absolute; bottom: 8px; z-index: 2; width: 36px; height: 30px; display: flex; align-items: center; justify-content: center; }
+.rmark { position: absolute; bottom: 8px; z-index: 2; width: 36px; height: 30px; display: grid; place-items: center; }
+.rmark > * { grid-area: 1 / 1; }
 .rmark img { position: absolute; inset: 0; margin: auto; opacity: 0.35; width: 34px; height: 34px; }
 .gem-img { object-fit: contain; pointer-events: none; }
-.rmark b { position: relative; font-size: 18px; font-weight: 800; }
+.rmark b { position: relative; top: 2px; font-size: 18px; font-weight: 800; }
 .rmark.l { left: 8px; }
 .rmark.r { right: 8px; }
 .card.back { cursor: default; display: flex; align-items: center; justify-content: center; border-top-width: 1px; }
@@ -162,7 +164,7 @@
 @keyframes dealflip { from { transform: perspective(800px) rotateY(180deg); } to { transform: perspective(800px) rotateY(0deg); } }
 
 /* the felt tray a hand is shown on when it is hovered or opened */
-.handboard { background-image: url(/boards/felt-hand.svg); background-size: 100% 100%; background-repeat: no-repeat; background-position: center; border: 0; box-shadow: none; }
+.handboard { background-image: url(/boards/felt-hand.svg); background-size: 100% 100%; background-repeat: no-repeat; background-position: center; border: 2px solid var(--felt-edge); border-radius: 12px; box-shadow: none; }
 
 /* buttons and scrolls sit in the slots carved into the bottom of the board */
 .boardbtns { position: absolute; left: calc(var(--cell) * 0.327); top: calc(var(--cell) * 5.846); width: calc(var(--cell) * 3.173); height: calc(var(--cell) * 0.5); display: grid; grid-template-columns: repeat(4, 1fr); gap: calc(var(--cell) * 0.0865); }
@@ -177,7 +179,8 @@
 .boardbtns.three { grid-template-columns: repeat(3, 1fr); gap: calc(var(--cell) * 0.0962); }
 
 /* the felt box the hints are written on */
-.hintbox { background-image: url(/boards/felt-hint.svg); background-size: 100% 100%; background-repeat: no-repeat; }
+.hintbox { background-image: url(/boards/felt-hint.svg); background-size: 100% 100%; background-repeat: no-repeat; border: 2px solid var(--felt-edge); border-radius: 12px; }
+:root { --felt-edge: #b98a4a; }
 
 /* the flipped coin is the coin picture itself */
 .coinbox .coin { width: 150px; height: 150px; }

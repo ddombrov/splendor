@@ -49,12 +49,12 @@ const getRoom = (db, code) => db.prepare('SELECT * FROM rooms WHERE code = ?').b
 const seatOf = (row, token) => (token && row.seat0 === token ? 0 : token && row.seat1 && row.seat1 === token ? 1 : null);
 
 /** Makes a game under a fresh 5-digit code. */
-async function createRoom(db, { exp, source, paired, names = [] }) {
+async function createRoom(db, { exp, source, paired, names = [], options = {} }) {
   for (let tries = 0; tries < 60; tries++) {
     const code = String(Math.floor(Math.random() * 100000)).padStart(5, '0');
     const now = Date.now();
     const tokens = [hex(16), paired ? hex(16) : null];
-    const game = createGame(!!exp, newSeed(), null);
+    const game = createGame(!!exp, newSeed(), null, options);
     names.forEach((n, i) => { if (n) game.players[i].name = n; });
     try {
       await db.prepare('INSERT INTO rooms (code, exp, source, rev, state, seat0, seat1, active0, active1, created, last_move) VALUES (?, ?, ?, 0, ?, ?, ?, ?, ?, ?, ?)')
@@ -83,7 +83,7 @@ export async function handle(request, env) {
     if (method === 'POST' && parts.length === 2) {
       const body = await readJson(request);
       const source = body.source === 'official' ? 'official' : 'random';
-      const { code, tokens } = await createRoom(db, { exp: !!body.exp, source, paired: false, names: [cleanName(body.name)] });
+      const { code, tokens } = await createRoom(db, { exp: !!body.exp, source, paired: false, names: [cleanName(body.name)], options: { randomCards: !!body.randomCards, randomRoyals: !!body.randomRoyals } });
       return json({ code, seat: 0, token: tokens[0] });
     }
 

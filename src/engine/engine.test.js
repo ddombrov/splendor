@@ -574,3 +574,26 @@ describe('tokens or a card, not both', () => {
     expect(S.selCard).toMatchObject({ src: 'pyr' });
   });
 });
+
+describe('game options', () => {
+  it('deal made-up cards, with the same counts, when random cards is on', () => {
+    const S = createGame(false, 5, 0, { randomCards: true });
+    expect([0, 1, 2].map((l) => S.pyr[l].length + S.decks[l].length)).toEqual([30, 24, 13]);
+    const printed = createGame(false, 5, 0);
+    expect(JSON.stringify(S.decks)).not.toBe(JSON.stringify(printed.decks));
+    for (const c of [...S.pyr.flat(), ...S.decks.flat()]) expect(c.cost.pearl ?? 0).toBeLessThanOrEqual(1);
+  });
+
+  it('show all four printed royals by default, and sometimes a different one when random royals is on', () => {
+    const base = createGame(false, 5, 0);
+    expect(base.royals.map((r) => r.id).sort()).toEqual(['b1', 'b2', 'b3', 'b4']);
+    let different = 0;
+    for (let seed = 1; seed <= 40; seed++) {
+      const S = createGame(false, seed, 0, { randomRoyals: true });
+      expect(S.royals).toHaveLength(4);
+      if (S.royals.some((r) => r.id === 'b5')) different++;
+    }
+    expect(different).toBeGreaterThan(0);
+    expect(different).toBeLessThan(40);
+  });
+});

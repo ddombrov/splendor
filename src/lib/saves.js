@@ -10,8 +10,8 @@ export function loadSave(mode) {
 
 export function writeSave(session, S) {
   try {
-    const { mode, exp, source, difficulty, depth } = session;
-    localStorage.setItem(key(mode), JSON.stringify({ mode, exp, source, difficulty, depth, S, at: Date.now() }));
+    const { mode, exp, source, difficulty, depth, randomCards, randomRoyals } = session;
+    localStorage.setItem(key(mode), JSON.stringify({ mode, exp, source, difficulty, depth, randomCards, randomRoyals, S, at: Date.now() }));
   } catch { /* storage is full or blocked; the game just is not saved */ }
 }
 
