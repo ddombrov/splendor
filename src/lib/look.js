@@ -18,7 +18,7 @@ apply();
 export const getLook = () => look;
 export const MAAIKE_AVAILABLE = !!import.meta.env?.DEV;
 
-const MAAIKE_ROYAL_PHOTOS = 10; // the four base royals, then the first six expansion royals
+const MAAIKE_ROYAL_PHOTOS = 12; // the four base royals, then the eight expansion royals
 /** The photo for a royal card in the Maaike version, or null. */
 export function maaikeRoyalPhoto(card) {
   const m = /^([be])(\d+)$/.exec(String(card.id));
