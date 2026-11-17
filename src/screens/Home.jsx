@@ -172,7 +172,7 @@ export default function Home({ onStart, onJoined, onQuick, onResume }) {
       {open && <GameDialog mode={open} exp={exp} onClose={() => setOpen(null)} onStart={start} onJoined={onJoined} />}
       {showSettings && (
         <GameSettings onClose={() => setShowSettings(false)}>
-          <Button variant="outline" className="w-full justify-start gap-2" onClick={() => { setShowSettings(false); setShowRules(true); }}><Pic name="rules" size={20} /> Rules and summary</Button>
+          <Button variant="outline" className="gap-2" onClick={() => { setShowSettings(false); setShowRules(true); }}><Pic name="rules" size={20} /> Rules and summary</Button>
         </GameSettings>
       )}
       {showRules && <Rules exp={exp} onClose={() => setShowRules(false)} />}

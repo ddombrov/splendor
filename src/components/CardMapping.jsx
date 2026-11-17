@@ -38,7 +38,6 @@ export default function CardMapping() {
     <div className="fixed inset-0 space-y-6 overflow-auto p-6 text-white">
       <div>
         <h1 className="text-2xl font-bold">Card mapping</h1>
-        <p className="text-sm text-white/70">Original picture on the left, the modern card or token that replaces it on the right. Temporary page: zoom the browser to see more or less.</p>
       </div>
       <Section title="Tokens">
         {TOKENS.map((k) => <Pair key={k} label={k}><TokenArt kind={k} size={56} look="classic" /><TokenArt kind={k} size={56} look="modern" /></Pair>)}

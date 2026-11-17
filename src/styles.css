@@ -219,3 +219,5 @@ html[data-look=classic] .woodbtn.go { background: #e0b64a; }
 html[data-look=classic] .boardscrolls { gap: calc(var(--cell) * 0.12); }
 html[data-look=classic] .woodbtn:disabled { opacity: 1; background: #cdbd9f; color: #8a7a62; border-color: #9a8466; }
 .woodbtn:disabled { opacity: 1; color: #a39682; }
+
+.deckcount { position: absolute; top: 4px; left: 50%; transform: translateX(-50%); min-width: 22px; padding: 1px 6px; border-radius: 9px; background: rgba(0, 0, 0, 0.6); color: #fff; font-size: 13px; font-weight: 800; line-height: 1.2; text-align: center; pointer-events: none; }

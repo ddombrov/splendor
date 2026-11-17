@@ -51,7 +51,7 @@ const CF_FILE = {
   xsteal: '11_privilege-steal-token', nolimit: '12_ignore-glassware-token-limit', priv2: '13_privilege-take-2-tokens', crowns2: '14_two-crowns', reserve5: '15_5-reserved-cards',
   matchplus: '16_take-2-tokens-or-any-token', peek: '17_pick-from-top-3',
 };
-export const CLASSIC_COUNTERFEITERS = Object.values(CF_FILE).map((n) => `counterfeiters/counterfeiter_${n}.png`);
+export const CLASSIC_COUNTERFEITERS = Object.values(CF_FILE).map((n) => `cards/counterfeiters/counterfeiter_${n}.png`);
 
 const EXP_ROYAL = {
   rreserve: 'royal_01_reserve-any-card', rgold: 'royal_02_take-gold-token', w9c: 'royal_03_9-points-one-color-wins', w9k: 'royal_04_9-crowns-wins',
@@ -68,10 +68,10 @@ export function classicCardFile(card) {
   let name = null;
   if (card.kind === 'cf') {
     const f = CF_FILE[card.ab === 'red2' ? `red2:${card.rc}` : card.ab];
-    return f ? `counterfeiters/counterfeiter_${f}.png` : null;
+    return f ? `cards/counterfeiters/counterfeiter_${f}.png` : null;
   }
   if (card.kind === 'royal') {
-    if (EXP_ROYAL[card.ab]) return `royals/${EXP_ROYAL[card.ab]}.png`;
+    if (EXP_ROYAL[card.ab]) return `cards/royals/${EXP_ROYAL[card.ab]}.png`;
     if (card.ab && !ROYAL_ABILITY[card.ab]) return null;
     name = `royal-card_${card.pts}pts${card.ab ? `_${ROYAL_ABILITY[card.ab]}` : ''}.jpg`;
   } else if (card.kind === 'jewel') {
@@ -87,5 +87,5 @@ export function classicCardFile(card) {
     name = `${parts.join('_')}.jpg`;
   }
   if (!name || !CLASSIC_FILES.has(name)) return null;
-  return card.kind === 'royal' ? `royals/${name}` : `cards/level-${card.level}/${name}`;
+  return card.kind === 'royal' ? `cards/royals/${name}` : `cards/level-${card.level}/${name}`;
 }

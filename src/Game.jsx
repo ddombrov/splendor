@@ -558,7 +558,7 @@ function Board({ session, onExit, onRestart, init, onReplaced }) {
               </button>
             </div>
           )}
-          <div className="grid grid-cols-2 gap-2">
+          <div className="flex flex-col items-start gap-2">
             {[
               ['log', 'Log', () => setShowLog(true)],
               ['rules', 'Rules and summary', () => setShowRules(true)],

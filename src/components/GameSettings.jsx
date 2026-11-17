@@ -19,15 +19,15 @@ export default function GameSettings({ onClose, inGame = false, current, locked 
   const [pending, setPending] = useState(null);
 
   const rows = [
-    { key: 'exp', title: 'Counterfeiters expansion', text: 'Adds glassware tokens, counterfeiter cards and more royals.', game: true },
-    { key: 'randomCards', title: 'Random cards', text: 'Deal made-up cards instead of the 67 printed ones, and draw the royals from a bigger pool.', game: true, needsModern: true },
-    { key: 'look', title: 'Original look', text: 'The printed card pictures, tokens, card backs and board. Random cards and royals are off while this is on.' },
-    { key: 'counters', title: 'Card counters', text: 'Show how many cards are in each stack in a hand.' },
+    { key: 'exp', title: 'Counterfeiters expansion', game: true },
+    { key: 'randomCards', title: 'Random cards', game: true, needsModern: true },
+    { key: 'look', title: 'Original look' },
+    { key: 'counters', title: 'Card counters' },
   ];
   const value = (r) => (r.key === 'look' ? classic : r.key === 'counters' ? counters : r.needsModern && noRandom ? false : !!shown[r.key]);
   const noRandom = classic || !!shown.exp; // every card of the expansion and the original look is printed
   const disabled = (r) => (r.game && inGame && locked) || (r.needsModern && noRandom);
-  const note = (r) => (r.game && inGame && locked ? 'Fixed for an online game.' : r.needsModern && noRandom ? (classic ? 'Not available with the original look.' : 'Not available with the expansion.') : r.text);
+  const note = (r) => (r.game && inGame && locked ? 'Fixed for an online game.' : r.needsModern && noRandom ? r.text : r.text);
   const change = (r, on) => {
     if (r.key === 'look') setLook(on ? 'classic' : 'modern');
     else if (r.key === 'counters') countersPref.set(on);
@@ -60,14 +60,16 @@ export default function GameSettings({ onClose, inGame = false, current, locked 
                 <label key={r.key} className={`flex items-center justify-between gap-4 ${disabled(r) ? 'opacity-50' : 'cursor-pointer'}`}>
                   <span>
                     <span className="block font-semibold">{r.title}</span>
-                    <span className="block text-sm text-muted-foreground">{note(r)}</span>
+                    {note(r) && <span className="block text-sm text-muted-foreground">{note(r)}</span>}
                   </span>
                   <Switch checked={value(r)} disabled={disabled(r)} onCheckedChange={(on) => change(r, on)} />
                 </label>
               ))}
             </div>
-            {children}
-            <Button variant="outline" className="w-full" onClick={() => window.open('/?mapping=1', '_blank')}>See card mapping</Button>
+            <div className="flex flex-col items-start gap-2 [&_button]:w-52 [&_button]:justify-start">
+              {children}
+              <Button variant="outline" onClick={() => window.open('/?mapping=1', '_blank')}>See card mapping</Button>
+            </div>
             <DialogFooter><Button onClick={onClose}>Done</Button></DialogFooter>
           </>
         )}

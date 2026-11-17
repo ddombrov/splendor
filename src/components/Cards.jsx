@@ -1,5 +1,5 @@
 import { CF_TEXT, ROYAL_TEXT } from '../engine/data.js';
-import { classicCardFile, useLook } from '../lib/look.js';
+import { classicCardFile, useCounters, useLook } from '../lib/look.js';
 import { centrePicture, cfPicture } from '../lib/cardTypes.js';
 import { PAL, Gem, Crown, AbilityIcon, Mini } from './Art.jsx';
 
@@ -115,7 +115,7 @@ export function CfCard({ card, onClick, selected, afford, look: forced }) {
 }
 
 // The base royals each have a picture of their own; the expansion royals keep the crown.
-const ROYAL_ART = { steal: 'cloak', privilege: 'beret', extra: 'sunhat', none: 'necklace', rreserve: 'tassel', rgold: 'scarf', w9c: 'butterfly', rcounter: 'cloak-blue', rtake4: 'snake', rbag2: 'hairclip', rtake3: 'turban' };
+const ROYAL_ART = { steal: 'cloak', privilege: 'beret', extra: 'sunhat', none: 'necklace', rreserve: 'tassel', rgold: 'scarf', w9c: 'butterfly', rcounter: 'cloak-blue', rtake4: 'turban-red', rbag2: 'hairclip', rtake3: 'turban' };
 
 export function RoyalCard({ card, onClick, glow, look: forced }) {
   const current = useLook();
@@ -146,5 +146,10 @@ export function RoyalCard({ card, onClick, glow, look: forced }) {
 
 /** A face-down card or deck: just the back artwork. */
 export function CardBack({ level, count, onClick }) {
-  return <div className={`card back lv${level}`} onClick={count ? onClick : undefined} />;
+  const counters = useCounters();
+  return (
+    <div className={`card back lv${level}`} onClick={count ? onClick : undefined}>
+      {counters && count != null && <span className="deckcount">{count}</span>}
+    </div>
+  );
 }

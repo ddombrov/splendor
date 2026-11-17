@@ -5,7 +5,6 @@ import { BorderBeam } from '@/components/ui/border-beam';
 import { cn } from '@/lib/utils';
 import { COLORS, CF_TEXT } from '../engine/data.js';
 import { JewelCard, RoyalCard, CardBack } from './Cards.jsx';
-import { useCounters } from '../lib/look.js';
 import { TokenArt, Gem, Scroll, Crown } from './Art.jsx';
 import { bonuses, colorPts, crowns, kinds, limitCount, plan, pts, resCap, roomLeft } from '../engine/engine.js';
 
@@ -38,14 +37,13 @@ export default function Player({ S, idx, dispatch, onInspect, colW = 52, viewer 
     if (!el || !box) return;
     const k = box.getBoundingClientRect().height / (box.offsetHeight || 1);
     const cs = getComputedStyle(box);
-    const avail = box.getBoundingClientRect().height - (parseFloat(cs.paddingTop) + parseFloat(cs.paddingBottom)) * k;
+    const slots = box.querySelector('[data-zone=res]');
+    const avail = box.getBoundingClientRect().height - (parseFloat(cs.paddingTop) + parseFloat(cs.paddingBottom)) * k - (slots ? slots.getBoundingClientRect().height : 0);
     const used = el.getBoundingClientRect().height;
     if (!avail || !used) return;
     const next = Math.max(0.45, Math.min(1, fit * (avail / used) * 0.985));
     if (Math.abs(next - fit) > 0.01) setFit(next);
   });
-  const counters = useCounters();
-  const count = (n) => counters && n > 0 && <span className="countbadge" title={`${n} cards`}>{n}</span>;
   const active = idx === S.cur && !S.awaitingFirst;
   const pd = S.pending;
   const mine = viewer == null || viewer === S.cur;
@@ -109,7 +107,7 @@ export default function Player({ S, idx, dispatch, onInspect, colW = 52, viewer 
                     ))}
                   </div>
                 )}
-                {count(owned.length)}
+                
                 {owned.length > MAX_STACK && <span className="text-sm font-extrabold leading-none text-muted-foreground" title="Open this player to see every card">…</span>}
               </div>
             );
@@ -127,7 +125,7 @@ export default function Player({ S, idx, dispatch, onInspect, colW = 52, viewer 
     const ch = Math.round(189 * z);
     return (
       <Card data-dest-tokens={idx} data-dest-cards={idx} data-dest-res={idx} className={cn('handboard min-h-0 flex-1 gap-0 overflow-hidden p-3', active && 'outline outline-[3px] -outline-offset-3 outline-[#ffd25e]')}>
-        <div ref={fitRef} style={{ zoom: fit }}>
+        <div ref={fitRef} className="shrink-0" style={{ zoom: fit }}>
         <h3 className="text-base font-bold">{p.name}</h3>
         <div className="mt-1 flex flex-wrap items-center gap-x-3">
           <Stat title="Prestige points"><span>{pts(p)}</span></Stat>
@@ -153,20 +151,20 @@ export default function Player({ S, idx, dispatch, onInspect, colW = 52, viewer 
                     ))}
                   </div>
                 )}
-                {count(owned.length)}
+                
                 {owned.length > MAX_STACK && <span className="text-lg font-extrabold leading-none text-muted-foreground" title="Open this player to see every card">…</span>}
               </div>
             );
           })}
         </div>
         {p.royals.length > 0 && <div className="mt-2">{royals(0.22)}</div>}
-        <div data-zone="res" className="compact-cards mt-2 flex gap-1.5" style={{ '--z': 0.24 }}>
+        </div>
+        <div data-zone="res" className="compact-cards mt-auto flex gap-1.5 pt-2" style={{ '--z': 0.24 }}>
           {Array.from({ length: resCap(p) }, (_, i) => {
             const c = p.res[i];
             if (!c) return <div key={`slot${i}`} className="slot" />;
             return reserved(c, i);
           })}
-        </div>
         </div>
       </Card>
     );
@@ -232,7 +230,7 @@ export default function Player({ S, idx, dispatch, onInspect, colW = 52, viewer 
               {owned.length > 0 && (
                 <div className="flex items-center gap-2">
                   {COLORS.includes(k) && <div title={`Points from ${k} cards`} className={cn('font-extrabold leading-none', zoomed ? 'text-3xl' : 'text-lg')}>{colorPts(p, k)}</div>}
-                  {count(owned.length)}
+                  
                 </div>
               )}
             </div>
