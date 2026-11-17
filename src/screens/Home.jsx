@@ -157,10 +157,9 @@ export default function Home({ onStart, onJoined, onQuick, onResume }) {
 
       {resuming && (
         <Dialog open onOpenChange={(o) => !o && setResuming(null)}>
-          <DialogContent className="sm:max-w-sm">
+          <DialogContent className="sm:max-w-sm" aria-describedby={undefined}>
             <DialogHeader>
               <DialogTitle>Resume your game?</DialogTitle>
-              <DialogDescription>You have an unfinished game {resuming === 'ai' ? 'against the computer' : 'on this device'}.</DialogDescription>
             </DialogHeader>
             <DialogFooter>
               <Button variant="outline" onClick={() => { const k = resuming; setResuming(null); begin(k); }}>New game</Button>

@@ -43,10 +43,9 @@ export default function GameSettings({ onClose, inGame = false, current, locked 
 
   return (
     <Dialog open onOpenChange={(o) => !o && onClose()}>
-      <DialogContent className="sm:max-w-md">
+      <DialogContent className="sm:max-w-md" aria-describedby={undefined}>
         <DialogHeader>
           <DialogTitle>{pending ? 'Start a new game?' : title}</DialogTitle>
-          <DialogDescription className={pending ? undefined : 'sr-only'}>{pending ? 'This changes the cards in play, so the current game will be lost.' : 'Choose what the game uses'}</DialogDescription>
         </DialogHeader>
         {pending ? (
           <DialogFooter>

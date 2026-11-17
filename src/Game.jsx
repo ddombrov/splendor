@@ -581,8 +581,8 @@ function Board({ session, onExit, onRestart, init, onReplaced }) {
       </Dialog>
 
       <Dialog open={!!ask} onOpenChange={(o) => !o && setAsk(null)}>
-        <DialogContent className="sm:max-w-md">
-          <DialogHeader><DialogTitle>{shownAsk?.title}</DialogTitle><DialogDescription>{shownAsk?.msg}</DialogDescription></DialogHeader>
+        <DialogContent className="sm:max-w-md" aria-describedby={undefined}>
+          <DialogHeader><DialogTitle>{shownAsk?.title}</DialogTitle></DialogHeader>
           <DialogFooter>
             <Button variant="outline" onClick={() => setAsk(null)}>Cancel</Button>
             <Button onClick={() => { const f = ask.onYes; setAsk(null); f(); }}>{shownAsk?.yes}</Button>
@@ -594,7 +594,7 @@ function Board({ session, onExit, onRestart, init, onReplaced }) {
         <DialogContent className="sm:max-w-md" showCloseButton={false} aria-describedby={undefined}>
           <DialogHeader>
             <DialogTitle>Who goes first?</DialogTitle>
-            <p className="flex items-center gap-1.5 text-sm text-muted-foreground"><Scroll size={20} /> The player who goes second gets a scroll.</p>
+            <p className="flex items-center gap-1.5 text-sm text-muted-foreground">The player who goes second gets a scroll.</p>
           </DialogHeader>
           {online && seat !== 0 ? (
             <p className="flex items-center gap-2 text-sm text-muted-foreground"><Loader2 className="size-4 animate-spin" /> Waiting for Player 1 to choose.</p>
