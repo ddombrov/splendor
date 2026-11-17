@@ -8,15 +8,15 @@ import { CLASSIC_FILES } from './classicFiles.js';
 const KEY = 'sd-look';
 const listeners = new Set();
 
-// The Maaike version uses private photos that are only on this computer, so it exists only while developing.
-const LOOKS = import.meta.env?.DEV ? ['classic', 'maaike'] : ['classic'];
+// The Maaike version uses personal photos from public/maaike. They are uploaded with the site but kept out of git.
+const LOOKS = ['classic', 'maaike'];
 const read = () => { try { const v = localStorage.getItem(KEY); return LOOKS.includes(v) ? v : 'modern'; } catch { return 'modern'; } };
 let look = read();
 const apply = () => { if (typeof document !== 'undefined') document.documentElement.dataset.look = look; };
 apply();
 
 export const getLook = () => look;
-export const MAAIKE_AVAILABLE = !!import.meta.env?.DEV;
+export const MAAIKE_AVAILABLE = true;
 
 const MAAIKE_ROYAL_PHOTOS = 12; // the four base royals, then the eight expansion royals
 /** The photo for a royal card in the Maaike version, or null. */

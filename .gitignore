@@ -12,5 +12,5 @@ CONTEXT.md
 docs/adr/
 .scratch/
 
-# private photos for the Maaike version: local only, never committed or deployed
+# photos for the Maaike version: uploaded with the site, but never committed to git
 public/maaike/
