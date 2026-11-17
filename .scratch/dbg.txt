@@ -1,1 +1,0 @@
-[{"id":"j2-5","kind":"jewel","level":2,"cost":{"red":2,"green":4,"pearl":1},"pts":2,"crowns":0,"ability":"privilege","n":1,"bonus":"black","color":null}]
