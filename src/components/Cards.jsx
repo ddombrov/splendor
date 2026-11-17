@@ -49,6 +49,18 @@ function PrintedCard({ card, file, onClick, selected, afford }) {
   );
 }
 
+// The picture in the middle of a modern card: a piece of jewellery set with the card's gem, and a lamp, chalice or
+// lantern when the card is worth no points. The colour of the card is shown by the gem in the top right corner.
+const GEM_VARIANT = { blue: 'sapphire', white: 'diamond', green: 'emerald', black: 'obsidian', red: 'ruby', none: 'gold' };
+const PIECES = ['solitaire-ring', 'signet-ring', 'stud-earring', 'teardrop-pendant', 'heart-necklace', 'silver-ring', 'shadow-amulet', 'stone-tablet'];
+const ZERO_PIECES = ['lamp', 'chalice', 'lantern'];
+const pickFrom = (card, list) => list[(Number(String(card.id).split('-').pop()) + card.level) % list.length];
+function centreArt(card) {
+  if (card.pts === 0) return `/modern/jewelry/zero/${pickFrom(card, ZERO_PIECES)}.png`;
+  const gem = GEM_VARIANT[card.bonus];
+  return gem ? `/modern/jewelry/${gem}/${pickFrom(card, PIECES)}.png` : null; // a wild card keeps the rainbow gem
+}
+
 export function JewelCard({ card, onClick, selected, afford }) {
   const look = useLook();
   const file = look === 'classic' ? classicCardFile(card) : null;
@@ -56,6 +68,7 @@ export function JewelCard({ card, onClick, selected, afford }) {
   const wild = card.bonus === 'wild';
   const kind = wild ? 'wild' : card.bonus;
   const abil = card.ability;
+  const centre = centreArt(card);
   const title = [wild && 'Wild bonus: copies one of your colours', card.ability && AB_LABEL[card.ability]].filter(Boolean).join(' + ');
   return (
     <div
@@ -65,7 +78,7 @@ export function JewelCard({ card, onClick, selected, afford }) {
       onClick={onClick}
       title={title}
     >
-      <div className="art">{kind !== 'none' && <Gem kind={kind} size={62} />}</div>
+      <div className="art">{centre ? <img src={centre} alt="" draggable={false} className="jewelart" /> : kind !== 'none' && <Gem kind={kind} size={62} />}</div>
       <div className="ptsrow">
         <div className="pts">{card.pts || ''}</div>
         <div className="crownrow">{Array.from({ length: card.crowns }, (_, i) => <Crown key={i} size={22} />)}</div>
@@ -107,13 +120,13 @@ export function CfCard({ card, onClick, selected, afford }) {
 }
 
 // The base royals each have a picture of their own; the expansion royals keep the crown.
-const ROYAL_ART = { steal: 'cloak', privilege: 'beret', extra: 'sunhat', none: 'necklace' };
+const ROYAL_ART = { steal: 'cloak', privilege: 'beret', extra: 'sunhat', none: 'necklace', rreserve: 'tassel', rgold: 'scarf', w9c: 'butterfly', rcounter: 'cloak-blue', rtake4: 'snake', rbag2: 'hairclip', rtake3: 'turban' };
 
 export function RoyalCard({ card, onClick, glow }) {
   const look = useLook();
   const file = look === 'classic' ? classicCardFile(card) : null;
   if (file) return <PrintedCard card={card} file={file} onClick={onClick} afford={glow} />;
-  const art = card.id.startsWith('b') ? ROYAL_ART[card.ab ?? 'none'] : null;
+  const art = ROYAL_ART[card.ab ?? 'none'] ?? null;
   return (
     <div data-card-id={card.id} className={`card royal ${glow ? 'afford' : ''}`} onClick={onClick}>
       <div className="ptsrow"><div className="pts">{card.pts}</div></div>
