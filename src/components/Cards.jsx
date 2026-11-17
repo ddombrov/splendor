@@ -1,4 +1,5 @@
 import { CF_TEXT, ROYAL_TEXT } from '../engine/data.js';
+import { classicCardFile, useLook } from '../lib/look.js';
 import { PAL, Gem, Crown, AbilityIcon, Mini } from './Art.jsx';
 
 // Royal abilities that have a picture; the first three need no words, the rest keep their text.
@@ -39,7 +40,19 @@ export function Costs({ cost }) {
   );
 }
 
+/** A card drawn as its printed picture (the original look). */
+function PrintedCard({ card, file, onClick, selected, afford }) {
+  return (
+    <div data-card-id={card.id} className={`card imgcard ${selected ? 'sel' : ''} ${afford ? 'afford' : ''}`} onClick={onClick}>
+      <img src={`/classic/cards/${file}`} alt="" draggable={false} />
+    </div>
+  );
+}
+
 export function JewelCard({ card, onClick, selected, afford }) {
+  const look = useLook();
+  const file = look === 'classic' ? classicCardFile(card) : null;
+  if (file) return <PrintedCard card={card} file={file} onClick={onClick} selected={selected} afford={afford} />;
   const wild = card.bonus === 'wild';
   const kind = wild ? 'wild' : card.bonus;
   const abil = card.ability || (wild ? 'wild' : null);
@@ -94,6 +107,9 @@ export function CfCard({ card, onClick, selected, afford }) {
 const ROYAL_ART = { steal: 'cloak', privilege: 'beret', extra: 'sunhat', none: 'necklace' };
 
 export function RoyalCard({ card, onClick, glow }) {
+  const look = useLook();
+  const file = look === 'classic' ? classicCardFile(card) : null;
+  if (file) return <PrintedCard card={card} file={file} onClick={onClick} afford={glow} />;
   const art = card.id.startsWith('b') ? ROYAL_ART[card.ab ?? 'none'] : null;
   return (
     <div data-card-id={card.id} className={`card royal ${glow ? 'afford' : ''}`} onClick={onClick}>

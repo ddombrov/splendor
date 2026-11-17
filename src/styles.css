@@ -163,6 +163,13 @@
 .dealtback { position: absolute; inset: 0; transform: rotateY(180deg); backface-visibility: hidden; }
 @keyframes dealflip { from { transform: perspective(800px) rotateY(180deg); } to { transform: perspective(800px) rotateY(0deg); } }
 
+/* original look: printed card faces and photographed card backs */
+.card.imgcard { border: 0; background: #111; }
+.card.imgcard img { display: block; width: 100%; height: 100%; object-fit: fill; }
+html[data-look=classic] .back.lv1 { background: url(/classic/back-1.jpg) center / 100% 100% no-repeat; }
+html[data-look=classic] .back.lv2 { background: url(/classic/back-2.jpg) center / 100% 100% no-repeat; }
+html[data-look=classic] .back.lv3 { background: url(/classic/back-3.jpg) center / 100% 100% no-repeat; }
+
 /* the felt tray a hand is shown on when it is hovered or opened */
 .handboard { background-image: url(/boards/felt-hand.svg); background-size: 100% 100%; background-repeat: no-repeat; background-position: center; border: 2px solid var(--felt-edge); border-radius: 12px; box-shadow: none; }
 

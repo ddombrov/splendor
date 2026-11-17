@@ -1,3 +1,4 @@
+import { CLASSIC_TOKEN, useLook } from '../lib/look.js';
 export const PAL = {
   blue: { h: '#cfe6ff', l: '#7db4ff', b: '#2f6fe0', d: '#14409a', glow: '59,130,246' },
   white: { h: '#ffffff', l: '#eef3f9', b: '#c3d0e0', d: '#8b9bb3', glow: '226,232,240' },
@@ -23,6 +24,10 @@ const DISC = { blue: '#173a82', white: '#6c7d96', green: '#0f5a31', black: '#2b3
 
 /** A flat token: a vibrant rim, a dimmed disc of the same colour, and the gem on top. No gloss and no shadow. */
 export function TokenArt({ kind, size = 52 }) {
+  const look = useLook();
+  if (look === 'classic' && CLASSIC_TOKEN[kind]) {
+    return <img className="tokart classic" src={`/classic/tokens/${CLASSIC_TOKEN[kind]}.jpg`} width={size} height={size} alt="" draggable={false} style={{ width: size, height: size, borderRadius: '50%', objectFit: 'cover' }} />;
+  }
   return (
     <svg className="tokart" width={size} height={size} viewBox="0 0 100 100">
       <circle cx="50" cy="50" r="48" fill={RIM[kind]} />

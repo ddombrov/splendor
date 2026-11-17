@@ -50,7 +50,7 @@ const YELLOW = [
   [5, 0, 'none', 0, null, '6 blue 1 pearl'],
   [0, 2, 'wild', 1, null, '6 blue 1 pearl'],
   [2, 0, 'blue', 1, P, '2 white 4 blue 1 pearl'],
-  [2, 0, 'black', 1, P, '2 red 4 green 1 pearl'],
+  [2, 0, 'black', 1, P, '2 red 4 black 1 pearl'],
   [2, 1, 'black', 1, null, '2 blue 2 green 2 red 1 pearl'],
   [2, 1, 'red', 1, null, '2 white 2 blue 2 green 1 pearl'],
   [1, 0, 'red', 1, S, '3 blue 4 black'],

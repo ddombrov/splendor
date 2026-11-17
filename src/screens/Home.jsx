@@ -8,6 +8,7 @@ import { api, savedName } from '../net/api.js';
 import { Pic } from '@/components/Art.jsx';
 import { Field, GemRow, NameChoice, Segmented } from './parts.jsx';
 import { loadSave } from '../lib/saves.js';
+import { setLook, useLook } from '../lib/look.js';
 
 const MODES = [
   { key: 'device', pic: 'friends', title: 'Play on this device' },
@@ -120,6 +121,7 @@ export default function Home({ onStart, onJoined, onQuick, onResume }) {
     const [v, setV] = useState(() => { try { return localStorage.getItem(key) === '1'; } catch { return false; } });
     return [v, (next) => { setV(next); try { localStorage.setItem(key, next ? '1' : '0'); } catch { /* ignore */ } }];
   };
+  const look = useLook();
   const [exp, changeExp] = useOption('sd-exp');
   const [randomCards, changeRandomCards] = useOption('sd-random-cards');
   const [randomRoyals, changeRandomRoyals] = useOption('sd-random-royals');
@@ -185,6 +187,7 @@ export default function Home({ onStart, onJoined, onQuick, onResume }) {
                 [exp, changeExp, 'Counterfeiters expansion', 'Adds glassware tokens, counterfeiter cards and more royals.'],
                 [randomCards, changeRandomCards, 'Random cards', 'Deal made-up cards instead of the 67 printed ones.'],
                 [randomRoyals, changeRandomRoyals, 'Random royal cards', 'Draw the royals from a pool of each 2 point power-up plus one 3 point royal.'],
+                [look === 'classic', (on) => setLook(on ? 'classic' : 'modern'), 'Original look', 'Photographed tokens and card backs, and the printed card faces. Pearl, glassware and the counterfeiter cards keep the modern artwork.'],
               ].map(([on, set, title, text]) => (
                 <label key={title} className="flex cursor-pointer items-center justify-between gap-4">
                   <span>
