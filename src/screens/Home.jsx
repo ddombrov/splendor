@@ -4,7 +4,7 @@ import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Switch } from '@/components/ui/switch';
 import Rules from '@/components/Rules.jsx';
-import { api, savedName } from '../net/api.js';
+import { api, rememberName, savedName } from '../net/api.js';
 import { Pic } from '@/components/Art.jsx';
 import { Field, GemRow, NameChoice, Segmented } from './parts.jsx';
 import { loadSave } from '../lib/saves.js';
@@ -80,7 +80,7 @@ function GameDialog({ mode, exp, onClose, onStart, onJoined }) {
   const set = (patch) => setOpts((o) => ({ ...o, ...patch }));
   const title = MODES.find((m) => m.key === mode).title;
   const [name, setName] = useState(savedName);
-  const go = async () => { setBusy(true); await onStart({ mode, exp, ...opts, name: name.trim() }); };
+  const go = async () => { setBusy(true); rememberName(name.trim()); await onStart({ mode, exp, ...opts, name: name.trim() }); };
   const joining = mode === 'online' && tab === 'join';
   return (
     <Dialog open onOpenChange={(o) => !o && onClose()}>
@@ -93,7 +93,7 @@ function GameDialog({ mode, exp, onClose, onStart, onJoined }) {
           {mode === 'online' && <Segmented value={tab} onChange={setTab} options={[{ value: 'create', label: 'Create a game' }, { value: 'join', label: 'Join with a code' }]} />}
           {joining ? <CodeEntry onJoined={onJoined} /> : (
             <>
-              {mode === 'online' && <NameChoice autoFocus value={name} onChange={setName} onEnter={() => name.trim() && go()} />}
+              <NameChoice autoFocus value={name} onChange={setName} onEnter={() => name.trim() && go()} />
               {mode === 'ai' && (
                 <>
                   <Field label="Difficulty"><Segmented value={opts.difficulty} onChange={(v) => set({ difficulty: v })} options={DIFFICULTIES} /></Field>
@@ -122,8 +122,7 @@ export default function Home({ onStart, onJoined, onQuick, onResume }) {
   // The printed look has no pictures for made-up cards or the extra royal, so those options are left out with it.
   const randomCards = false; // the random card option was removed
   const start = (o) => onStart({ ...o, randomCards, randomRoyals: randomCards });
-  // Playing on one device has nothing to choose, so it starts straight away.
-  const begin = (key) => (key === 'device' ? start({ mode: 'device', exp, source: 'random' }) : setOpen(key));
+  const begin = (key) => setOpen(key);
   // Starting a game on this device or against the computer first offers to resume the unfinished one.
   const pick = (key) => {
     if (key === 'quick') return onQuick();
