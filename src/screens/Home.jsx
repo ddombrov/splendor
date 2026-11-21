@@ -73,12 +73,13 @@ function CodeEntry({ onJoined }) {
   );
 }
 
-function GameDialog({ mode, exp, onClose, onStart, onJoined }) {
+function GameDialog({ mode, exp, resumable, onClose, onStart, onJoined, onResume, onQuick }) {
   const [opts, setOpts] = useState({ source: 'random', difficulty: 'medium', depth: 'standard' });
   const [tab, setTab] = useState('create');
   const [busy, setBusy] = useState(false);
   const set = (patch) => setOpts((o) => ({ ...o, ...patch }));
-  const title = MODES.find((m) => m.key === mode).title;
+  // With an unfinished game saved, the same dialog asks whether to resume it.
+  const title = resumable ? 'Resume your game?' : MODES.find((m) => m.key === mode).title;
   const [name, setName] = useState(savedName);
   const go = async () => { setBusy(true); rememberName(name.trim()); await onStart({ mode, exp, ...opts, name: name.trim() }); };
   const joining = mode === 'online' && tab === 'join';
@@ -93,7 +94,7 @@ function GameDialog({ mode, exp, onClose, onStart, onJoined }) {
           {mode === 'online' && <Segmented value={tab} onChange={setTab} options={[{ value: 'create', label: 'Create a game' }, { value: 'join', label: 'Join with a code' }]} />}
           {joining ? <CodeEntry onJoined={onJoined} /> : (
             <>
-              <NameChoice autoFocus value={name} onChange={setName} onEnter={() => name.trim() && go()} />
+              <NameChoice autoFocus value={name} onChange={setName} onEnter={() => name.trim() && (mode === 'quick' ? onQuick() : go())} />
               {mode === 'ai' && (
                 <>
                   <Field label="Difficulty"><Segmented value={opts.difficulty} onChange={(v) => set({ difficulty: v })} options={DIFFICULTIES} /></Field>
@@ -101,8 +102,22 @@ function GameDialog({ mode, exp, onClose, onStart, onJoined }) {
                 </>
               )}
               <DialogFooter>
-                <Button variant="outline" onClick={onClose}>Cancel</Button>
-                <Button onClick={go} disabled={busy || (mode === 'online' && !name.trim())}>{busy && <Loader2 className="animate-spin" />}{mode === 'online' ? 'Create game' : 'Start game'}</Button>
+                {resumable ? (
+                  <>
+                    <Button variant="outline" onClick={go} disabled={busy}>New game</Button>
+                    <Button onClick={() => { rememberName(name.trim()); onResume(mode, name.trim()); }}>Resume game</Button>
+                  </>
+                ) : mode === 'quick' ? (
+                  <>
+                    <Button variant="outline" onClick={onClose}>Cancel</Button>
+                    <Button onClick={() => { rememberName(name.trim()); onQuick(); }} disabled={!name.trim()}>Find an opponent</Button>
+                  </>
+                ) : (
+                  <>
+                    <Button variant="outline" onClick={onClose}>Cancel</Button>
+                    <Button onClick={go} disabled={busy || (mode === 'online' && !name.trim())}>{busy && <Loader2 className="animate-spin" />}{mode === 'online' ? 'Create game' : 'Start game'}</Button>
+                  </>
+                )}
               </DialogFooter>
             </>
           )}
@@ -115,20 +130,14 @@ function GameDialog({ mode, exp, onClose, onStart, onJoined }) {
 export default function Home({ onStart, onJoined, onQuick, onResume }) {
   const [open, setOpen] = useState(null);
   const [showRules, setShowRules] = useState(false);
-  const [resuming, setResuming] = useState(null); // a game kind that has an unfinished game saved
   const [showSettings, setShowSettings] = useState(false);
   const classic = useLook() === 'classic';
   const exp = expPref.use();
   // The printed look has no pictures for made-up cards or the extra royal, so those options are left out with it.
   const randomCards = false; // the random card option was removed
   const start = (o) => onStart({ ...o, randomCards, randomRoyals: randomCards });
-  const begin = (key) => setOpen(key);
-  // Starting a game on this device or against the computer first offers to resume the unfinished one.
-  const pick = (key) => {
-    if (key === 'quick') return onQuick();
-    if (loadSave(key)) return setResuming(key);
-    return begin(key);
-  };
+  // Every mode opens its setup dialog first; on this device and against the computer it also offers to resume.
+  const pick = (key) => setOpen(key);
   return (
     <div className="fixed inset-0 overflow-y-auto overflow-x-hidden overscroll-contain">
       <div className="mx-auto flex min-h-full max-w-2xl flex-col items-center justify-center gap-8 px-6 py-10 [@media(max-height:520px)]:max-w-4xl [@media(max-height:520px)]:gap-3 [@media(max-height:520px)]:py-3">
@@ -154,20 +163,7 @@ export default function Home({ onStart, onJoined, onQuick, onResume }) {
         </div>
       </div>
 
-      {resuming && (
-        <Dialog open onOpenChange={(o) => !o && setResuming(null)}>
-          <DialogContent className="sm:max-w-sm" aria-describedby={undefined}>
-            <DialogHeader>
-              <DialogTitle>Resume your game?</DialogTitle>
-            </DialogHeader>
-            <DialogFooter>
-              <Button variant="outline" onClick={() => { const k = resuming; setResuming(null); begin(k); }}>New game</Button>
-              <Button onClick={() => { const k = resuming; setResuming(null); onResume(k); }}>Resume game</Button>
-            </DialogFooter>
-          </DialogContent>
-        </Dialog>
-      )}
-      {open && <GameDialog mode={open} exp={exp} onClose={() => setOpen(null)} onStart={start} onJoined={onJoined} />}
+      {open && <GameDialog mode={open} exp={exp} resumable={(open === 'device' || open === 'ai') && !!loadSave(open)} onClose={() => setOpen(null)} onStart={start} onJoined={onJoined} onResume={onResume} onQuick={onQuick} />}
       {showSettings && (
         <GameSettings onClose={() => setShowSettings(false)}>
           <Button variant="outline" className="gap-2" onClick={() => { setShowSettings(false); setShowRules(true); }}><Pic name="rules" size={20} /> Rules and summary</Button>

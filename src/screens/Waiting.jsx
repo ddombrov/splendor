@@ -46,7 +46,8 @@ export function Lobby({ code, onCancel, onOpponentJoined }) {
 /** Quick match: wait in line to be paired. After a minute, offer the computer instead. */
 export function QuickMatch({ onMatched, onCancel, onPlayComputer }) {
   const [name, setName] = useState(savedName);
-  const [ready, setReady] = useState(false);
+  // The home page's quick match dialog already chose the name, so the search starts straight away.
+  const [ready, setReady] = useState(() => !!savedName().trim());
   const [seconds, setSeconds] = useState(0);
   const ticket = useRef(null);
   const done = useRef(false);

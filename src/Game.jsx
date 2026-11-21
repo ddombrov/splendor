@@ -111,6 +111,13 @@ function useViewport() {
   return vp;
 }
 
+// A resumed game keeps its board but takes the name chosen when resuming.
+const resumedGame = (session) => {
+  const S = loadSave(session.mode)?.S;
+  if (S && session.name) S.players[0].name = session.name;
+  return S;
+};
+
 const freshGame = (session) => {
   const g = createGame(session.exp, newSeed(), null, { randomCards: session.randomCards, randomRoyals: session.randomRoyals });
   if (session.name) g.players[0].name = session.name;
@@ -121,7 +128,7 @@ const freshGame = (session) => {
 /** Loads an online game from the server, then hands it to the board. */
 export default function Game({ session, onExit, onRestart }) {
   const online = session.mode === 'online';
-  const [init, setInit] = useState(() => (online ? null : { S: (session.resume && loadSave(session.mode)?.S) || freshGame(session), rev: 0 }));
+  const [init, setInit] = useState(() => (online ? null : { S: (session.resume && resumedGame(session)) || freshGame(session), rev: 0 }));
   const [gone, setGone] = useState(false);
   useEffect(() => {
     if (!online) return;
