@@ -18,7 +18,7 @@ import Player from './components/Player.jsx';
 import Rules from './components/Rules.jsx';
 import GameSettings from './components/GameSettings.jsx';
 import GameLog from './components/GameLog.jsx';
-import { classicCardFile, useLook } from './lib/look.js';
+import { classicCardFile, isMaaikeName, setMaaikeGame, useLook } from './lib/look.js';
 import { TokenArt, Scroll, Gem, Mini, CompleteIcon, Pic } from './components/Art.jsx';
 import { computeLayout } from './layout.js';
 import { clearSave, loadSave, writeSave } from './lib/saves.js';
@@ -148,6 +148,11 @@ function Board({ session, onExit, onRestart, init, onReplaced }) {
   const vsAi = session.mode === 'ai';
   const seat = online ? session.seat : vsAi ? 0 : null; // whose screen this is; null means both players share it
   const [S, setS] = useState(init.S);
+  const hasMaaike = S.players.some((p) => isMaaikeName(p.name));
+  useEffect(() => {
+    setMaaikeGame(hasMaaike);
+    return () => setMaaikeGame(false);
+  }, [hasMaaike]);
   const Sref = useRef(init.S);
   const revRef = useRef(init.rev);
   const [copied, setCopied] = useState(false);

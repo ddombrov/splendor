@@ -1,7 +1,7 @@
 import { createGame } from '../engine/engine.js';
 import { JewelCard, CfCard, RoyalCard } from './Cards.jsx';
 import { TokenArt } from './Art.jsx';
-import { classicCardFile } from '../lib/look.js';
+import { classicCardFile, isMaaikeGame } from '../lib/look.js';
 import { cardType } from '../lib/cardTypes.js';
 
 // Temporary page (opened from Settings in its own tab): every original piece beside the modern one that stands in for it.
@@ -10,7 +10,7 @@ const JEWELS = [0, 1, 2].flatMap((l) => [...S.pyr[l], ...S.decks[l]]);
 const CFS = [...S.crow, ...S.cdeck];
 const ROYALS = [...S.royals, ...S.rdeck];
 // The right-hand side is the modern look, or the Maaike version when opened from its info icon.
-const RIGHT = new URLSearchParams(location.search).get('look') === 'maaike' ? 'maaike' : 'modern';
+const RIGHT = new URLSearchParams(location.search).get('look') === 'maaike' && isMaaikeGame() ? 'maaike' : 'modern';
 const TOKENS = ['blue', 'white', 'green', 'black', 'red', 'pearl', 'glass', 'gold'];
 
 const Pair = ({ label, children }) => (

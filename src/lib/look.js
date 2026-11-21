@@ -12,11 +12,23 @@ const listeners = new Set();
 const LOOKS = ['classic', 'maaike'];
 const read = () => { try { const v = localStorage.getItem(KEY); return LOOKS.includes(v) ? v : 'modern'; } catch { return 'modern'; } };
 let look = read();
-const apply = () => { if (typeof document !== 'undefined') document.documentElement.dataset.look = look; };
+// The Maaike version is hidden: it is only offered, and only shown, while a game has a player named Maaike.
+// A new tab inherits sessionStorage, so the card mapping opened from inside such a game can show it too.
+const MAAIKE_GAME = 'sd-maaike-game';
+let maaikeGame = (() => { try { return sessionStorage.getItem(MAAIKE_GAME) === '1' && new URLSearchParams(location.search).has('mapping'); } catch { return false; } })();
+export const getLook = () => (look === 'maaike' && !maaikeGame ? 'modern' : look);
+const apply = () => { if (typeof document !== 'undefined') document.documentElement.dataset.look = getLook(); };
 apply();
 
-export const getLook = () => look;
-export const MAAIKE_AVAILABLE = true;
+export const isMaaikeName = (name) => typeof name === 'string' && name.trim().toLowerCase() === 'maaike';
+export function setMaaikeGame(on) {
+  if (maaikeGame === on) return;
+  maaikeGame = on;
+  try { if (on) sessionStorage.setItem(MAAIKE_GAME, '1'); else sessionStorage.removeItem(MAAIKE_GAME); } catch { /* ignore */ }
+  apply();
+  listeners.forEach((fn) => fn());
+}
+export const isMaaikeGame = () => maaikeGame;
 
 const MAAIKE_ROYAL_PHOTOS = 12; // the four base royals, then the eight expansion royals
 /** The photo for a royal card in the Maaike version, or null. */
@@ -48,6 +60,7 @@ export function setLook(next) {
   listeners.forEach((fn) => fn());
 }
 const subscribe = (fn) => { listeners.add(fn); return () => listeners.delete(fn); };
+export const useMaaikeGame = () => useSyncExternalStore(subscribe, isMaaikeGame);
 export const useLook = () => useSyncExternalStore(subscribe, getLook);
 
 /** A true/false option remembered in this browser, readable anywhere and as a hook. */

@@ -3,7 +3,7 @@ import { Info } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Switch } from '@/components/ui/switch';
-import { MAAIKE_AVAILABLE, cardsPref, countersPref, expPref, setLook, useLook } from '../lib/look.js';
+import { cardsPref, countersPref, expPref, setLook, useLook, useMaaikeGame } from '../lib/look.js';
 
 const PREF = { exp: expPref, randomCards: cardsPref };
 
@@ -13,6 +13,7 @@ const PREF = { exp: expPref, randomCards: cardsPref };
  */
 export default function GameSettings({ onClose, inGame = false, current, locked = false, onRestart, title = 'Game settings', children }) {
   const look = useLook();
+  const maaikeGame = useMaaikeGame();
   const counters = countersPref.use();
   const stored = { exp: expPref.use(), randomCards: cardsPref.use() };
   const shown = inGame ? current : stored;
@@ -22,7 +23,7 @@ export default function GameSettings({ onClose, inGame = false, current, locked 
   const rows = [
     { key: 'exp', title: 'Counterfeiters expansion', game: true },
     { key: 'look', title: 'Original look' },
-    ...(MAAIKE_AVAILABLE ? [{ key: 'maaike', title: 'Maaike version' }] : []),
+    ...(inGame && maaikeGame ? [{ key: 'maaike', title: 'Maaike version' }] : []),
     { key: 'counters', title: 'Card counters' },
   ];
   const value = (r) => (r.key === 'look' ? classic : r.key === 'maaike' ? look === 'maaike' : r.key === 'counters' ? counters : r.needsModern && noRandom ? false : !!shown[r.key]);
