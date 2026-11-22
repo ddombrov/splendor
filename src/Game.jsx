@@ -122,6 +122,7 @@ const freshGame = (session) => {
   const g = createGame(session.exp, newSeed(), null, { randomCards: session.randomCards, randomRoyals: session.randomRoyals });
   if (session.name) g.players[0].name = session.name;
   if (session.mode === 'ai') g.players[1].name = 'Computer';
+  if (session.mode === 'device' && session.name2) g.players[1].name = session.name2;
   return g;
 };
 

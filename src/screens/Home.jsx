@@ -6,7 +6,7 @@ import { Switch } from '@/components/ui/switch';
 import Rules from '@/components/Rules.jsx';
 import { api, rememberName, savedName } from '../net/api.js';
 import { Pic } from '@/components/Art.jsx';
-import { Field, GemRow, NameChoice, Segmented } from './parts.jsx';
+import { Field, GemRow, NameChoice, NameField, Segmented } from './parts.jsx';
 import { loadSave } from '../lib/saves.js';
 import GameSettings from '@/components/GameSettings.jsx';
 import { cardsPref, expPref, useLook } from '../lib/look.js';
@@ -81,7 +81,16 @@ function GameDialog({ mode, exp, resumable, onClose, onStart, onJoined, onResume
   // With an unfinished game saved, the same dialog asks whether to resume it.
   const title = resumable ? 'Resume your game?' : MODES.find((m) => m.key === mode).title;
   const [name, setName] = useState(savedName);
-  const go = async () => { setBusy(true); rememberName(name.trim()); await onStart({ mode, exp, ...opts, name: name.trim() }); };
+  // On one device both players are here, so the second one gets a name too.
+  const [name2, setName2] = useState(() => { try { return localStorage.getItem('sd:name2') || ''; } catch { return ''; } });
+  const asksSecond = mode === 'device';
+  const sameNames = asksSecond && name.trim() && name.trim().toLowerCase() === name2.trim().toLowerCase();
+  const go = async () => {
+    setBusy(true);
+    rememberName(name.trim());
+    if (asksSecond) { try { localStorage.setItem('sd:name2', name2.trim()); } catch { /* storage may be blocked */ } }
+    await onStart({ mode, exp, ...opts, name: name.trim(), ...(asksSecond && { name2: name2.trim() }) });
+  };
   const joining = mode === 'online' && tab === 'join';
   return (
     <Dialog open onOpenChange={(o) => !o && onClose()}>
@@ -95,6 +104,12 @@ function GameDialog({ mode, exp, resumable, onClose, onStart, onJoined, onResume
           {joining ? <CodeEntry onJoined={onJoined} /> : (
             <>
               <NameChoice autoFocus value={name} onChange={setName} onEnter={() => name.trim() && (mode === 'quick' ? onQuick() : go())} />
+              {asksSecond && !resumable && (
+                <Field label="Player 2">
+                  <NameField value={name2} onChange={setName2} onEnter={() => !sameNames && go()} placeholder="Player 2" />
+                  {sameNames && <p className="text-sm text-amber-400">The two players need different names.</p>}
+                </Field>
+              )}
               {mode === 'ai' && (
                 <>
                   <Field label="Difficulty"><Segmented value={opts.difficulty} onChange={(v) => set({ difficulty: v })} options={DIFFICULTIES} /></Field>
@@ -115,7 +130,7 @@ function GameDialog({ mode, exp, resumable, onClose, onStart, onJoined, onResume
                 ) : (
                   <>
                     <Button variant="outline" onClick={onClose}>Cancel</Button>
-                    <Button onClick={go} disabled={busy || (mode === 'online' && !name.trim())}>{busy && <Loader2 className="animate-spin" />}{mode === 'online' ? 'Create game' : 'Start game'}</Button>
+                    <Button onClick={go} disabled={busy || sameNames || (mode === 'online' && !name.trim())}>{busy && <Loader2 className="animate-spin" />}{mode === 'online' ? 'Create game' : 'Start game'}</Button>
                   </>
                 )}
               </DialogFooter>

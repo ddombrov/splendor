@@ -57,13 +57,13 @@ export function NameChoice({ value, onChange, onEnter, autoFocus }) {
 }
 
 /** A text box for the player's name. */
-export const NameField = ({ value, onChange, onEnter, autoFocus }) => (
+export const NameField = ({ value, onChange, onEnter, autoFocus, placeholder = 'Your name' }) => (
   <input
     autoFocus={autoFocus}
     value={value}
     onChange={(e) => onChange(e.target.value.slice(0, 20))}
     onKeyDown={(e) => e.key === 'Enter' && onEnter?.()}
-    placeholder="Your name"
+    placeholder={placeholder}
     maxLength={20}
     className="w-full rounded-lg border bg-background px-4 py-3 text-lg font-semibold outline-none placeholder:text-muted-foreground/50 focus:border-primary"
   />
