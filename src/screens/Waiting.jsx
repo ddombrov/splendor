@@ -54,16 +54,21 @@ export function QuickMatch({ onMatched, onCancel, onPlayComputer }) {
   useEffect(() => {
     if (!ready) return undefined;
     let live = true;
-    const poll = async () => {
-      if (!ticket.current || done.current) return;
-      const res = await api.quickStatus(ticket.current);
-      if (live && res && !done.current) { done.current = true; onMatched(res); }
-    };
-    api.quickJoin(name.trim()).then((id) => {
+    const join = () => api.quickJoin(name.trim()).then((id) => {
       if (!live) { api.quickLeave(id); return; }
       ticket.current = id;
       poll();
     });
+    const poll = async () => {
+      if (!ticket.current || done.current) return;
+      const res = await api.quickStatus(ticket.current);
+      if (!live || done.current || !res) return;
+      // The ticket was dropped from the queue: join again rather than wait on a ticket that no longer exists.
+      if (res.gone) { ticket.current = null; join(); return; }
+      done.current = true;
+      onMatched(res);
+    };
+    join();
     const id = setInterval(() => { setSeconds((s) => s + 1); poll(); }, 1000);
     return () => { live = false; clearInterval(id); if (ticket.current && !done.current) api.quickLeave(ticket.current); };
     // the name is only read once, when the search starts

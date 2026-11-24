@@ -81,6 +81,7 @@ export const api = {
   /** Has this ticket been paired yet? */
   async quickStatus(ticket) {
     const res = await request('GET', `/quick/${ticket}`);
+    if (res.gone) return { gone: true };
     if (!res.code) return null;
     saveSeat(res.code, res.seat, res.token);
     return { code: res.code, seat: res.seat };

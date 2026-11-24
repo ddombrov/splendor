@@ -1,4 +1,4 @@
-import { useCallback, useState } from 'react';
+import { Component, useCallback, useState } from 'react';
 import Game from './Game.jsx';
 import Home from './screens/Home.jsx';
 import { Lobby, QuickMatch } from './screens/Waiting.jsx';
@@ -46,6 +46,29 @@ export default function App() {
   if (view.name === 'quick') {
     return <QuickMatch onMatched={matched} onCancel={home} onPlayComputer={() => start({ mode: 'ai', exp: false, source: 'random', difficulty: 'medium', depth: 'standard' })} />;
   }
-  if (view.name === 'game') return <Game key={view.session.key ?? view.session.code} session={view.session} onExit={home} onRestart={(o) => setView({ name: 'game', session: { ...view.session, ...o, key: Date.now(), resume: false } })} />;
+  if (view.name === 'game') {
+    return (
+      <GameErrorBoundary key={view.session.key ?? view.session.code} onExit={home}>
+        <Game session={view.session} onExit={home} onRestart={(o) => setView({ name: 'game', session: { ...view.session, ...o, key: Date.now(), resume: false } })} />
+      </GameErrorBoundary>
+    );
+  }
   return <Home onStart={start} onResume={resume} onJoined={joined} onQuick={() => setView({ name: 'quick' })} />;
+}
+
+// If the game screen ever fails, this shows a way back instead of leaving a blank page.
+class GameErrorBoundary extends Component {
+  state = { failed: false };
+  static getDerivedStateFromError() { return { failed: true }; }
+  componentDidCatch(error) { console.error(error); }
+  render() {
+    if (!this.state.failed) return this.props.children;
+    return (
+      <div className="fixed inset-0 flex flex-col items-center justify-center gap-4 p-6 text-center">
+        <h1 className="text-2xl font-bold">Something went wrong</h1>
+        <p className="text-sm text-muted-foreground">The game hit an error. Online games are saved and can be joined again with their code.</p>
+        <button type="button" className="rounded-md bg-primary px-4 py-2 font-semibold text-primary-foreground" onClick={this.props.onExit}>Back to home</button>
+      </div>
+    );
+  }
 }

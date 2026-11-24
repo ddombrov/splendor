@@ -198,7 +198,11 @@ export async function handle(request, env) {
     if (method === 'GET' && ticket) {
       const row = await db.prepare('SELECT * FROM queue WHERE ticket = ?').bind(ticket).first();
       if (!row) return json({ gone: true });
-      if (!row.code || row.code === 'pending') return json({ waiting: true });
+      if (!row.code || row.code === 'pending') {
+        // Checking keeps the ticket fresh, so a player who keeps waiting is never dropped from the queue.
+        await db.prepare('UPDATE queue SET at = ? WHERE ticket = ? AND code IS NULL').bind(Date.now(), ticket).run();
+        return json({ waiting: true });
+      }
       await db.prepare('DELETE FROM queue WHERE ticket = ?').bind(ticket).run();
       return json({ code: row.code, seat: row.seat, token: row.token });
     }

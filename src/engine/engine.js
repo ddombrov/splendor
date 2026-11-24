@@ -64,6 +64,8 @@ export function gapPair(S, sel) {
 
 /* Cheapest way for the current player to pay for a card, including counterfeiter discounts. */
 export function plan(S, p, card) {
+  // The opponent's cards reserved from a deck reach this screen hidden, with no cost to pay.
+  if (!card.cost) return null;
   if (card.bonus === 'wild' && !ownedColors(p).length) return null;
   const b = bonuses(p);
   const K = kinds(S);

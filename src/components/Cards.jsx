@@ -82,7 +82,7 @@ export function JewelCard({ card, onClick, selected, afford, look: forced }) {
       </div>
       {abil && (
         <div className="abil">
-          <AbilityIcon ab={abil} size={28} />
+          <AbilityIcon ab={abil} size={28} light={kind === 'black'} />
         </div>
       )}
       <Costs cost={card.cost} />
