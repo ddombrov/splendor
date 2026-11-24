@@ -1,16 +1,15 @@
 import { createGame } from '../engine/engine.js';
 import { JewelCard, CfCard, RoyalCard } from './Cards.jsx';
 import { TokenArt } from './Art.jsx';
-import { classicCardFile, isMaaikeGame } from '../lib/look.js';
+import { classicCardFile } from '../lib/look.js';
 import { cardType } from '../lib/cardTypes.js';
 
-// Temporary page (opened from Settings in its own tab): every original piece beside the modern one that stands in for it.
+// Every original piece beside the one that stands in for it. Opened from Settings: in its own tab for the modern
+// look, or over the game for the Maaike version, which only a game with Maaike in it may show.
 const S = createGame(true, 1, 0);
 const JEWELS = [0, 1, 2].flatMap((l) => [...S.pyr[l], ...S.decks[l]]);
 const CFS = [...S.crow, ...S.cdeck];
 const ROYALS = [...S.royals, ...S.rdeck];
-// The right-hand side is the modern look, or the Maaike version when opened from its info icon.
-const RIGHT = new URLSearchParams(location.search).get('look') === 'maaike' && isMaaikeGame() ? 'maaike' : 'modern';
 const TOKENS = ['blue', 'white', 'green', 'black', 'red', 'pearl', 'glass', 'gold'];
 
 const Pair = ({ label, children }) => (
@@ -47,11 +46,12 @@ const Back = ({ src }) => (src
 
 const costText = (c) => Object.entries(c.cost).map(([k, n]) => `${n} ${k}`).join(', ');
 
-export default function CardMapping() {
+export default function CardMapping({ right: RIGHT = 'modern', onClose }) {
   return (
-    <div className="fixed inset-0 space-y-6 overflow-auto p-6 text-white">
-      <div>
+    <div className={`fixed inset-0 space-y-6 overflow-auto p-6 text-white ${onClose ? 'z-[100] bg-[#0e1520]' : ''}`}>
+      <div className="flex items-center justify-between gap-4">
         <h1 className="text-2xl font-bold">Card mapping</h1>
+        {onClose && <button type="button" onClick={onClose} className="rounded-md border border-white/30 px-3 py-1.5 text-sm font-semibold hover:bg-white/10">Close</button>}
       </div>
       <Section title="Tokens">
         {TOKENS.map((k) => <Pair key={k} label={k}><TokenArt kind={k} size={56} look="classic" /><TokenArt kind={k} size={56} look={RIGHT} /></Pair>)}

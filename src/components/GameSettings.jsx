@@ -1,4 +1,6 @@
 import { useState } from 'react';
+import { createPortal } from 'react-dom';
+import CardMapping from './CardMapping.jsx';
 import { Info } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
@@ -19,6 +21,7 @@ export default function GameSettings({ onClose, inGame = false, current, locked 
   const shown = inGame ? current : stored;
   const classic = look === 'classic';
   const [pending, setPending] = useState(null);
+  const [maaikeMapping, setMaaikeMapping] = useState(false);
 
   const rows = [
     { key: 'exp', title: 'Counterfeiters expansion', game: true },
@@ -44,6 +47,10 @@ export default function GameSettings({ onClose, inGame = false, current, locked 
     onRestart({ ...next, randomRoyals: next.randomCards });
   };
 
+  // The Maaike version's mapping opens over the game: a new tab would not know a Maaike game is being played, since
+  // the game may be inside another site's frame, whose storage a separate tab cannot see.
+  if (maaikeMapping) return createPortal(<CardMapping right="maaike" onClose={() => setMaaikeMapping(false)} />, document.body);
+
   return (
     <Dialog open onOpenChange={(o) => !o && onClose()}>
       <DialogContent className="sm:max-w-md" aria-describedby={undefined}>
@@ -61,7 +68,7 @@ export default function GameSettings({ onClose, inGame = false, current, locked 
               {rows.map((r) => (
                 <label key={r.key} className={`flex items-center justify-between gap-4 ${disabled(r) ? 'opacity-50' : 'cursor-pointer'}`}>
                   <span>
-                    <span className="flex items-center gap-1.5 font-semibold">{r.title}{(r.key === 'look' || r.key === 'maaike') && <button type="button" title="See card mapping" className="text-muted-foreground hover:text-foreground" onClick={(e) => { e.preventDefault(); window.open(r.key === 'maaike' ? '/?mapping=1&look=maaike' : '/?mapping=1', '_blank'); }}><Info className="size-4" /></button>}</span>
+                    <span className="flex items-center gap-1.5 font-semibold">{r.title}{(r.key === 'look' || r.key === 'maaike') && <button type="button" title="See card mapping" className="text-muted-foreground hover:text-foreground" onClick={(e) => { e.preventDefault(); if (r.key === 'maaike') setMaaikeMapping(true); else window.open('/?mapping=1', '_blank'); }}><Info className="size-4" /></button>}</span>
                     {note(r) && <span className="block text-sm text-muted-foreground">{note(r)}</span>}
                   </span>
                   <Switch checked={value(r)} disabled={disabled(r)} onCheckedChange={(on) => change(r, on)} />
