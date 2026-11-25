@@ -248,3 +248,15 @@ html[data-look=maaike] .back.lvcf { background: url(/maaike/backs/3.jpg) center 
 .card.jewel.photo.k-wild::after { border: 0; padding: 3px; background: linear-gradient(135deg, #ff5d73, #ffd25e, #4fd18b, #4f8cff, #b78bf0); -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0); -webkit-mask-composite: xor; mask: linear-gradient(#000 0 0) content-box exclude, linear-gradient(#000 0 0); }
 html[data-look=classic] .back.lvhidden { background: url(/classic/backs/hidden.png) center / 100% 100% no-repeat; }
 html[data-look=maaike] .back.lvhidden { background: url(/maaike/backs/4.jpg) center / 100% 100% no-repeat; }
+
+/* a single button gets the board with one long slot */
+.stage .board-wrap.one { background-image: url(/modern/boards/board-1-button.svg); }
+.boardbtns.one { grid-template-columns: 1fr; }
+html[data-look=classic] .stage .board-wrap.one { background-image: url(/classic/board/plain.png); }
+
+/* board buttons stay put inside their slot: hovering and pressing only change the colour */
+.woodbtn:hover:not(:disabled), .woodbtn:active:not(:disabled) { transform: none; }
+
+/* the colours a wild card may copy glow in the open hand, and clicking one chooses it */
+.wildpick { cursor: pointer; border-radius: 10px; outline: 3px solid #facc15; outline-offset: 4px; box-shadow: 0 0 16px 6px rgba(250, 204, 21, 0.55); }
+.wildpick:hover { background: rgba(250, 204, 21, 0.18); }

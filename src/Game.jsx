@@ -19,7 +19,7 @@ import Rules from './components/Rules.jsx';
 import GameSettings from './components/GameSettings.jsx';
 import GameLog from './components/GameLog.jsx';
 import { classicCardFile, isMaaikeName, setMaaikeGame, useLook } from './lib/look.js';
-import { TokenArt, Scroll, Gem, Mini, CompleteIcon, Pic } from './components/Art.jsx';
+import { TokenArt, Scroll, Mini, CompleteIcon, Pic } from './components/Art.jsx';
 import { computeLayout } from './layout.js';
 import { clearSave, loadSave, writeSave } from './lib/saves.js';
 import { Flights, diffFlights, takeSnapshot } from './motion.jsx';
@@ -88,7 +88,7 @@ function statusText(S) {
       case 'steal': return `${p.name}: click one of ${opp(S).name}'s tokens to steal it.`;
       case 'royal': return `${p.name}: click a royal card to see what it does, then press Claim royal.`;
       case 'discard': return `${p.name}: more than 10 tokens. Click your tokens to discard down to 10.`;
-      case 'wild': return `${p.name}: choose the colour for your wild bonus.`;
+      case 'wild': return `${p.name}: click one of your glowing colours for your wild card to copy.`;
       case 'freeReserve': return `${p.name}: click a card or deck to reserve it, or skip.`;
       case 'freeCf': return `${p.name}: take a counterfeiter card for free.`;
       case 'endabil': return `${p.name}: use a counterfeiter ability, or finish your turn.`;
@@ -154,6 +154,7 @@ function useViewport() {
 const resumedGame = (session) => {
   const S = loadSave(session.mode)?.S;
   if (S && session.name) S.players[0].name = session.name;
+  if (S && session.mode === 'device' && session.name2) S.players[1].name = session.name2;
   return S;
 };
 
@@ -314,17 +315,10 @@ function Board({ session, onExit, onRestart, init, onReplaced }) {
   const [inspect, setInspect] = useState(null);
   useEffect(() => { setInspect(null); }, [S.log.length]);
   const look = (card, fn) => () => { setInspect(card); fn?.(); };
-  // A turn starts with the optional actions (replenish, use a privilege) and moves on to the main action when skipped.
-  // Skipping can be undone by cancelling the main action; replenishing or using a privilege cannot.
+  // A turn starts with the optional actions (replenish, use privileges), which can be used as often as allowed and in
+  // any order, and moves on to the main action when skipped. Touching a token or a card counts as skipping.
   const [skipped, setSkipped] = useState(false);
-  const [optUsed, setOptUsed] = useState(false);
-  useEffect(() => { setSkipped(false); setOptUsed(false); }, [S.cur, S.over, S.awaitingFirst]);
-  const privCount = S.players[S.cur].priv;
-  const lastPriv = useRef({ cur: S.cur, n: privCount });
-  useEffect(() => {
-    if (lastPriv.current.cur === S.cur && privCount < lastPriv.current.n) setOptUsed(true); // a privilege was just used
-    lastPriv.current = { cur: S.cur, n: privCount };
-  }, [S.cur, privCount]);
+  useEffect(() => { setSkipped(false); }, [S.cur, S.over, S.awaitingFirst]);
   const p = cur(S), pd = S.pending;
   const boardHasTokens = S.board.some((c) => c && c !== 'gold');
   const canTakeTokens = boardHasTokens && roomLeft(p) >= 1;
@@ -335,11 +329,11 @@ function Board({ session, onExit, onRestart, init, onReplaced }) {
   // Skipping the optional step is only allowed when the player has a main action left to do.
   const mainPossible = canTakeTokens || canReserveGold || canPay;
   const noOptional = !canReplenish(S) && !canUsePriv;
-  const past = skipped || optUsed || noOptional; // the optional step is over, by choice or because there is nothing to choose
-  const canGoBack = skipped && !optUsed && !noOptional; // skipped the optional step but could still take it
+  const past = skipped || noOptional; // the optional step is over, by choice or because there is nothing to choose
+  const canGoBack = skipped && !noOptional; // skipped the optional step but could still take it
   const locked = !past && !S.mode && !S.pending && !S.awaitingFirst;
-  const guard = (fn) => (locked ? undefined : fn);
-  const pdispatch = (a) => { if (!(locked && a.type === 'card')) dispatch(a); };
+  const guard = (fn) => (locked ? () => { setSkipped(true); fn(); } : fn);
+  const pdispatch = (a) => { if (locked && a.type === 'card') setSkipped(true); dispatch(a); };
   // Layout numbers. The cards get the size their rows allow, the board takes what is left, and any
   // spare width goes to the players, the cards and the board in that order of need.
   const prompt = statusText(S);
@@ -399,7 +393,7 @@ function Board({ session, onExit, onRestart, init, onReplaced }) {
   // Both players sit in one column left of the board, equal in height. Hovering one lets it take over the whole column.
   const [hovered, setHovered] = useState(null);
   // While you must steal a token, the opponent's hand stays open so you can pick from it.
-  const shownHand = pd?.type === 'steal' && myTurn ? 1 - S.cur : hovered;
+  const shownHand = pd?.type === 'steal' && myTurn ? 1 - S.cur : pd?.type === 'wild' && myTurn ? S.cur : hovered;
   const playersColumn = (
     <div className={cn('relative min-h-0', tall ? (stacked ? 'order-2 flex flex-col gap-3' : 'order-2 grid grid-cols-2 gap-3') : strip ? 'grid grid-cols-2 gap-3' : 'flex flex-col gap-3')} style={strip ? { gridColumn: '1 / -1', gridRow: 2, height: stripH } : undefined} onMouseLeave={() => setHovered(null)}>
       {[0, 1].map((i) => (
@@ -418,7 +412,7 @@ function Board({ session, onExit, onRestart, init, onReplaced }) {
         >
           <div className="flex h-full flex-col" style={{ width: tall ? '100%' : strip ? padX + boardColW : sideW + 12 + boardColW - 12 }}>
             <Player S={S} idx={shownHand} dispatch={pdispatch} onInspect={setInspect} colW={Math.floor(((tall ? w - 20 : strip ? padX + boardColW + 12 : sideW + 12 + boardColW) - 36 - (kinds(S).length) * 12) / (kinds(S).length + 1))} viewer={seat} buying={buying} zoomed wide />
-            {pd?.type === 'steal' && prompt && (
+            {(pd?.type === 'steal' || pd?.type === 'wild') && myTurn && prompt && (
               <div className="hintbox mt-3 flex min-h-[90px] shrink-0 items-center px-8 py-5 font-bold leading-snug text-white" style={{ fontSize: cell * 0.155 }}>{prompt}</div>
             )}
           </div>
@@ -445,10 +439,9 @@ function Board({ session, onExit, onRestart, init, onReplaced }) {
   const complete = () => {
     const type = { take: 'take', buy: 'buy', reserve: 'reserve', refill: 'repl' }[action];
     setPicked(null);
-    if (action === 'refill') setOptUsed(true);
     dispatch({ type });
   };
-  const cancel = () => { setPicked(null); if (!optUsed) setSkipped(false); dispatch({ type: 'cancelAction' }); };
+  const cancel = () => { setPicked(null); setSkipped(false); dispatch({ type: 'cancelAction' }); };
   const choose = (what) => {
     dispatch({ type: 'cancelAction' });
     if (what === 'priv') dispatch({ type: 'priv' });
@@ -466,7 +459,7 @@ function Board({ session, onExit, onRestart, init, onReplaced }) {
   ].filter(Boolean);
   const buttons = extras.length ? extras : action ? [
     ...(action !== 'priv' ? [{ label: { take: 'Take tokens', buy: 'Buy card', reserve: 'Reserve card', refill: 'Replenish' }[action], disabled: !canComplete, onClick: complete, go: true }] : []),
-    { label: 'Cancel', disabled: !idle, onClick: cancel, col: action !== 'priv' ? undefined : 2 },
+    { label: 'Cancel', disabled: !idle, onClick: cancel },
   ] : past ? [
     { label: 'Take', disabled: !(idle && canTakeTokens), onClick: () => choose('take') },
     { label: 'Reserve', disabled: !(idle && canReserveGold), onClick: () => choose('reserve') },
@@ -477,7 +470,7 @@ function Board({ session, onExit, onRestart, init, onReplaced }) {
     { label: 'Use privilege', disabled: !(idle && canUsePriv), onClick: () => choose('priv') },
     { label: 'Skip', disabled: !(idle && mainPossible), onClick: () => setSkipped(true) },
   ];
-  const slots = extras.length || action ? 'two' : canGoBack ? '' : 'three';
+  const slots = ['', 'one', 'two', 'three', ''][buttons.length];
 
   return (
     <>
@@ -552,11 +545,6 @@ function Board({ session, onExit, onRestart, init, onReplaced }) {
                     ))}
                   </div>
                 ))}
-                {pd?.type === 'wild' && (
-                  <ButtonRow>
-                    {pd.colors.map((c) => <Button key={c} size="sm" variant="outline" onClick={act({ type: 'wild', c })}><Gem kind={c} size={16} /> {c}</Button>)}
-                  </ButtonRow>
-                )}
                 {pd?.type === 'endabil' && (
                   <ButtonRow>
                     {endOpts.map((o) => <Button key={o.k} size="sm" variant="outline" onClick={act({ type: 'endabil', k: o.k })}>{o.t}</Button>)}

@@ -70,6 +70,7 @@ export default function Player({ S, idx, dispatch, onInspect, colW = 52, viewer 
   const canDisc = pd?.type === 'discard' && active && mine;
   const canSteal = pd?.type === 'steal' && !active && mine;
   const canReturn = active && mine && !S.main && !pd && roomLeft(p) === 0;
+  const wildColors = pd?.type === 'wild' && active && mine ? pd.colors : [];
   const b = bonuses(p);
   const all = [...kinds(S), 'gold'];
   const ownedOf = (k) => p.cards.filter((x) => (k === 'gold' ? x.bonus === 'none' : x.color === k));
@@ -148,7 +149,7 @@ export default function Player({ S, idx, dispatch, onInspect, colW = 52, viewer 
             const shown = owned.slice(-MAX_STACK);
             const step = shown.length > 1 ? Math.min(cw, Math.floor((expanded ? 100 : 70) / (shown.length - 1))) : 0;
             return (
-              <div key={k} title={`${k}: ${p.tok[k]} tokens${owned.length ? `, ${owned.length} cards` : ''}`} className="flex items-center gap-2">
+              <div key={k} title={`${k}: ${p.tok[k]} tokens${owned.length ? `, ${owned.length} cards` : ''}`} className="flex items-center gap-2" style={{ height: ch }}>
                 <TokenArt kind={k} size={expanded ? 36 : 26} />
                 <span className="w-6 text-lg font-extrabold leading-none">{p.tok[k]}</span>
                 {shown.length > 0 && (
@@ -197,6 +198,7 @@ export default function Player({ S, idx, dispatch, onInspect, colW = 52, viewer 
       <div data-dest-tokens={idx} data-dest-cards={idx} className="mt-3 flex items-start gap-3" title="Tokens, with the cards of each colour under them">
         {all.map((k) => {
           const click = canReturn ? () => dispatch({ type: 'giveBack', c: k }) : canDisc ? () => dispatch({ type: 'disc', c: k }) : canSteal && k !== 'gold' ? () => dispatch({ type: 'steal', c: k }) : null;
+          const wildPick = wildColors.includes(k) ? () => dispatch({ type: 'wild', c: k }) : null;
           const owned = ownedOf(k);
           const z = colW / 124;
           const full = Math.round(colW * 1.525);
@@ -204,7 +206,7 @@ export default function Player({ S, idx, dispatch, onInspect, colW = 52, viewer 
           tallest.current = Math.max(tallest.current, strip * (owned.length - 1));
           const tok = zoomed ? Math.min(colW - 6, 80) : 32;
           return (
-            <div key={k} className="flex shrink-0 flex-col items-center gap-2" style={{ width: colW }}>
+            <div key={k} className={cn('flex shrink-0 flex-col items-center gap-2', wildPick && 'wildpick')} style={{ width: colW }} onClick={wildPick ?? undefined} title={wildPick ? `Copy ${k}` : undefined}>
               {zoomed && (
                 <div className="flex items-center gap-2" title={`${k}: ${p.tok[k]} tokens`}>
                   <TokenArt kind={k} size={Math.max(30, Math.round(colW * 0.36))} />

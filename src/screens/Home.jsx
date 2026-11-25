@@ -85,10 +85,13 @@ function GameDialog({ mode, exp, resumable, onClose, onStart, onJoined, onResume
   const [name2, setName2] = useState(() => { try { return localStorage.getItem('sd:name2') || ''; } catch { return ''; } });
   const asksSecond = mode === 'device';
   const sameNames = asksSecond && name.trim() && name.trim().toLowerCase() === name2.trim().toLowerCase();
-  const go = async () => {
-    setBusy(true);
+  const rememberNames = () => {
     rememberName(name.trim());
     if (asksSecond) { try { localStorage.setItem('sd:name2', name2.trim()); } catch { /* storage may be blocked */ } }
+  };
+  const go = async () => {
+    setBusy(true);
+    rememberNames();
     await onStart({ mode, exp, ...opts, name: name.trim(), ...(asksSecond && { name2: name2.trim() }) });
   };
   const joining = mode === 'online' && tab === 'join';
@@ -104,7 +107,7 @@ function GameDialog({ mode, exp, resumable, onClose, onStart, onJoined, onResume
           {joining ? <CodeEntry onJoined={onJoined} /> : (
             <>
               <NameChoice autoFocus value={name} onChange={setName} onEnter={() => name.trim() && (mode === 'quick' ? onQuick() : go())} />
-              {asksSecond && !resumable && (
+              {asksSecond && (
                 <Field label="Player 2">
                   <NameField value={name2} onChange={setName2} onEnter={() => !sameNames && go()} placeholder="Player 2" />
                   {sameNames && <p className="text-sm text-amber-400">The two players need different names.</p>}
@@ -119,8 +122,8 @@ function GameDialog({ mode, exp, resumable, onClose, onStart, onJoined, onResume
               <DialogFooter>
                 {resumable ? (
                   <>
-                    <Button variant="outline" onClick={go} disabled={busy}>New game</Button>
-                    <Button onClick={() => { rememberName(name.trim()); onResume(mode, name.trim()); }}>Resume game</Button>
+                    <Button variant="outline" onClick={go} disabled={busy || sameNames}>New game</Button>
+                    <Button disabled={sameNames} onClick={() => { rememberNames(); onResume(mode, name.trim(), asksSecond ? name2.trim() : ''); }}>Resume game</Button>
                   </>
                 ) : mode === 'quick' ? (
                   <>
