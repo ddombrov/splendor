@@ -8,9 +8,6 @@ import { JewelCard, CfCard, RoyalCard, CardBack } from './Cards.jsx';
 import { TokenArt, Gem, Scroll, Crown, PAL } from './Art.jsx';
 import { bonuses, colorPts, crowns, kinds, limitCount, plan, pts, resCap, roomLeft } from '../engine/engine.js';
 
-const Label = ({ children }) => (
-  <div className="mt-2 mb-1 text-[10px] font-semibold uppercase tracking-widest text-muted-foreground">{children}</div>
-);
 // The opened hand shows the stats large; everywhere else they stretch across the panel (see .stats in styles.css).
 const Stat = ({ title, big, children }) => (
   <div title={title} className={cn('stat flex shrink-0 items-center gap-1 font-extrabold leading-none', big && 'h-14 gap-2 px-4 text-5xl')}>{children}</div>
@@ -89,7 +86,10 @@ export default function Player({ S, idx, dispatch, onInspect, colW = 52, viewer 
   const wildColors = pd?.type === 'wild' && active && mine ? pd.colors : [];
   const b = bonuses(p);
   const all = [...kinds(S), 'gold'];
-  const ownedOf = (k) => p.cards.filter((x) => (k === 'gold' ? x.bonus === 'none' : x.color === k));
+  // Counterfeiter cards are paid for with glassware, so they stack under the glassware tokens; one whose power
+  // was used this turn is faded.
+  const ownedOf = (k) => (k === 'glass' ? p.cf : p.cards.filter((x) => (k === 'gold' ? x.bonus === 'none' : x.color === k)));
+  const ownedCard = (card) => (card.kind === 'cf' ? <div className={cn(S.used[card.id] && active && 'opacity-45')}><CfCard card={card} /></div> : <JewelCard card={card} />);
   const royals = (z) => p.royals.length > 0 && (
     <div className="compact-cards flex flex-wrap gap-1" style={{ '--z': z }}>
       {p.royals.map((r) => <RoyalCard key={r.id} card={r} onClick={() => onInspect?.(r)} />)}
@@ -133,7 +133,7 @@ export default function Player({ S, idx, dispatch, onInspect, colW = 52, viewer 
                   <div className="compact-cards relative mt-0.5" style={{ '--z': cw / 124, width: cw, height: ch + step * (shown.length - 1) }}>
                     {shown.map((card, i) => (
                       <div key={card.id} className="absolute left-0 cursor-zoom-in overflow-hidden rounded-[4px]" style={{ top: i * step, width: cw, height: ch, zIndex: i }} onClick={() => onInspect?.(card)}>
-                        <JewelCard card={card} />
+                        {ownedCard(card)}
                       </div>
                     ))}
                   </div>
@@ -172,7 +172,7 @@ export default function Player({ S, idx, dispatch, onInspect, colW = 52, viewer 
                   <div className="compact-cards relative shrink-0" style={{ '--z': z, width: cw + step * (shown.length - 1), height: ch }}>
                     {shown.map((card, i) => (
                       <div key={card.id} className="absolute top-0 cursor-zoom-in overflow-hidden rounded-[4px]" style={{ left: i * step, width: cw, height: ch, zIndex: i }} onClick={() => onInspect?.(card)}>
-                        <JewelCard card={card} />
+                        {ownedCard(card)}
                       </div>
                     ))}
                   </div>
@@ -238,7 +238,7 @@ export default function Player({ S, idx, dispatch, onInspect, colW = 52, viewer 
                 <div className="compact-cards relative shrink-0" style={{ width: colW, height: (owned.length - 1) * strip + full, '--z': z }}>
                   {owned.map((card, i) => (
                     <div key={card.id} className="absolute left-0 cursor-zoom-in" style={{ top: i * strip, width: colW, zIndex: i }} onClick={() => onInspect?.(card)}>
-                      <JewelCard card={card} />
+                      {ownedCard(card)}
                     </div>
                   ))}
                 </div>
@@ -254,17 +254,6 @@ export default function Player({ S, idx, dispatch, onInspect, colW = 52, viewer 
         })}
       </div>
 
-      {p.cf.length > 0 && (
-        <div>
-          <Label>Counterfeiter cards</Label>
-          {/* a power already used this turn is shown faded */}
-          <div className="compact-cards flex flex-wrap gap-2" style={{ '--z': zoomed ? 0.6 : 0.4 }}>
-            {p.cf.map((c) => (
-              <div key={c.id} className={cn(S.used[c.id] && active && 'opacity-45')}><CfCard card={c} onClick={() => onInspect?.(c)} /></div>
-            ))}
-          </div>
-        </div>
-      )}
 
       </div>
 

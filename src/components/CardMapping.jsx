@@ -60,38 +60,46 @@ const FILTERS = [
   ['points', 'Points', (c) => c.pts > 0],
   ['none', 'No power', (c) => !(c.ability ?? c.ab) && c.bonus !== 'wild'],
 ];
+// The second row of filters picks which part of the mapping to show.
+const PARTS = [['all', 'Everything'], ['tokens', 'Tokens'], ['backs', 'Card backs'], ['royals', 'Royal cards'], ['cf', 'Counterfeiter cards'], ['1', 'Level 1 cards'], ['2', 'Level 2 cards'], ['3', 'Level 3 cards']];
 const costText = (c) => Object.entries(c.cost).map(([k, n]) => `${n} ${k}`).join(', ');
 
 export default function CardMapping({ right: RIGHT = 'modern', onClose }) {
   const [filter, setFilter] = useState('all');
+  const [part, setPart] = useState('all');
   const keep = FILTERS.find(([k]) => k === filter)[2];
   const all = filter === 'all';
-  const royals = ROYALS.filter(keep);
+  const shows = (k) => part === 'all' || part === k;
+  const royals = shows('royals') ? ROYALS.filter(keep) : [];
+  const chip = (on) => `rounded-full border px-3 py-1 text-sm font-semibold ${on ? 'border-[#d9b15a] bg-[#d9b15a] text-[#17130a]' : 'border-white/30 bg-[#16202e] hover:bg-white/10'}`;
   return (
     <div className={`fixed inset-0 space-y-6 overflow-auto p-6 text-white ${onClose ? 'z-[100] bg-[#0e1520]' : ''}`}>
       <div className="flex items-center justify-between gap-4">
         <h1 className="text-2xl font-bold">Card mapping</h1>
         {onClose && <button type="button" onClick={onClose} className="rounded-md border border-white/30 px-3 py-1.5 text-sm font-semibold hover:bg-white/10">Close</button>}
       </div>
-      <div className="sticky top-0 z-10 -mx-2 flex flex-wrap gap-2 bg-[#0e1520]/90 px-2 py-2 backdrop-blur">
-        {FILTERS.map(([k, label]) => (
-          <button key={k} type="button" onClick={() => setFilter(k)} className={`rounded-full border px-3 py-1 text-sm font-semibold ${filter === k ? 'border-[#d9b15a] bg-[#d9b15a] text-[#17130a]' : 'border-white/30 bg-[#16202e] hover:bg-white/10'}`}>{label}</button>
-        ))}
+      <div className="sticky top-0 z-10 -mx-2 space-y-2 bg-[#0e1520]/90 px-2 py-2 backdrop-blur">
+        <div className="flex flex-wrap gap-2">
+          {FILTERS.map(([k, label]) => <button key={k} type="button" onClick={() => setFilter(k)} className={chip(filter === k)}>{label}</button>)}
+        </div>
+        <div className="flex flex-wrap gap-2">
+          {PARTS.map(([k, label]) => <button key={k} type="button" onClick={() => setPart(k)} className={chip(part === k)}>{label}</button>)}
+        </div>
       </div>
-      {all && <Section title="Tokens">
+      {all && shows('tokens') && <Section title="Tokens">
         {TOKENS.map((k) => <Pair key={k} label={k}><TokenArt kind={k} size={56} look="classic" /><TokenArt kind={k} size={56} look={RIGHT} /></Pair>)}
       </Section>}
-      {all && <Section title="Card backs">
+      {all && shows('backs') && <Section title="Card backs">
         {BACKS.map(([label, classic, modern, maaike]) => <Pair key={label} label={label}><Back src={classic} /><Back src={RIGHT === 'maaike' ? (maaike ?? modern) : modern} /></Pair>)}
       </Section>}
       {royals.length > 0 && <Section title={`Royal cards (${royals.length})`}>
         {royals.map((r) => <Pair key={r.id} label={`${r.pts} pt \u00b7 ${r.ab ?? 'no ability'}`}><Small><RoyalCard card={r} look="classic" /></Small><Small><RoyalCard card={r} look={RIGHT} /></Small></Pair>)}
       </Section>}
-      {all && <Section title={`Counterfeiter cards (${CFS.length})`}>
+      {all && shows('cf') && <Section title={`Counterfeiter cards (${CFS.length})`}>
         {CFS.map((c) => <Pair key={c.id} label={`${c.ab}${c.rc ? ` ${c.rc}` : ''} \u00b7 ${costText(c)}`}><Sideways card={c} /><Small><CfCard card={c} look={RIGHT} /></Small></Pair>)}
       </Section>}
       {[1, 2, 3].map((level) => {
-        const cards = JEWELS.filter((c) => c.level === level && keep(c));
+        const cards = shows(String(level)) ? JEWELS.filter((c) => c.level === level && keep(c)) : [];
         const types = [...new Set(cards.map((c) => cardType(c).name))];
         if (!cards.length) return null;
         return (

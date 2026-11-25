@@ -158,8 +158,12 @@ const resumedGame = (session) => {
   return S && markInfinite(S);
 };
 
-// Players named infinite-test have endless tokens, so a game can be played through to the end for testing.
-const markInfinite = (S) => { S.players.forEach((p) => { p.infinite = isInfiniteName(p.name); }); return S; };
+// If either player is named infinite-test, both have endless tokens, so a game can be played through to the end for testing.
+const markInfinite = (S) => {
+  const on = S.players.some((p) => isInfiniteName(p.name));
+  S.players.forEach((p) => { p.infinite = on; });
+  return S;
+};
 
 const freshGame = (session) => {
   const g = createGame(session.exp, newSeed(), null, { randomCards: session.randomCards, randomRoyals: session.randomRoyals });
