@@ -3,7 +3,7 @@ import Game from './Game.jsx';
 import Home from './screens/Home.jsx';
 import { Lobby, QuickMatch } from './screens/Waiting.jsx';
 import { api } from './net/api.js';
-import { loadSave } from './lib/saves.js';
+import { clearSave, loadSave } from './lib/saves.js';
 
 const SAVED = 'sd:view';
 const loadView = () => {
@@ -52,7 +52,7 @@ export default function App() {
   }
   if (view.name === 'game') {
     return (
-      <GameErrorBoundary key={view.session.key ?? view.session.code} onExit={home}>
+      <GameErrorBoundary key={view.session.key ?? view.session.code} session={view.session} onExit={home}>
         <Game session={view.session} onExit={home} onRestart={(o) => setView({ name: 'game', session: { ...view.session, ...o, key: Date.now(), resume: false } })} />
       </GameErrorBoundary>
     );
@@ -60,18 +60,46 @@ export default function App() {
   return <Home onStart={start} onResume={resume} onJoined={joined} onQuick={() => setView({ name: 'quick' })} />;
 }
 
-// If the game screen ever fails, this shows a way back instead of leaving a blank page.
+// If the game screen ever fails, this shows a way back instead of leaving a blank page, and lets the player copy
+// what went wrong together with the saved game, so the problem can be replayed.
 class GameErrorBoundary extends Component {
-  state = { failed: false };
-  static getDerivedStateFromError() { return { failed: true }; }
+  state = { error: null, copied: false, details: '' };
+  static getDerivedStateFromError(error) { return { error }; }
   componentDidCatch(error) { console.error(error); }
+  async details() {
+    const { session } = this.props;
+    const local = session.mode === 'device' || session.mode === 'ai';
+    const room = local ? null : await api.getRoom(session.code).catch(() => null);
+    return JSON.stringify({
+      error: String(this.state.error?.stack || this.state.error),
+      at: new Date().toISOString(),
+      screen: { width: window.innerWidth, height: window.innerHeight },
+      session,
+      saved: local ? loadSave(session.mode) : room,
+    }, null, 1);
+  }
+  copy = async () => {
+    const details = await this.details();
+    try { await navigator.clipboard.writeText(details); this.setState({ copied: true, details: '' }); } catch { this.setState({ details }); }
+  };
+  discard = () => { clearSave(this.props.session.mode); this.props.onExit(); };
   render() {
-    if (!this.state.failed) return this.props.children;
+    if (!this.state.error) return this.props.children;
+    const { session } = this.props;
+    const local = session.mode === 'device' || session.mode === 'ai';
+    const btn = 'rounded-md px-4 py-2 font-semibold';
     return (
       <div className="fixed inset-0 flex flex-col items-center justify-center gap-4 p-6 text-center">
         <h1 className="text-2xl font-bold">Something went wrong</h1>
-        <p className="text-sm text-muted-foreground">The game hit an error. Online games are saved and can be joined again with their code.</p>
-        <button type="button" className="rounded-md bg-primary px-4 py-2 font-semibold text-primary-foreground" onClick={this.props.onExit}>Back to home</button>
+        <p className="max-w-md text-sm text-muted-foreground">
+          {local ? 'The game hit an error. Copy the game details and send them over so the problem can be replayed and fixed.' : `The game hit an error. Copy the game details and send them over so the problem can be replayed and fixed. This online game can be joined again with the code ${session.code}.`}
+        </p>
+        <div className="flex flex-wrap justify-center gap-2">
+          <button type="button" className={`${btn} border border-white/30`} onClick={this.copy}>{this.state.copied ? 'Copied' : 'Copy game details'}</button>
+          {local && <button type="button" className={`${btn} border border-white/30`} onClick={this.discard}>Delete this saved game</button>}
+          <button type="button" className={`${btn} bg-primary text-primary-foreground`} onClick={this.props.onExit}>Back to home</button>
+        </div>
+        {this.state.details && <textarea readOnly value={this.state.details} className="h-40 w-full max-w-xl rounded-md border border-white/20 bg-black/40 p-2 text-left text-xs" onFocus={(e) => e.target.select()} />}
       </div>
     );
   }

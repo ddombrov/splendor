@@ -3,8 +3,8 @@ import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { BorderBeam } from '@/components/ui/border-beam';
 import { cn } from '@/lib/utils';
-import { COLORS, CF_TEXT } from '../engine/data.js';
-import { JewelCard, RoyalCard, CardBack } from './Cards.jsx';
+import { COLORS } from '../engine/data.js';
+import { JewelCard, CfCard, RoyalCard, CardBack } from './Cards.jsx';
 import { TokenArt, Gem, Scroll, Crown, PAL } from './Art.jsx';
 import { bonuses, colorPts, crowns, kinds, limitCount, plan, pts, resCap, roomLeft } from '../engine/engine.js';
 
@@ -46,11 +46,23 @@ export default function Player({ S, idx, dispatch, onInspect, colW = 52, viewer 
   const [room, setRoom] = useState({ key: roomKey, v: null });
   const stackRoom = room.key === roomKey ? room.v : null; // the most height the extra cards of one stack may take
   const tallest = useRef(0);
+  // Both measurements below adjust the layout and then measure again. A few rounds settle it; if they ever keep
+  // going, they stop rather than redraw forever.
+  const rounds = useRef({ n: 0, at: 0 });
+  const mayAdjust = () => {
+    const now = performance.now();
+    const r = rounds.current;
+    r.n = now - r.at < 200 ? r.n + 1 : 0;
+    r.at = now;
+    return r.n < 12;
+  };
   useLayoutEffect(() => {
     const el = handRef.current?.parentElement; // the hand's card, which clips anything that does not fit
     if (!el) return;
     const over = el.scrollHeight - el.clientHeight;
-    if (over > 1 && tallest.current > 0) setRoom({ key: roomKey, v: Math.max(0, tallest.current - over - 4) });
+    if (over <= 1 || tallest.current <= 0) return;
+    const v = Math.max(0, tallest.current - over - 4);
+    if (v !== stackRoom && mayAdjust()) setRoom({ key: roomKey, v });
   });
   const [fit, setFit] = useState(1);
   useLayoutEffect(() => {
@@ -60,11 +72,12 @@ export default function Player({ S, idx, dispatch, onInspect, colW = 52, viewer 
     const k = box.getBoundingClientRect().height / (box.offsetHeight || 1);
     const cs = getComputedStyle(box);
     const slots = box.querySelector('[data-zone=res]');
-    const avail = box.getBoundingClientRect().height - (parseFloat(cs.paddingTop) + parseFloat(cs.paddingBottom)) * k - (slots ? slots.getBoundingClientRect().height : 0);
+    // the room from the top of the scaled part down to the reserved cards
+    const avail = box.getBoundingClientRect().bottom - parseFloat(cs.paddingBottom) * k - (slots ? slots.getBoundingClientRect().height : 0) - el.getBoundingClientRect().top;
     const used = el.getBoundingClientRect().height;
-    if (!avail || !used) return;
+    if (avail <= 0 || !used) return;
     const next = Math.max(0.45, Math.min(1, fit * (avail / used) * 0.985));
-    if (Math.abs(next - fit) > 0.01) setFit(next);
+    if (Math.abs(next - fit) > 0.01 && mayAdjust()) setFit(next);
   });
   const active = idx === S.cur && !S.awaitingFirst;
   const pd = S.pending;
@@ -143,9 +156,9 @@ export default function Player({ S, idx, dispatch, onInspect, colW = 52, viewer 
     const ch = Math.round(189 * z);
     return (
       <Card data-dest-tokens={idx} data-dest-cards={idx} data-dest-res={idx} className={cn('handboard min-h-0 flex-1 gap-0 overflow-hidden p-3', active && 'outline outline-[3px] -outline-offset-3 outline-[#ffd25e]')}>
+        <h3 className="shrink-0 text-base font-bold">{p.name}</h3>
+        <div className="mt-1 shrink-0"><Stats p={p} /></div>
         <div ref={fitRef} className="shrink-0" style={{ zoom: fit }}>
-        <h3 className="text-base font-bold">{p.name}</h3>
-        <div className="mt-1"><Stats p={p} /></div>
         <div className={cn('mt-2 flex flex-col', expanded ? 'gap-3' : 'gap-0.5')}>
           {all.map((k) => {
             const owned = ownedOf(k);
@@ -232,7 +245,7 @@ export default function Player({ S, idx, dispatch, onInspect, colW = 52, viewer 
               )}
               {owned.length > 0 && (
                 <div className="flex items-center gap-2">
-                  {COLORS.includes(k) && <div title={`Points from ${k} cards`} className={cn('font-extrabold leading-none', zoomed ? 'text-3xl' : 'text-lg')}>{colorPts(p, k)}</div>}
+                  {COLORS.includes(k) && <div title={`Points from ${k} cards`} className={cn('font-extrabold leading-none', zoomed ? 'text-3xl' : 'text-lg')}>{colorPts(p, k)} <span className={cn('font-bold text-muted-foreground', zoomed ? 'text-lg' : 'text-[10px]')}>pts</span></div>}
                   
                 </div>
               )}
@@ -243,12 +256,11 @@ export default function Player({ S, idx, dispatch, onInspect, colW = 52, viewer 
 
       {p.cf.length > 0 && (
         <div>
-          <Label>Counterfeiters</Label>
-          <div className="flex flex-col gap-1">
+          <Label>Counterfeiter cards</Label>
+          {/* a power already used this turn is shown faded */}
+          <div className="compact-cards flex flex-wrap gap-2" style={{ '--z': zoomed ? 0.6 : 0.4 }}>
             {p.cf.map((c) => (
-              <span key={c.id} className={cn('border-l-2 border-violet-400 pl-1.5 text-[10px] leading-tight', S.used[c.id] && active && 'opacity-45')}>
-                {CF_TEXT[c.ab](c)}
-              </span>
+              <div key={c.id} className={cn(S.used[c.id] && active && 'opacity-45')}><CfCard card={c} onClick={() => onInspect?.(c)} /></div>
             ))}
           </div>
         </div>

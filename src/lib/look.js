@@ -21,6 +21,7 @@ const apply = () => { if (typeof document !== 'undefined') document.documentElem
 apply();
 
 export const isMaaikeName = (name) => typeof name === 'string' && name.trim().toLowerCase() === 'maaike';
+export const isInfiniteName = (name) => typeof name === 'string' && name.trim().toLowerCase() === 'infinite-test';
 export function setMaaikeGame(on) {
   if (maaikeGame === on) return;
   maaikeGame = on;

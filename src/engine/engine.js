@@ -67,6 +67,7 @@ export function plan(S, p, card) {
   // The opponent's cards reserved from a deck reach this screen hidden, with no cost to pay.
   if (!card.cost) return null;
   if (card.bonus === 'wild' && !ownedColors(p).length) return null;
+  if (p.infinite) return { pay: Object.fromEntries([...kinds(S), 'gold'].map((k) => [k, 0])), g: 0, ids: [], score: [0, 0, 0] }; // the infinite-test player pays nothing
   const b = bonuses(p);
   const K = kinds(S);
   const base = {};

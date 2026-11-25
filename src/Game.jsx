@@ -18,7 +18,7 @@ import Player from './components/Player.jsx';
 import Rules from './components/Rules.jsx';
 import GameSettings from './components/GameSettings.jsx';
 import GameLog from './components/GameLog.jsx';
-import { classicCardFile, isMaaikeName, setMaaikeGame, useLook } from './lib/look.js';
+import { classicCardFile, isInfiniteName, isMaaikeName, setMaaikeGame, useLook } from './lib/look.js';
 import { TokenArt, Scroll, Mini, CompleteIcon, Pic } from './components/Art.jsx';
 import { computeLayout } from './layout.js';
 import { clearSave, loadSave, writeSave } from './lib/saves.js';
@@ -155,15 +155,18 @@ const resumedGame = (session) => {
   const S = loadSave(session.mode)?.S;
   if (S && session.name) S.players[0].name = session.name;
   if (S && session.mode === 'device' && session.name2) S.players[1].name = session.name2;
-  return S;
+  return S && markInfinite(S);
 };
+
+// Players named infinite-test have endless tokens, so a game can be played through to the end for testing.
+const markInfinite = (S) => { S.players.forEach((p) => { p.infinite = isInfiniteName(p.name); }); return S; };
 
 const freshGame = (session) => {
   const g = createGame(session.exp, newSeed(), null, { randomCards: session.randomCards, randomRoyals: session.randomRoyals });
   if (session.name) g.players[0].name = session.name;
   if (session.mode === 'ai') g.players[1].name = 'Computer';
   if (session.mode === 'device' && session.name2) g.players[1].name = session.name2;
-  return g;
+  return markInfinite(g);
 };
 
 /** Loads an online game from the server, then hands it to the board. */
@@ -293,8 +296,8 @@ function Board({ session, onExit, onRestart, init, onReplaced }) {
       if (found.length) setFlights((list) => [...list, ...found.map((f) => ({ ...f, id: nextFlight.current++ }))]);
     }
     if (before && before !== S && S.log.length >= before.log.length) {
-      const old = new Set(before.pyr.flat().map((c) => c?.id));
-      setDealt(S.pyr.flat().filter((c) => c && !old.has(c.id)).map((c) => c.id));
+      const old = new Set([...before.pyr.flat(), ...before.crow].map((c) => c?.id));
+      setDealt([...S.pyr.flat(), ...S.crow].filter((c) => c && !old.has(c.id)).map((c) => c.id));
     }
     prevS.current = S;
     snapshot.current = takeSnapshot();
@@ -529,8 +532,10 @@ function Board({ session, onExit, onRestart, init, onReplaced }) {
                   <div className="rowline">
                     {S.cdeck.length > 0 && <CardBack level="cf" label="CF" count={S.cdeck.length} onClick={guard(() => dispatch({ type: 'card', src: 'cdeck' }))} />}
                     {S.crow.map((c, i) => (
-                      <CfCard key={c.id} card={c} selected={S.selCard?.src === 'cf' && S.selCard.i === i}
-                        afford={plans(c) || pd?.type === 'freeCf'} onClick={look(c, guard(() => dispatch({ type: 'card', src: 'cf', i })))} />
+                      <Dealt key={c.id} fresh={dealt.includes(c.id)} level="cf">
+                        <CfCard card={c} selected={S.selCard?.src === 'cf' && S.selCard.i === i}
+                          afford={plans(c) || pd?.type === 'freeCf'} onClick={look(c, guard(() => dispatch({ type: 'card', src: 'cf', i })))} />
+                      </Dealt>
                     ))}
                   </div>
                 )}
@@ -611,7 +616,7 @@ function Board({ session, onExit, onRestart, init, onReplaced }) {
           <div className="flex flex-col items-center gap-2">
             {[
               ['log', 'Log', () => setShowLog(true)],
-              ['rules', 'Rules and summary', () => setShowRules(true)],
+              ['rules', 'Rules', () => setShowRules(true)],
               ...(online ? [] : [['start-over', 'Start over', restart]]),
               ['resign', 'Resign', resign],
               ['leave-game', 'Leave game', leave],

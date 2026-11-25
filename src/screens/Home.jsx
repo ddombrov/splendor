@@ -184,7 +184,7 @@ export default function Home({ onStart, onJoined, onQuick, onResume }) {
       {open && <GameDialog mode={open} exp={exp} resumable={(open === 'device' || open === 'ai') && !!loadSave(open)} onClose={() => setOpen(null)} onStart={start} onJoined={onJoined} onResume={onResume} onQuick={onQuick} />}
       {showSettings && (
         <GameSettings onClose={() => setShowSettings(false)}>
-          <Button variant="outline" className="gap-2" onClick={() => { setShowSettings(false); setShowRules(true); }}><Pic name="rules" size={20} /> Rules and summary</Button>
+          <Button variant="outline" className="gap-2" onClick={() => { setShowSettings(false); setShowRules(true); }}><Pic name="rules" size={20} /> Rules</Button>
         </GameSettings>
       )}
       {showRules && <Rules exp={exp} onClose={() => setShowRules(false)} />}
