@@ -12,7 +12,7 @@ import { cn } from '@/lib/utils';
 import { api } from './net/api.js';
 import { botActions } from './engine/bot.js';
 import { perkText } from './engine/data.js';
-import { createGame, reduce, cur, opp, plan, canReplenish, endOptions, validLine, selectedCard, resCap, roomLeft, kinds } from './engine/engine.js';
+import { createGame, reduce, cur, opp, plan, canReplenish, endOptions, validLine, selectedCard, resCap, roomLeft, kinds, limitCount } from './engine/engine.js';
 import { JewelCard, CfCard, RoyalCard, CardBack } from './components/Cards.jsx';
 import Player from './components/Player.jsx';
 import Rules from './components/Rules.jsx';
@@ -83,15 +83,15 @@ function statusText(S) {
   if (S.toast) return S.toast;
   if (pd) {
     switch (pd.type) {
-      case 'pick': return `${p.name}: take a token from the board (highlighted).${pd.plus ? ' You may take 2 of the matching colour, or any 1 token.' : ''}`;
-      case 'multi': return `${p.name}: choose up to ${pd.max} token${pd.max > 1 ? 's' : ''}${pd.rule === 'same' ? ' of one type' : ''}, then confirm.`;
-      case 'steal': return `${p.name}: click one of ${opp(S).name}'s tokens to steal it.`;
+      case 'pick': return pd.plus ? `${p.name}: take up to 2 ${pd.color} tokens, or any 1 other non-gold token, from the board (highlighted), or press Skip.` : `${p.name}: take 1 ${pd.color} token from the board (highlighted).`;
+      case 'multi': return `${p.name}: click up to ${pd.max} non-gold token${pd.max > 1 ? 's' : ''}${pd.rule === 'same' ? ' of one colour' : ''} on the board, then press Confirm.`;
+      case 'steal': return `${p.name}: click one of ${opp(S).name}'s tokens to steal it. Any token except gold can be stolen.`;
       case 'royal': return `${p.name}: click a royal card to see what it does, then press Claim royal.`;
-      case 'discard': return `${p.name}: more than 10 tokens. Click your tokens to discard down to 10.`;
+      case 'discard': return `${p.name}: you hold ${limitCount(p)} tokens but may keep only 10. Click your tokens to return ${limitCount(p) - 10} to the bag.`;
       case 'wild': return `${p.name}: click one of your glowing colours for your wild card to copy.`;
-      case 'freeReserve': return `${p.name}: click a card or deck to reserve it, or skip.`;
-      case 'freeCf': return `${p.name}: take a counterfeiter card for free.`;
-      case 'endabil': return `${p.name}: use a counterfeiter ability, or finish your turn.`;
+      case 'freeReserve': return `${p.name}: reserve a card for free by clicking a card or a deck, or press Skip. No gold token comes with it.`;
+      case 'freeCf': return `${p.name}: click a counterfeiter card or its deck to take it for free, or press Skip.`;
+      case 'endabil': return `${p.name}: use one of your counterfeiter powers below the cards, or press Done to end your turn.`;
       case 'peek': return `${p.name}: choose 1 of these 3 cards to reserve.`;
       default: break;
     }
@@ -99,7 +99,7 @@ function statusText(S) {
   if (S.mode === 'priv') return `${p.name}: click any non-gold token to take it with your privilege.`;
   if (S.mode === 'priv2') return `${p.name}: counterfeiter bonus, click one more non-gold token.`;
   if (S.sel.length === 2 && !validLine(S, S.sel)) return `${p.name}: pick the token between these two to take 3 in a line, or choose different tokens.`;
-  if (S.goldSel != null) return `${p.name}: gold token chosen. Choose a card or deck to reserve, then press Complete move.`;
+  if (S.goldSel != null) return `${p.name}: gold token chosen. Click a card or a deck to reserve, then press Reserve card.`;
   return null;
 }
 

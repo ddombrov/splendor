@@ -59,7 +59,7 @@ export function JewelCard({ card, onClick, selected, afford, look: forced }) {
   const kind = wild ? 'wild' : card.bonus;
   const abil = card.ability;
   const photo = look === 'maaike' ? maaikePhoto(card) : null;
-  const centre = photo ? null : card.bonus === 'wild' ? '/modern/icons/any-color-gem.png' : centrePicture(card); // the rainbow bug stands in for wild cards
+  const centre = photo ? null : centrePicture(card);
   const title = [wild && 'Wild bonus: copies one of your colours', card.ability && AB_LABEL[card.ability]].filter(Boolean).join(' + ');
   return (
     <div
@@ -80,9 +80,10 @@ export function JewelCard({ card, onClick, selected, afford, look: forced }) {
           ? <img key={i} src="/modern/jewelry/wild-gems.png" width={28} height={28} alt="" draggable={false} className="gem-img" />
           : <Gem key={i} kind={kind} size={card.n > 1 ? 22 : 26} />))}
       </div>
-      {abil && (
-        <div className="abil">
-          <AbilityIcon ab={abil} size={28} light={kind !== 'white'} />
+      {(abil || wild) && (
+        <div className="abil flex gap-1">
+          {wild && <AbilityIcon ab="wild" size={28} />}
+          {abil && <AbilityIcon ab={abil} size={28} light />}
         </div>
       )}
       <Costs cost={card.cost} />

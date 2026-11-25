@@ -64,7 +64,7 @@ export function AbilityIcon({ ab, size = 24, light = false }) {
   if (ab === 'crown') return <Crown size={size} />;
   if (ab === 'gold') return <Gem kind="gold" size={size} />;
   if (ab.startsWith('gem:')) return <Gem kind={ab.slice(4)} size={size} />;
-  // The black go-again arrow is drawn white on every card colour except the pale white cards.
+  // The black go-again arrow is drawn white where it sits on a card.
   const name = ab === 'extra' && light ? 'go-again-white' : ABILITY_ICON[ab];
   if (!name) return null;
   return <img src={`/modern/icons/${name}.png`} alt="" draggable={false} className="shrink-0 object-contain" style={{ width: size, height: size, filter: name === 'go-again-white' ? 'drop-shadow(0 0 2px rgba(0, 0, 0, 0.85))' : undefined }} />;

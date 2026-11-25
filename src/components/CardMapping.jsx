@@ -13,7 +13,7 @@ const ROYALS = [...S.royals, ...S.rdeck];
 const TOKENS = ['blue', 'white', 'green', 'black', 'red', 'pearl', 'glass', 'gold'];
 
 const Pair = ({ label, children }) => (
-  <div className="flex flex-col items-center gap-1 rounded-lg border border-white/15 p-2 text-center text-[11px] text-white/70" style={{ width: 'fit-content' }}>
+  <div className="flex flex-col items-center gap-1 rounded-lg border border-white/15 bg-[#16202e] p-2 text-center text-[11px] text-white/70" style={{ width: 'fit-content' }}>
     <div className="flex items-center gap-2">{children}</div>
     <span className="max-w-[260px]">{label}</span>
   </div>

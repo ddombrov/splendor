@@ -11,25 +11,26 @@ import { bonuses, colorPts, crowns, kinds, limitCount, plan, pts, resCap, roomLe
 const Label = ({ children }) => (
   <div className="mt-2 mb-1 text-[10px] font-semibold uppercase tracking-widest text-muted-foreground">{children}</div>
 );
-const Stat = ({ title, big, children }) => (
-  <div title={title} className={cn('flex items-center gap-1 font-extrabold leading-none', big ? 'h-14 gap-2 px-4 text-5xl' : 'h-8 px-2 text-xl')}>{children}</div>
+// `tight` is for the narrow strip a hand gets along the bottom of the screen.
+const Stat = ({ title, big, tight, children }) => (
+  <div title={title} className={cn('flex shrink-0 items-center gap-1 font-extrabold leading-none', big ? 'h-14 gap-2 px-4 text-5xl' : tight ? 'h-6 gap-0.5 px-1 text-sm' : 'h-7 px-1.5 text-base')}>{children}</div>
 );
-const Stats = ({ p, big }) => (
+const Stats = ({ p, big, tight }) => (
   <div className="flex w-fit items-stretch divide-x divide-white/30 rounded-lg border border-white/30 bg-black/25">
-    <Stat big={big} title="Prestige points"><span>{pts(p)}</span><span className={cn('font-bold text-muted-foreground', big ? 'text-2xl' : 'text-xs')}>pts</span></Stat>
-    <Stat big={big} title="Crowns"><span>{crowns(p)}</span><Crown size={big ? 46 : 20} /></Stat>
-    <Stat big={big} title="Scrolls"><span>{p.priv}</span><Scroll size={big ? 50 : 22} /></Stat>
-    <TokenStat p={p} big={big} />
+    <Stat big={big} tight={tight} title="Prestige points"><span>{pts(p)}</span><span className={cn('font-bold text-muted-foreground', big ? 'text-2xl' : 'text-[10px]')}>pts</span></Stat>
+    <Stat big={big} tight={tight} title="Crowns"><span>{crowns(p)}</span><Crown size={big ? 46 : tight ? 13 : 16} /></Stat>
+    <Stat big={big} tight={tight} title="Scrolls"><span>{p.priv}</span><Scroll size={big ? 50 : tight ? 15 : 18} /></Stat>
+    <TokenStat p={p} big={big} tight={tight} />
   </div>
 );
 
 // Past this many cards of one colour, the small views show the latest few and an ellipsis; the opened view shows them all.
 const MAX_STACK = 5;
 
-const TokenStat = ({ p, big }) => {
+const TokenStat = ({ p, big, tight }) => {
   const n = limitCount(p);
   return (
-    <Stat big={big} title="Tokens held, out of the limit of 10">
+    <Stat big={big} tight={tight} title="Tokens held, out of the limit of 10">
       <span className={n >= 10 ? 'text-amber-300' : undefined}>{n}/10</span>
     </Stat>
   );
@@ -86,8 +87,8 @@ export default function Player({ S, idx, dispatch, onInspect, colW = 52, viewer 
   ));
 
   if (summary && horizontal) {
-    const cw = 34;
-    const ch = 52;
+    const cw = 31;
+    const ch = 47;
     const slots = (
       <div data-zone="res" className="compact-cards flex shrink-0 items-center gap-1.5" style={{ '--z': 0.26 }}>
           {Array.from({ length: resCap(p) }, (_, i) => {
@@ -98,13 +99,13 @@ export default function Player({ S, idx, dispatch, onInspect, colW = 52, viewer 
         </div>
     );
     return (
-      <Card data-dest-tokens={idx} data-dest-cards={idx} data-dest-res={idx} className={cn('handboard min-h-0 flex-1 flex-row items-stretch gap-4 overflow-hidden px-4 py-2', active && 'outline outline-[3px] -outline-offset-3 outline-[#ffd25e]')}>
+      <Card data-dest-tokens={idx} data-dest-cards={idx} data-dest-res={idx} className={cn('handboard min-h-0 flex-1 flex-row items-stretch gap-2.5 overflow-hidden px-3 py-2', active && 'outline outline-[3px] -outline-offset-3 outline-[#ffd25e]')}>
         <div className="flex shrink-0 flex-col justify-center gap-1">
           <h3 className="text-base font-bold">{p.name}</h3>
-          <Stats p={p} />
+          <Stats p={p} tight />
           {compact && <div className="mt-1">{slots}</div>}
         </div>
-        <div className="flex min-w-0 flex-1 items-start justify-center gap-2 pt-1">
+        <div className="flex min-w-0 flex-1 items-start gap-1 pt-1" style={{ justifyContent: 'safe center' }}>
           {all.map((k) => {
             const owned = ownedOf(k);
             const shown = owned.slice(-MAX_STACK);

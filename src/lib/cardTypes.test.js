@@ -14,11 +14,7 @@ describe('printed card types', () => {
     for (const n of ['Woman wearing a necklace', 'Royal crown on a cushion']) expect(count(3, n)).toBe(5);
   });
 
-  it('give every card a picture that exists, except the wild ones', () => {
-    for (const c of all) {
-      const pic = centrePicture(c);
-      if (c.bonus === 'wild') expect(pic).toBeNull();
-      else expect(existsSync(new URL(`../../public${pic}`, import.meta.url))).toBe(true);
-    }
+  it('give every card a picture that exists', () => {
+    for (const c of all) expect(existsSync(new URL(`../../public${centrePicture(c)}`, import.meta.url))).toBe(true);
   });
 });
