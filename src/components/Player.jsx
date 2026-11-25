@@ -12,7 +12,15 @@ const Label = ({ children }) => (
   <div className="mt-2 mb-1 text-[10px] font-semibold uppercase tracking-widest text-muted-foreground">{children}</div>
 );
 const Stat = ({ title, big, children }) => (
-  <div title={title} className={cn('flex items-center gap-1 font-extrabold leading-none', big ? 'h-12 gap-2 text-5xl' : 'h-7 text-xl')}>{children}</div>
+  <div title={title} className={cn('flex items-center gap-1 font-extrabold leading-none', big ? 'h-14 gap-2 px-4 text-5xl' : 'h-8 px-2 text-xl')}>{children}</div>
+);
+const Stats = ({ p, big }) => (
+  <div className="flex w-fit items-stretch divide-x divide-white/30 rounded-lg border border-white/30 bg-black/25">
+    <Stat big={big} title="Prestige points"><span>{pts(p)}</span><span className={cn('font-bold text-muted-foreground', big ? 'text-2xl' : 'text-xs')}>pts</span></Stat>
+    <Stat big={big} title="Crowns"><span>{crowns(p)}</span><Crown size={big ? 46 : 20} /></Stat>
+    <Stat big={big} title="Scrolls"><span>{p.priv}</span><Scroll size={big ? 50 : 22} /></Stat>
+    <TokenStat p={p} big={big} />
+  </div>
 );
 
 // Past this many cards of one colour, the small views show the latest few and an ellipsis; the opened view shows them all.
@@ -27,9 +35,20 @@ const TokenStat = ({ p, big }) => {
   );
 };
 
-export default function Player({ S, idx, dispatch, onInspect, colW = 52, viewer = null, onOpen = null, zoomed = false, wide = false, summary = false, expanded = false, horizontal = false, compact = false }) {
+export default function Player({ S, idx, dispatch, onInspect, colW = 52, viewer = null, buying = false, onOpen = null, zoomed = false, wide = false, summary = false, expanded = false, horizontal = false, compact = false }) {
   const p = S.players[idx];
   const fitRef = useRef(null);
+  const handRef = useRef(null);
+  const roomKey = `${p.cards.length}|${Object.values(p.tok).join()}|${p.res.length}|${p.royals.length}|${colW}|${zoomed}`;
+  const [room, setRoom] = useState({ key: roomKey, v: null });
+  const stackRoom = room.key === roomKey ? room.v : null; // the most height the extra cards of one stack may take
+  const tallest = useRef(0);
+  useLayoutEffect(() => {
+    const el = handRef.current?.parentElement; // the hand's card, which clips anything that does not fit
+    if (!el) return;
+    const over = el.scrollHeight - el.clientHeight;
+    if (over > 1 && tallest.current > 0) setRoom({ key: roomKey, v: Math.max(0, tallest.current - over - 4) });
+  });
   const [fit, setFit] = useState(1);
   useLayoutEffect(() => {
     const el = fitRef.current;
@@ -60,7 +79,7 @@ export default function Player({ S, idx, dispatch, onInspect, colW = 52, viewer 
     </div>
   );
   const reserved = (c, i) => (showReserved ? (
-    <JewelCard key={c.id} card={c} selected={S.selCard?.src === 'res' && S.selCard.i === i} afford={!S.main && !!plan(S, p, c)} onClick={() => { onInspect?.(c); dispatch({ type: 'card', src: 'res', i }); }} />
+    <JewelCard key={c.id} card={c} selected={S.selCard?.src === 'res' && S.selCard.i === i} afford={buying && idx === S.cur && !!plan(S, p, c)} onClick={() => { onInspect?.(c); dispatch({ type: 'card', src: 'res', i }); }} />
   ) : (
     <CardBack key={c.id} level="hidden" />
   ));
@@ -81,12 +100,7 @@ export default function Player({ S, idx, dispatch, onInspect, colW = 52, viewer 
       <Card data-dest-tokens={idx} data-dest-cards={idx} data-dest-res={idx} className={cn('handboard min-h-0 flex-1 flex-row items-stretch gap-4 overflow-hidden px-4 py-2', active && 'outline outline-[3px] -outline-offset-3 outline-[#ffd25e]')}>
         <div className="flex shrink-0 flex-col justify-center gap-1">
           <h3 className="text-base font-bold">{p.name}</h3>
-          <div className="flex flex-wrap items-center gap-x-3">
-            <Stat title="Prestige points"><span>{pts(p)}</span></Stat>
-            <Stat title="Crowns"><span>{crowns(p)}</span><Crown size={20} /></Stat>
-            <Stat title="Scrolls"><span>{p.priv}</span><Scroll size={22} /></Stat>
-            <TokenStat p={p} />
-          </div>
+          <Stats p={p} />
           {compact && <div className="mt-1">{slots}</div>}
         </div>
         <div className="flex min-w-0 flex-1 items-start justify-center gap-2 pt-1">
@@ -127,12 +141,7 @@ export default function Player({ S, idx, dispatch, onInspect, colW = 52, viewer 
       <Card data-dest-tokens={idx} data-dest-cards={idx} data-dest-res={idx} className={cn('handboard min-h-0 flex-1 gap-0 overflow-hidden p-3', active && 'outline outline-[3px] -outline-offset-3 outline-[#ffd25e]')}>
         <div ref={fitRef} className="shrink-0" style={{ zoom: fit }}>
         <h3 className="text-base font-bold">{p.name}</h3>
-        <div className="mt-1 flex flex-wrap items-center gap-x-3">
-          <Stat title="Prestige points"><span>{pts(p)}</span></Stat>
-          <Stat title="Crowns"><span>{crowns(p)}</span><Crown size={20} /></Stat>
-          <Stat title="Scrolls"><span>{p.priv}</span><Scroll size={22} /></Stat>
-          <TokenStat p={p} />
-        </div>
+        <div className="mt-1"><Stats p={p} /></div>
         <div className={cn('mt-2 flex flex-col', expanded ? 'gap-3' : 'gap-0.5')}>
           {all.map((k) => {
             const owned = ownedOf(k);
@@ -157,43 +166,31 @@ export default function Player({ S, idx, dispatch, onInspect, colW = 52, viewer 
             );
           })}
         </div>
-        {p.royals.length > 0 && <div className="mt-2">{royals(0.22)}</div>}
         </div>
-        <div data-zone="res" className="compact-cards mt-auto flex gap-1.5 pt-2" style={{ '--z': 0.24 }}>
+        <div data-zone="res" className="compact-cards mt-auto flex items-end gap-1.5 pt-2" style={{ '--z': 0.24 }}>
           {Array.from({ length: resCap(p) }, (_, i) => {
             const c = p.res[i];
             if (!c) return <div key={`slot${i}`} className="slot" />;
             return reserved(c, i);
           })}
+          {p.royals.length > 0 && <div className="ml-1.5 border-l border-white/25 pl-1.5">{royals(0.24)}</div>}
         </div>
       </Card>
     );
   }
 
+  tallest.current = 0;
   return (
     <Card
       onClick={onOpen ? (e) => { if (!e.target.closest('[data-card-id], .pile')) onOpen(); } : undefined}
       className={cn('relative min-h-0 flex-1 gap-0 overflow-hidden border-transparent bg-transparent p-3 shadow-none', active && !zoomed && 'border-primary/50', onOpen && 'cursor-zoom-in')}
     >
       {active && !zoomed && <BorderBeam size={120} duration={9} borderWidth={2} colorFrom="#d9b15a" colorTo="#d9b15a00" />}
-      <div className="flex flex-wrap items-center justify-between gap-x-2 gap-y-1">
+      <div ref={handRef} className="flex flex-wrap items-center justify-between gap-x-2 gap-y-1">
         <div className="flex items-center gap-2">
           <h3 className={cn('font-bold', zoomed ? 'text-3xl' : 'text-base')}>{p.name}</h3>
         </div>
-        <div className={cn('flex items-center', zoomed ? 'gap-8' : 'gap-3')}>
-          <Stat big={zoomed} title="Prestige points">
-            <span>{pts(p)}</span>
-          </Stat>
-          <Stat big={zoomed} title="Crowns">
-            <span>{crowns(p)}</span>
-            <Crown size={zoomed ? 46 : 22} />
-          </Stat>
-          <Stat big={zoomed} title="Scrolls">
-            <span>{p.priv}</span>
-            <Scroll size={zoomed ? 50 : 24} />
-          </Stat>
-          <TokenStat p={p} big={zoomed} />
-        </div>
+        <Stats p={p} big={zoomed} />
       </div>
 
       <div className={wide ? cn('flex items-start gap-6', zoomed && 'flex-wrap') : 'contents'}>
@@ -203,7 +200,8 @@ export default function Player({ S, idx, dispatch, onInspect, colW = 52, viewer 
           const owned = ownedOf(k);
           const z = colW / 124;
           const full = Math.round(colW * 1.525);
-          const strip = owned.length > 1 ? Math.max(10, Math.min(Math.round((zoomed ? 62 : 40) * z), Math.floor((colW * 4.2 - full) / (owned.length - 1)))) : 0;
+          const strip = owned.length > 1 ? Math.max(stackRoom == null ? 10 : 4, Math.min(Math.round((zoomed ? 62 : 40) * z), Math.floor((stackRoom ?? colW * 4.2 - full) / (owned.length - 1)))) : 0;
+          tallest.current = Math.max(tallest.current, strip * (owned.length - 1));
           const tok = zoomed ? Math.min(colW - 6, 80) : 32;
           return (
             <div key={k} className="flex shrink-0 flex-col items-center gap-2" style={{ width: colW }}>
@@ -238,12 +236,6 @@ export default function Player({ S, idx, dispatch, onInspect, colW = 52, viewer 
         })}
       </div>
 
-      {p.royals.length > 0 && (
-        <div>
-          <Label>Royal cards</Label>
-          {royals(zoomed ? 0.6 : 0.4)}
-        </div>
-      )}
       {p.cf.length > 0 && (
         <div>
           <Label>Counterfeiters</Label>
@@ -260,12 +252,13 @@ export default function Player({ S, idx, dispatch, onInspect, colW = 52, viewer 
       </div>
 
       <div className="compact-cards mt-auto pt-4" style={{ '--z': zoomed ? 0.9 : wide ? 0.68 : 0.52 }}>
-        <div className="rowline wrap">
+        <div className="rowline wrap items-end">
           {Array.from({ length: resCap(p) }, (_, i) => {
             const c = p.res[i];
             if (!c) return <div key={`slot${i}`} className="slot" />;
             return reserved(c, i);
           })}
+          {p.royals.length > 0 && <div className="ml-2 border-l border-white/25 pl-3">{royals(zoomed ? 0.9 : wide ? 0.68 : 0.52)}</div>}
         </div>
       </div>
     </Card>

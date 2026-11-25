@@ -163,10 +163,14 @@
 
 
 /* a card dealt from the deck turns over to show its face */
-.dealt { position: relative; transform-style: preserve-3d; animation: dealflip 0.9s 0.3s ease-in-out both; }
+.dealt { position: relative; z-index: 20; transform-style: preserve-3d; }
 .dealt > .card { backface-visibility: hidden; }
 .dealtback { position: absolute; inset: 0; transform: rotateY(180deg); backface-visibility: hidden; }
-@keyframes dealflip { from { transform: perspective(800px) rotateY(180deg); } to { transform: perspective(800px) rotateY(0deg); } }
+
+/* cards the player can buy right now glow green */
+.card.afford { box-shadow: 0 0 0 2px var(--good), 0 0 12px 3px rgba(95, 197, 138, 0.85); }
+.royal.afford { box-shadow: 0 0 0 2px var(--gold), 0 0 12px 3px rgba(217, 177, 90, 0.85); }
+.card.royal.sel { box-shadow: 0 0 0 3px #facc15, 0 0 14px 4px rgba(250, 204, 21, 0.8); }
 
 /* original look: printed card faces and photographed card backs */
 .card.imgcard { border: 0; background: #111; }

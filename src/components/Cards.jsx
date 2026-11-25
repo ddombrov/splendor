@@ -121,15 +121,15 @@ export function CfCard({ card, onClick, selected, afford, look: forced }) {
 // The base royals each have a picture of their own; the expansion royals keep the crown.
 const ROYAL_ART = { steal: 'cloak', privilege: 'beret', extra: 'sunhat', none: 'necklace', rreserve: 'tassel', rgold: 'scarf', w9c: 'butterfly', rcounter: 'cloak-blue', rtake4: 'turban-red', rbag2: 'hairclip', rtake3: 'turban' };
 
-export function RoyalCard({ card, onClick, glow, look: forced }) {
+export function RoyalCard({ card, onClick, glow, selected, look: forced }) {
   const current = useLook();
   const look = forced ?? current;
   const file = look === 'classic' ? classicCardFile(card) : null;
-  if (file) return <PrintedCard card={card} file={file} onClick={onClick} afford={glow} />;
+  if (file) return <PrintedCard card={card} file={file} onClick={onClick} selected={selected} afford={!selected && glow} />;
   const photo = look === 'maaike' ? maaikeRoyalPhoto(card) : null;
   const art = photo ? null : ROYAL_ART[card.ab ?? 'none'] ?? null;
   return (
-    <div data-card-id={card.id} className={`card royal ${photo ? 'photo' : ''} ${glow ? 'afford' : ''}`} onClick={onClick}>
+    <div data-card-id={card.id} className={`card royal ${photo ? 'photo' : ''} ${selected ? 'sel' : glow ? 'afford' : ''}`} onClick={onClick}>
       {photo && <><img src={photo} alt="" draggable={false} className="photofill" /><div className="photoscrim" /></>}
       <div className="ptsrow"><div className="pts">{card.pts}</div></div>
       {art && <div className="royal-crown pic"><img src={`/modern/cards/royals/${art}.png`} alt="" draggable={false} className="royal-art" /></div>}

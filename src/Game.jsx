@@ -28,15 +28,54 @@ import CoinFlip from './components/CoinFlip.jsx';
 // The engine is deterministic, so the screen supplies the seed for each new game.
 const newSeed = () => crypto.getRandomValues(new Uint32Array(1))[0];
 
-// A card just dealt from the deck shows its back and turns over to its face.
+// A card just dealt slides off the top of its deck into the empty place, turning over on the way.
 function Dealt({ fresh, level, children }) {
+  const ref = useRef(null);
+  useLayoutEffect(() => {
+    const el = ref.current;
+    const deck = el?.closest('.rowline')?.querySelector('.card.back');
+    if (!fresh || !el || !deck) return undefined;
+    const me = el.getBoundingClientRect();
+    const from = deck.getBoundingClientRect();
+    const k = me.width / (el.offsetWidth || 1); // the stage is scaled, and the move is measured inside it
+    const anim = el.animate(
+      [
+        { transform: `translate(${(from.left - me.left) / k}px, ${(from.top - me.top) / k}px) perspective(800px) rotateY(180deg)` },
+        { transform: 'translate(0px, 0px) perspective(800px) rotateY(0deg)' },
+      ],
+      { duration: 850, delay: 350, easing: 'cubic-bezier(0.3, 0.1, 0.25, 1)', fill: 'backwards' },
+    );
+    return () => anim.cancel();
+  }, [fresh]);
   if (!fresh) return children;
   return (
-    <div className="dealt">
+    <div ref={ref} className="dealt">
       {children}
       <div className="dealtback"><CardBack level={level} /></div>
     </div>
   );
+}
+
+// The enlarged card grows out of the card that was clicked, wherever it sits on the screen.
+function Magnified({ id, children }) {
+  const ref = useRef(null);
+  useLayoutEffect(() => {
+    const el = ref.current;
+    const src = [...document.querySelectorAll(`[data-card-id="${id}"]`)].find((x) => !el?.contains(x));
+    if (!el || !src) return undefined;
+    const a = src.getBoundingClientRect();
+    const b = el.getBoundingClientRect();
+    if (!b.width) return undefined;
+    const anim = el.animate(
+      [
+        { transform: `translate(${a.left - b.left}px, ${a.top - b.top}px) scale(${a.width / b.width})`, opacity: 0.6 },
+        { transform: 'translate(0px, 0px) scale(1)', opacity: 1 },
+      ],
+      { duration: 260, easing: 'cubic-bezier(0.2, 0.7, 0.3, 1)' },
+    );
+    return () => anim.cancel();
+  }, [id]);
+  return <div ref={ref} style={{ transformOrigin: 'top left' }}>{children}</div>;
 }
 
 function statusText(S) {
@@ -47,7 +86,7 @@ function statusText(S) {
       case 'pick': return `${p.name}: take a token from the board (highlighted).${pd.plus ? ' You may take 2 of the matching colour, or any 1 token.' : ''}`;
       case 'multi': return `${p.name}: choose up to ${pd.max} token${pd.max > 1 ? 's' : ''}${pd.rule === 'same' ? ' of one type' : ''}, then confirm.`;
       case 'steal': return `${p.name}: click one of ${opp(S).name}'s tokens to steal it.`;
-      case 'royal': return `${p.name}: choose a royal card.`;
+      case 'royal': return `${p.name}: click a royal card to see what it does, then press Claim royal.`;
       case 'discard': return `${p.name}: more than 10 tokens. Click your tokens to discard down to 10.`;
       case 'wild': return `${p.name}: choose the colour for your wild bonus.`;
       case 'freeReserve': return `${p.name}: click a card or deck to reserve it, or skip.`;
@@ -269,6 +308,8 @@ function Board({ session, onExit, onRestart, init, onReplaced }) {
   const [ask, setAsk] = useState(null);
   const [lastAsk, setLastAsk] = useState(null);
   const [picked, setPicked] = useState(null);
+  const [royalPick, setRoyalPick] = useState(null);
+  useEffect(() => { setRoyalPick(null); }, [S.pending?.type, S.royals.length]);
   // Clicking a card also shows what its perk does in the hint; clicking anywhere else, or moving on, clears it.
   const [inspect, setInspect] = useState(null);
   useEffect(() => { setInspect(null); }, [S.log.length]);
@@ -308,8 +349,8 @@ function Board({ session, onExit, onRestart, init, onReplaced }) {
   const steals = inspect && (inspect.ability === 'steal' || inspect.ab === 'steal' || inspect.ab === 'xsteal');
   const stealNote = !steals ? '' : roomLeft(me) < 1 ? ' Your hand is full (10/10), so you would not get to steal unless paying frees room.' : !kinds(S).some((k) => them.tok[k] > 0) ? ' Your opponent has nothing to steal right now.' : ' Your opponent has tokens, so you would get to steal.';
   const perk = perkText(inspect) && perkText(inspect) + stealNote;
-  // Either tokens are highlighted as chosen or a card is shown enlarged, never both.
-  const previewCard = S.sel.length || S.goldSel != null || S.mode ? null : inspect;
+  // Tokens being taken and a card shown enlarged never appear together; a gold token chosen to reserve with is fine.
+  const previewCard = S.sel.length || S.mode ? null : inspect;
   const [sbW, setSbW] = useState(0); // width of the page scrollbar, which takes room from the stacked layout
   const { mode, players, stripH, padX, k, w, h, sideW, cardsW, cardZoom, boardColW, cell } = computeLayout({ ...vp, vw: vp.vw - sbW, exp: S.exp });
   const strip = players === 'bottom';
@@ -343,6 +384,18 @@ function Board({ session, onExit, onRestart, init, onReplaced }) {
   const card = selectedCard(S);
   const act = (a) => () => dispatch(a);
 
+  const idle = !S.main && !pd && myTurn;
+  const canBuy = idle && card && !!plan(S, p, card);
+  const reservableSel = !!S.selCard && (S.selCard.src === 'pyr' || S.selCard.src === 'deck') && p.res.length < resCap(p);
+  const goldChosen = S.goldSel != null;
+  const canRes = idle && goldChosen && reservableSel;
+  const takeable = idle && validLine(S, S.sel);
+  // The action in progress comes from what the player has chosen, or from the button they pressed.
+  const action = S.sel.length ? 'take' : S.goldSel != null ? 'reserve' : S.mode ? 'priv' : picked || (card ? 'buy' : null);
+  // Cards that can be bought glow, except while the player is taking tokens or reserving.
+  const buying = idle && (action == null || action === 'buy');
+  const plans = (c) => buying && !!plan(S, p, c);
+
   // Both players sit in one column left of the board, equal in height. Hovering one lets it take over the whole column.
   const [hovered, setHovered] = useState(null);
   // While you must steal a token, the opponent's hand stays open so you can pick from it.
@@ -351,7 +404,7 @@ function Board({ session, onExit, onRestart, init, onReplaced }) {
     <div className={cn('relative min-h-0', tall ? (stacked ? 'order-2 flex flex-col gap-3' : 'order-2 grid grid-cols-2 gap-3') : strip ? 'grid grid-cols-2 gap-3' : 'flex flex-col gap-3')} style={strip ? { gridColumn: '1 / -1', gridRow: 2, height: stripH } : undefined} onMouseLeave={() => setHovered(null)}>
       {[0, 1].map((i) => (
         <div key={i} className="flex min-h-0 flex-1 flex-col" style={stacked ? { height: 150, flex: 'none' } : undefined} onMouseOver={(e) => setHovered(e.target.closest('[data-zone="res"]') ? null : i)}>
-          <Player S={S} idx={i} dispatch={pdispatch} onInspect={setInspect} colW={colW} viewer={seat} summary horizontal={strip || stacked} compact={stacked} />
+          <Player S={S} idx={i} dispatch={pdispatch} onInspect={setInspect} colW={colW} viewer={seat} buying={buying} summary horizontal={strip || stacked} compact={stacked} />
         </div>
       ))}
       {shownHand != null && (
@@ -364,9 +417,9 @@ function Board({ session, onExit, onRestart, init, onReplaced }) {
               : { left: -10, top: -10, height: 'calc(100% + 20px)', width: sideW + 12 + boardColW + 20, backgroundColor: '#17403a' }}
         >
           <div className="flex h-full flex-col" style={{ width: tall ? '100%' : strip ? padX + boardColW : sideW + 12 + boardColW - 12 }}>
-            <Player S={S} idx={shownHand} dispatch={pdispatch} onInspect={setInspect} colW={Math.floor(((tall ? w - 20 : strip ? padX + boardColW + 12 : sideW + 12 + boardColW) - 12 - (kinds(S).length) * 12) / (kinds(S).length + 1))} viewer={seat} zoomed wide />
+            <Player S={S} idx={shownHand} dispatch={pdispatch} onInspect={setInspect} colW={Math.floor(((tall ? w - 20 : strip ? padX + boardColW + 12 : sideW + 12 + boardColW) - 36 - (kinds(S).length) * 12) / (kinds(S).length + 1))} viewer={seat} buying={buying} zoomed wide />
             {pd?.type === 'steal' && prompt && (
-              <div className="hintbox mt-3 flex min-h-[90px] shrink-0 items-center px-8 py-5 font-bold leading-snug text-white" style={{ fontSize: cell * 0.125 }}>{prompt}</div>
+              <div className="hintbox mt-3 flex min-h-[90px] shrink-0 items-center px-8 py-5 font-bold leading-snug text-white" style={{ fontSize: cell * 0.155 }}>{prompt}</div>
             )}
           </div>
         </div>
@@ -388,15 +441,6 @@ function Board({ session, onExit, onRestart, init, onReplaced }) {
     setTimeout(() => setCopied(false), 1500);
   };
 
-  const idle = !S.main && !pd && myTurn;
-  const plans = (c) => idle && !locked && !!plan(S, p, c);
-  const canBuy = idle && card && !!plan(S, p, card);
-  const reservableSel = !!S.selCard && (S.selCard.src === 'pyr' || S.selCard.src === 'deck') && p.res.length < resCap(p);
-  const goldChosen = S.goldSel != null;
-  const canRes = idle && goldChosen && reservableSel;
-  const takeable = idle && validLine(S, S.sel);
-  // The action in progress comes from what the player has chosen, or from the button they pressed.
-  const action = S.sel.length ? 'take' : S.goldSel != null ? 'reserve' : S.mode ? 'priv' : picked || (card ? 'buy' : null);
   const canComplete = { take: takeable, buy: canBuy, reserve: canRes, refill: idle && canReplenish(S), priv: false }[action];
   const complete = () => {
     const type = { take: 'take', buy: 'buy', reserve: 'reserve', refill: 'repl' }[action];
@@ -418,6 +462,7 @@ function Board({ session, onExit, onRestart, init, onReplaced }) {
   const extras = [
     pd?.type === 'multi' && { label: `Confirm ${pd.sel.length} token${pd.sel.length === 1 ? '' : 's'}`, onClick: act({ type: 'confirmMulti' }), go: true },
     (['freeReserve', 'freeCf'].includes(pd?.type) || (pd?.type === 'pick' && pd.plus)) && { label: 'Skip', onClick: act({ type: 'skip' }) },
+    pd?.type === 'royal' && myTurn && { label: 'Claim royal', disabled: royalPick == null, onClick: act({ type: 'royal', i: royalPick }), go: true },
   ].filter(Boolean);
   const buttons = extras.length ? extras : action ? [
     ...(action !== 'priv' ? [{ label: { take: 'Take tokens', buy: 'Buy card', reserve: 'Reserve card', refill: 'Replenish' }[action], disabled: !canComplete, onClick: complete, go: true }] : []),
@@ -460,7 +505,7 @@ function Board({ session, onExit, onRestart, init, onReplaced }) {
                       );
                     })}
                   </div>
-                  <div className={cn('boardbtns', slots)} style={{ fontSize: cell * 0.125 }}>
+                  <div className={cn('boardbtns', slots)} style={{ fontSize: cell * 0.155 }}>
                     {buttons.map((b) => (
                       <button key={b.label} type="button" disabled={b.disabled} onClick={b.onClick} className={cn('woodbtn', b.go && 'go')} style={b.col ? { gridColumn: b.col } : undefined}>
                         {b.go && !b.disabled && <CompleteIcon size={cell * 0.18} />}{b.label}
@@ -473,7 +518,7 @@ function Board({ session, onExit, onRestart, init, onReplaced }) {
                 </div>
 
                 {(perk || prompt) && (
-                  <div className={cn('hintbox flex min-h-[76px] shrink-0 items-center px-8 py-4 font-bold leading-snug', S.toast && !perk ? 'text-amber-300' : 'text-white')} style={{ width: cell * 5.9615, fontSize: cell * 0.125 }}>
+                  <div className={cn('hintbox flex min-h-[76px] shrink-0 items-center px-8 py-4 font-bold leading-snug', S.toast && !perk ? 'text-amber-300' : 'text-white')} style={{ width: cell * 5.9615, fontSize: cell * 0.155 }}>
                     {perk ?? prompt}
                   </div>
                 )}
@@ -483,7 +528,7 @@ function Board({ session, onExit, onRestart, init, onReplaced }) {
               <div data-zone="pyr" className={cn('compact-cards flex min-h-0 flex-col gap-3 overflow-hidden', tall ? 'order-3' : '-mt-0.5')} ref={cardsRef} style={{ '--z': cardZoom * zs, ...place(3) }}>
                 <div className="rowline">
                   {S.royals.map((r, i) => (
-                    <RoyalCard key={r.id} card={r} glow={pd?.type === 'royal'} onClick={look(r, () => dispatch({ type: 'royal', i }))} />
+                    <RoyalCard key={r.id} card={r} glow={pd?.type === 'royal' && myTurn} selected={royalPick === i} onClick={look(r, () => pd?.type === 'royal' && myTurn && setRoyalPick(i))} />
                   ))}
                   {!S.royals.length && <span className="text-xs text-muted-foreground">All claimed</span>}
                 </div>
@@ -532,6 +577,7 @@ function Board({ session, onExit, onRestart, init, onReplaced }) {
       {createPortal(<Flights flights={flights} onLanded={landed} />, document.body)}
       {previewCard && createPortal(
         <div className="pointer-events-none fixed right-3 z-[70]" style={{ top: 64 }}>
+          <Magnified key={previewCard.id} id={previewCard.id}>
           {(() => {
             const printed = lookMode === 'classic' ? classicCardFile(previewCard) : null;
             if (previewCard.kind === 'cf' && printed) {
@@ -551,6 +597,7 @@ function Board({ session, onExit, onRestart, init, onReplaced }) {
               </div>
             );
           })()}
+          </Magnified>
         </div>,
         document.body,
       )}
