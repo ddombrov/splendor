@@ -527,7 +527,7 @@ function Board({ session, onExit, onRestart, init, onReplaced }) {
                 </div>
                 {S.exp && (
                   <div className="rowline">
-                    <CardBack level="cf" label="CF" count={S.cdeck.length} onClick={guard(() => dispatch({ type: 'card', src: 'cdeck' }))} />
+                    {S.cdeck.length > 0 && <CardBack level="cf" label="CF" count={S.cdeck.length} onClick={guard(() => dispatch({ type: 'card', src: 'cdeck' }))} />}
                     {S.crow.map((c, i) => (
                       <CfCard key={c.id} card={c} selected={S.selCard?.src === 'cf' && S.selCard.i === i}
                         afford={plans(c) || pd?.type === 'freeCf'} onClick={look(c, guard(() => dispatch({ type: 'card', src: 'cf', i })))} />
@@ -536,7 +536,7 @@ function Board({ session, onExit, onRestart, init, onReplaced }) {
                 )}
                 {[2, 1, 0].map((l) => (
                   <div className="rowline" key={l}>
-                    <CardBack level={l + 1} label={`L${l + 1}`} count={S.decks[l].length} onClick={guard(() => dispatch({ type: 'card', src: 'deck', l }))} />
+                    {S.decks[l].length > 0 && <CardBack level={l + 1} label={`L${l + 1}`} count={S.decks[l].length} onClick={guard(() => dispatch({ type: 'card', src: 'deck', l }))} />}
                     {S.pyr[l].map((c, i) => (
                       <Dealt key={c.id} fresh={dealt.includes(c.id)} level={l + 1}>
                         <JewelCard card={c} selected={S.selCard?.src === 'pyr' && S.selCard.l === l && S.selCard.i === i}

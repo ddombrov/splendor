@@ -83,7 +83,7 @@ export function JewelCard({ card, onClick, selected, afford, look: forced }) {
       {(abil || wild) && (
         <div className="abil flex gap-1">
           {wild && <AbilityIcon ab="wild" size={28} />}
-          {abil && <AbilityIcon ab={abil} size={28} light />}
+          {abil && <AbilityIcon ab={abil} size={28} />}
         </div>
       )}
       <Costs cost={card.cost} />

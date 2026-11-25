@@ -258,5 +258,14 @@ html[data-look=classic] .stage .board-wrap.one { background-image: url(/classic/
 .woodbtn:hover:not(:disabled), .woodbtn:active:not(:disabled) { transform: none; }
 
 /* the colours a wild card may copy glow in the open hand, and clicking one chooses it */
-.wildpick { cursor: pointer; border-radius: 10px; outline: 3px solid #facc15; outline-offset: 4px; box-shadow: 0 0 16px 6px rgba(250, 204, 21, 0.55); }
-.wildpick:hover { background: rgba(250, 204, 21, 0.18); }
+.wildpick { cursor: pointer; border-radius: 10px; outline: 3px solid rgb(var(--pick)); outline-offset: 4px; box-shadow: 0 0 16px 6px rgba(var(--pick), 0.6); }
+.wildpick:hover { background: rgba(var(--pick), 0.2); }
+
+/* the top row of cards leaves room for a card to lift when hovered or chosen */
+[data-zone=pyr] > .rowline:first-child { padding-top: 8px; }
+
+/* the small stat boxes stretch across their panel, and their writing grows or shrinks with its width */
+.stats { container-type: inline-size; width: 100%; }
+.stats .stat { flex: 1 1 0; justify-content: center; height: 2em; padding: 0 0.3em; font-size: clamp(11px, 6.2cqw, 24px); }
+.stats .stat img, .stats .stat svg { width: 1.05em !important; height: 1.05em !important; }
+.stats .stat .unit { font-size: 0.55em; }

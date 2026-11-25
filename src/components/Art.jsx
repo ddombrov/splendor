@@ -57,15 +57,14 @@ export function Mini({ kind, size = 16 }) {
   return <Gem kind={kind} size={size} />;
 }
 
-const ABILITY_ICON = { extra: 'go-again', privilege: 'scroll', match: 'take-from-board', steal: 'steal', wild: 'any-color-gem', bag: 'bag', takecard: 'take-card', xmark: 'x-mark', eye: 'eyeball' };
+const ABILITY_ICON = { extra: 'go-again-white', privilege: 'scroll', match: 'take-from-board', steal: 'steal', wild: 'any-color-gem', bag: 'bag', takecard: 'take-card', xmark: 'x-mark', eye: 'eyeball' };
 
 /** The picture for a card ability: go again, privilege scroll, take from the board, steal, any colour. */
-export function AbilityIcon({ ab, size = 24, light = false }) {
+export function AbilityIcon({ ab, size = 24 }) {
   if (ab === 'crown') return <Crown size={size} />;
   if (ab === 'gold') return <Gem kind="gold" size={size} />;
   if (ab.startsWith('gem:')) return <Gem kind={ab.slice(4)} size={size} />;
-  // The black go-again arrow is drawn white where it sits on a card.
-  const name = ab === 'extra' && light ? 'go-again-white' : ABILITY_ICON[ab];
+  const name = ABILITY_ICON[ab];
   if (!name) return null;
   return <img src={`/modern/icons/${name}.png`} alt="" draggable={false} className="shrink-0 object-contain" style={{ width: size, height: size, filter: name === 'go-again-white' ? 'drop-shadow(0 0 2px rgba(0, 0, 0, 0.85))' : undefined }} />;
 }

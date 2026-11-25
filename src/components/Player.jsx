@@ -5,32 +5,34 @@ import { BorderBeam } from '@/components/ui/border-beam';
 import { cn } from '@/lib/utils';
 import { COLORS, CF_TEXT } from '../engine/data.js';
 import { JewelCard, RoyalCard, CardBack } from './Cards.jsx';
-import { TokenArt, Gem, Scroll, Crown } from './Art.jsx';
+import { TokenArt, Gem, Scroll, Crown, PAL } from './Art.jsx';
 import { bonuses, colorPts, crowns, kinds, limitCount, plan, pts, resCap, roomLeft } from '../engine/engine.js';
 
 const Label = ({ children }) => (
   <div className="mt-2 mb-1 text-[10px] font-semibold uppercase tracking-widest text-muted-foreground">{children}</div>
 );
-// `tight` is for the narrow strip a hand gets along the bottom of the screen.
-const Stat = ({ title, big, tight, children }) => (
-  <div title={title} className={cn('flex shrink-0 items-center gap-1 font-extrabold leading-none', big ? 'h-14 gap-2 px-4 text-5xl' : tight ? 'h-6 gap-0.5 px-1 text-sm' : 'h-7 px-1.5 text-base')}>{children}</div>
+// The opened hand shows the stats large; everywhere else they stretch across the panel (see .stats in styles.css).
+const Stat = ({ title, big, children }) => (
+  <div title={title} className={cn('stat flex shrink-0 items-center gap-1 font-extrabold leading-none', big && 'h-14 gap-2 px-4 text-5xl')}>{children}</div>
 );
-const Stats = ({ p, big, tight }) => (
-  <div className="flex w-fit items-stretch divide-x divide-white/30 rounded-lg border border-white/30 bg-black/25">
-    <Stat big={big} tight={tight} title="Prestige points"><span>{pts(p)}</span><span className={cn('font-bold text-muted-foreground', big ? 'text-2xl' : 'text-[10px]')}>pts</span></Stat>
-    <Stat big={big} tight={tight} title="Crowns"><span>{crowns(p)}</span><Crown size={big ? 46 : tight ? 13 : 16} /></Stat>
-    <Stat big={big} tight={tight} title="Scrolls"><span>{p.priv}</span><Scroll size={big ? 50 : tight ? 15 : 18} /></Stat>
-    <TokenStat p={p} big={big} tight={tight} />
+const Stats = ({ p, big }) => (
+  <div className={big ? undefined : 'stats'}>
+    <div className={cn('flex items-stretch divide-x divide-white/30 rounded-lg border border-white/30 bg-black/25', big ? 'w-fit' : 'w-full')}>
+      <Stat big={big} title="Prestige points"><span>{pts(p)}</span><span className={cn('unit font-bold text-muted-foreground', big && 'text-2xl')}>pts</span></Stat>
+      <Stat big={big} title="Crowns"><span>{crowns(p)}</span><Crown size={big ? 46 : 16} /></Stat>
+      <Stat big={big} title="Scrolls"><span>{p.priv}</span><Scroll size={big ? 50 : 18} /></Stat>
+      <TokenStat p={p} big={big} />
+    </div>
   </div>
 );
 
 // Past this many cards of one colour, the small views show the latest few and an ellipsis; the opened view shows them all.
 const MAX_STACK = 5;
 
-const TokenStat = ({ p, big, tight }) => {
+const TokenStat = ({ p, big }) => {
   const n = limitCount(p);
   return (
-    <Stat big={big} tight={tight} title="Tokens held, out of the limit of 10">
+    <Stat big={big} title="Tokens held, out of the limit of 10">
       <span className={n >= 10 ? 'text-amber-300' : undefined}>{n}/10</span>
     </Stat>
   );
@@ -100,9 +102,9 @@ export default function Player({ S, idx, dispatch, onInspect, colW = 52, viewer 
     );
     return (
       <Card data-dest-tokens={idx} data-dest-cards={idx} data-dest-res={idx} className={cn('handboard min-h-0 flex-1 flex-row items-stretch gap-2.5 overflow-hidden px-3 py-2', active && 'outline outline-[3px] -outline-offset-3 outline-[#ffd25e]')}>
-        <div className="flex shrink-0 flex-col justify-center gap-1">
+        <div className="flex shrink-0 flex-col justify-center gap-1" style={{ width: 'clamp(160px, 30%, 300px)' }}>
           <h3 className="text-base font-bold">{p.name}</h3>
-          <Stats p={p} tight />
+          <Stats p={p} />
           {compact && <div className="mt-1">{slots}</div>}
         </div>
         <div className="flex min-w-0 flex-1 items-start gap-1 pt-1" style={{ justifyContent: 'safe center' }}>
@@ -175,7 +177,7 @@ export default function Player({ S, idx, dispatch, onInspect, colW = 52, viewer 
             if (!c) return <div key={`slot${i}`} className="slot" />;
             return reserved(c, i);
           })}
-          {p.royals.length > 0 && <div className="ml-1.5 border-l border-white/25 pl-1.5">{royals(0.24)}</div>}
+          {p.royals.length > 0 && <div className="ml-auto">{royals(0.24)}</div>}
         </div>
       </Card>
     );
@@ -207,7 +209,7 @@ export default function Player({ S, idx, dispatch, onInspect, colW = 52, viewer 
           tallest.current = Math.max(tallest.current, strip * (owned.length - 1));
           const tok = zoomed ? Math.min(colW - 6, 80) : 32;
           return (
-            <div key={k} className={cn('flex shrink-0 flex-col items-center gap-2', wildPick && 'wildpick')} style={{ width: colW }} onClick={wildPick ?? undefined} title={wildPick ? `Copy ${k}` : undefined}>
+            <div key={k} className={cn('flex shrink-0 flex-col items-center gap-2', wildPick && 'wildpick')} style={{ width: colW, '--pick': PAL[k].glow }} onClick={wildPick ?? undefined} title={wildPick ? `Copy ${k}` : undefined}>
               {zoomed && (
                 <div className="flex items-center gap-2" title={`${k}: ${p.tok[k]} tokens`}>
                   <TokenArt kind={k} size={Math.max(30, Math.round(colW * 0.36))} />
@@ -261,7 +263,7 @@ export default function Player({ S, idx, dispatch, onInspect, colW = 52, viewer 
             if (!c) return <div key={`slot${i}`} className="slot" />;
             return reserved(c, i);
           })}
-          {p.royals.length > 0 && <div className="ml-2 border-l border-white/25 pl-3">{royals(zoomed ? 0.9 : wide ? 0.68 : 0.52)}</div>}
+          {p.royals.length > 0 && <div className="ml-auto">{royals(zoomed ? 0.9 : wide ? 0.68 : 0.52)}</div>}
         </div>
       </div>
     </Card>

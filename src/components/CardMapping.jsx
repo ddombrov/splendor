@@ -44,6 +44,7 @@ const Back = ({ src }) => (src
   ? <div style={{ width: 124 * 0.62, height: 189 * 0.62, borderRadius: 6, background: `url(${src}) center / 100% 100% no-repeat` }} />
   : <div style={{ width: 124 * 0.62, height: 189 * 0.62, borderRadius: 6, border: '1px dashed rgba(255,255,255,0.3)' }} className="grid place-items-center text-[10px] text-white/50">none</div>);
 
+const LEVEL_COLOUR = { 1: 'green', 2: 'yellow', 3: 'blue' };
 const costText = (c) => Object.entries(c.cost).map(([k, n]) => `${n} ${k}`).join(', ');
 
 export default function CardMapping({ right: RIGHT = 'modern', onClose }) {
@@ -65,12 +66,27 @@ export default function CardMapping({ right: RIGHT = 'modern', onClose }) {
       <Section title={`Counterfeiter cards (${CFS.length})`}>
         {CFS.map((c) => <Pair key={c.id} label={`${c.ab}${c.rc ? ` ${c.rc}` : ''} \u00b7 ${costText(c)}`}><Sideways card={c} /><Small><CfCard card={c} look={RIGHT} /></Small></Pair>)}
       </Section>
-      <Section title={`Development cards (${JEWELS.length})`}>
-        {JEWELS.map((c) => {
-          const t = cardType(c);
-          return <Pair key={c.id} label={`${t.name} \u2192 ${t.piece === 'neutral' ? t.neutral : t.piece} \u00b7 L${c.level} \u00b7 ${c.pts} pt${c.crowns ? ` \u00b7 ${c.crowns} crown` : ''} \u00b7 ${costText(c)}`}><Small><JewelCard card={c} look="classic" /></Small><Small><JewelCard card={c} look={RIGHT} /></Small></Pair>;
-        })}
-      </Section>
+      {[1, 2, 3].map((level) => {
+        const cards = JEWELS.filter((c) => c.level === level);
+        const types = [...new Set(cards.map((c) => cardType(c).name))];
+        return (
+          <section key={level} className="space-y-3">
+            <h2 className="text-sm font-bold uppercase tracking-widest text-white">{`Level ${level} cards, ${LEVEL_COLOUR[level]} back (${cards.length})`}</h2>
+            {types.map((name) => {
+              const group = cards.filter((c) => cardType(c).name === name);
+              const t = cardType(group[0]);
+              return (
+                <div key={name} className="space-y-1">
+                  <h3 className="text-xs font-semibold text-white/80">{`${name} → ${t.piece === 'neutral' ? t.neutral : t.piece} (${group.length})`}</h3>
+                  <div className="flex flex-wrap gap-2">
+                    {group.map((c) => <Pair key={c.id} label={`${c.bonus} · ${c.pts} pt${c.crowns ? ` · ${c.crowns} crown` : ''} · ${costText(c)}`}><Small><JewelCard card={c} look="classic" /></Small><Small><JewelCard card={c} look={RIGHT} /></Small></Pair>)}
+                  </div>
+                </div>
+              );
+            })}
+          </section>
+        );
+      })}
     </div>
   );
 }

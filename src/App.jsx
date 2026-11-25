@@ -9,7 +9,11 @@ const SAVED = 'sd:view';
 const loadView = () => {
   try {
     const v = JSON.parse(sessionStorage.getItem(SAVED));
-    return v && ['lobby', 'game'].includes(v.name) && v.session?.mode !== 'device' && v.session?.mode !== 'ai' ? v : { name: 'home' };
+    if (v?.name === 'game' && (v.session?.mode === 'device' || v.session?.mode === 'ai')) {
+      // A reload in the middle of a game here picks up the saved game rather than starting the one it began as.
+      return loadSave(v.session.mode) ? { name: 'game', session: { ...v.session, resume: true } } : { name: 'home' };
+    }
+    return v && ['lobby', 'game'].includes(v.name) ? v : { name: 'home' };
   } catch { return { name: 'home' }; }
 };
 
