@@ -469,8 +469,14 @@ function Board({ session, onExit, onRestart, init, onReplaced }) {
     pd?.type === 'royal' && myTurn && { label: 'Claim royal', disabled: royalPick == null, onClick: act({ type: 'royal', i: royalPick }), go: true },
     pd?.type === 'discard' && S.undo && myTurn && { label: 'Undo move', onClick: act({ type: 'undo' }) },
   ].filter(Boolean);
+  // A take or a reservation that would leave the player over ten says on its button how many tokens must go back.
+  const over = (action === 'take' || action === 'reserve') && canComplete ? (() => {
+    const next = reduce(S, { type: action });
+    return next.pending?.type === 'discard' ? limitCount(cur(next)) - 10 : 0;
+  })() : 0;
+  const completeLabel = over ? `${action === 'take' ? 'Take' : 'Reserve'} and discard ${over}` : { take: 'Take tokens', buy: 'Buy card', reserve: 'Reserve card', refill: 'Replenish' }[action];
   const buttons = extras.length ? extras : action ? [
-    ...(action !== 'priv' ? [{ label: { take: 'Take tokens', buy: 'Buy card', reserve: 'Reserve card', refill: 'Replenish' }[action], disabled: !canComplete, onClick: complete, go: true }] : []),
+    ...(action !== 'priv' ? [{ label: completeLabel, disabled: !canComplete, onClick: complete, go: true }] : []),
     { label: 'Cancel', disabled: !idle, onClick: cancel },
   ] : canPass(S) ? [
     { label: 'Pass', disabled: !idle, onClick: act({ type: 'pass' }), go: true },
