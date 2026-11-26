@@ -140,6 +140,16 @@ export function endOptions(S) {
 /* ---------- state setup ---------- */
 /** Replenishing needs tokens in the bag and an empty square to put them on. */
 export const canReplenish = (S) => S.bag.length > 0 && S.board.some((c) => c == null);
+
+/** Whether the player has any main action: tokens to take, a gold token to reserve with, or a card they can pay for. */
+export function hasMainAction(S) {
+  const p = cur(S);
+  if (S.board.some((c) => c && c !== 'gold')) return true;
+  if (S.board.includes('gold') && p.res.length < resCap(p)) return true;
+  return [...S.pyr.flat(), ...p.res, ...S.crow].some((c) => c && plan(S, p, c));
+}
+/** A player may pass only when no main action is possible and replenishing cannot make one possible. */
+export const canPass = (S) => !S.over && !S.awaitingFirst && !S.main && !S.pending && !hasMainAction(S) && !canReplenish(S);
 function fillBoard(S) {
   for (const i of SPIRAL) if (S.board[i] == null && S.bag.length) S.board[i] = S.bag.pop();
 }
@@ -172,7 +182,7 @@ export function createGame(exp = false, seed, first = 0, opts = {}) {
     cdeck: exp ? (opts.randomCards ? genRandomCounterfeiters : genCounterfeiters)(rand) : [], crow: [],
     royals: royalPool.splice(0, 4), rdeck: royalPool,
     privBoard: 3, awaitingFirst: false, sel: [], goldSel: null, selCard: null, mode: null, main: false, pending: null,
-    queue: [], extra: false, over: null, log: [], used: {}, toast: null,
+    queue: [], extra: false, over: null, log: [], used: {}, toast: null, undo: null,
   };
   fillBoard(S);
   // Level 1 shows 5 cards, level 2 shows 4, level 3 shows 3.
@@ -205,7 +215,7 @@ function refillPyr(S, l, i) {
 function toBag(S, k, n) { for (let i = 0; i < n; i++) S.bag.push(k); }
 
 function finishMain(S, steps = []) {
-  S.main = true; S.mode = null; S.sel = []; S.goldSel = null; S.selCard = null;
+  S.main = true; S.mode = null; S.sel = []; S.goldSel = null; S.selCard = null; S.undo = null;
   // A player who has already won does not get to use card abilities or claim royals: the game ends at once.
   S.queue = ['win', ...steps, 'royal', 'endabil', 'discard', 'win', 'switch'];
   runQueue(S);
@@ -283,6 +293,15 @@ function doStep(S, step) {
       return true;
     default: return true;
   }
+}
+
+/**
+ * A privilege token that takes the player over ten is kept only if the turn's main action follows: until then
+ * the position from before it is kept, so the player can undo instead of returning tokens at the end of the turn.
+ */
+function keepUndo(S, mode) {
+  if (S.undo || limitCount(cur(S)) < 10) return;
+  S.undo = structuredClone({ ...S, undo: null, toast: null, mode });
 }
 
 function takeFromBoard(S, i) {
@@ -378,14 +397,14 @@ const handlers = {
     if (S.main) return;
     if (S.mode === 'priv2') {
       if (c === 'gold') return;
-      if (roomLeft(p) < 1) { S.toast = 'You already hold 10 tokens.'; return; }
+      keepUndo(S, 'priv2');
       takeFromBoard(S, i); S.mode = null;
       log(S, `${p.name} takes a second token with the privilege bonus.`);
       return;
     }
     if (S.mode === 'priv') {
       if (c === 'gold' || p.priv < 1) return;
-      if (roomLeft(p) < 1) { S.toast = 'You already hold 10 tokens.'; return; }
+      keepUndo(S, null);
       p.priv--; S.privBoard++;
       takeFromBoard(S, i);
       log(S, `${p.name} spends a privilege to take a ${c} token.`);
@@ -393,9 +412,9 @@ const handlers = {
       if (bonus) { S.used[bonus.id] = true; S.mode = 'priv2'; } else S.mode = null;
       return;
     }
+    // Going over ten tokens is allowed: tokens over the limit are returned at the end of the turn.
     if (c === 'gold') {
       if (p.res.length >= resCap(p)) { S.toast = `You already hold ${resCap(p)} reserved cards.`; return; }
-      if (S.goldSel !== i && roomLeft(p) < 1) { S.toast = 'You already hold 10 tokens.'; return; }
       S.goldSel = S.goldSel === i ? null : i;
       S.sel = [];
       return;
@@ -404,17 +423,15 @@ const handlers = {
     const k = S.sel.indexOf(i);
     if (k >= 0) S.sel.splice(k, 1);
     else {
-      if (roomLeft(p) < 1) { S.toast = 'You already hold 10 tokens.'; return; }
       const next = [...S.sel, i];
-      if (next.length > roomLeft(p) && validLine(S, next)) { S.toast = `You can only take ${roomLeft(p)} more token${roomLeft(p) === 1 ? '' : 's'} (10 token limit).`; return; }
       // If the new pick does not fit, let go of the oldest picks until what is left still can: an L shape keeps its last two.
-      const fits = (c) => validLine(S, c) || (roomLeft(p) >= 3 && gapPair(S, c));
+      const fits = (c) => validLine(S, c) || gapPair(S, c);
       while (next.length > 1 && !fits(next)) next.shift();
       S.sel = next;
     }
   },
   take(S) {
-    if (S.main || S.pending || !validLine(S, S.sel) || S.sel.length > roomLeft(cur(S))) return;
+    if (S.main || S.pending || !validLine(S, S.sel)) return;
     const p = cur(S), cols = S.sel.map((i) => S.board[i]);
     S.sel.forEach((i) => (S.board[i] = null));
     cols.forEach((c) => p.tok[c]++);
@@ -443,6 +460,7 @@ const handlers = {
   },
   repl(S) {
     if (S.main || S.pending || !canReplenish(S)) return;
+    S.undo = null;
     shuffle(S.bag, () => nextRandom(S)); fillBoard(S);
     givePriv(S, 1 - S.cur);
     log(S, `${cur(S).name} replenishes the board; ${opp(S).name} gains a privilege.`);
@@ -474,6 +492,11 @@ const handlers = {
     S.selCard = { src, l, i };
   },
   buy(S) { doBuy(S); },
+  pass(S) {
+    if (!canPass(S)) return;
+    log(S, `${cur(S).name} has no possible move and passes.`);
+    finishMain(S);
+  },
   wild(S, { c }) {
     if (S.pending?.type !== 'wild') return;
     S.pending = null;
@@ -523,7 +546,8 @@ const handlers = {
     if (S.pending?.type !== 'discard' || cur(S).tok[c] < 1) return;
     cur(S).tok[c]--; S.bag.push(c);
     log(S, `${cur(S).name} discards a ${c} token.`);
-    if (limitCount(cur(S)) <= 10) S.pending = null;
+    if (limitCount(cur(S)) > 10) return; // still over the limit: keep discarding before the turn ends
+    S.pending = null;
     runQueue(S);
   },
   endabil(S, { k }) {
@@ -577,6 +601,7 @@ export function reduce(state, a) {
   S.toast = null;
   if (S.over) return state;
   if (S.awaitingFirst && a.type !== 'chooseFirst' && a.type !== 'resign') return state;
+  if (a.type === 'undo') return S.undo && !S.main && !S.pending ? S.undo : state;
   handlers[a.type]?.(S, a);
   return S;
 }

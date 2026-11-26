@@ -1,5 +1,5 @@
 import { describe, expect, it, vi } from 'vitest';
-import { createGame, cur, opp, plan, reduce, limitCount as limit, SPIRAL } from './engine.js';
+import { canPass, createGame, cur, opp, plan, reduce, limitCount as limit, SPIRAL } from './engine.js';
 
 const play = (state, ...actions) => actions.reduce((s, a) => reduce(s, a), state);
 const click = (...cells) => cells.map((i) => ({ type: 'tok', i }));
@@ -269,17 +269,6 @@ describe('the ten token limit when taking', () => {
     return state;
   };
 
-  it('does not let a take push the player over ten', () => {
-    const state = withTokens(gameWithBoard({ 0: 'red', 1: 'green' }), 9);
-    const picked = play(state, ...click(0, 1));
-    expect(picked.sel).toEqual([0]);
-    expect(picked.toast).toBeTruthy();
-    const after = play(picked, { type: 'take' });
-    expect(after.players[0].tok.red).toBe(1);
-    expect(limit(after.players[0])).toBe(10);
-    expect(after.pending).toBeNull();
-  });
-
   it('lets a take reach exactly ten', () => {
     const state = withTokens(gameWithBoard({ 0: 'red', 1: 'green' }), 8);
     const after = play(state, ...click(0, 1), { type: 'take' });
@@ -287,26 +276,87 @@ describe('the ten token limit when taking', () => {
     expect(after.cur).toBe(1);
   });
 
-  it('refuses any token when already at ten', () => {
-    const state = withTokens(gameWithBoard({ 0: 'red' }), 10);
-    const picked = play(state, ...click(0));
-    expect(picked.sel).toEqual([]);
-    expect(picked.toast).toBeTruthy();
+  it('lets a player at ten take three, then return three at the end of the turn', () => {
+    const state = withTokens(gameWithBoard({ 0: 'red', 1: 'green', 2: 'white' }), 10);
+    const taken = play(state, ...click(0, 1, 2), { type: 'take' });
+    expect(limit(taken.players[0])).toBe(13);
+    expect(taken.pending?.type).toBe('discard');
+    const after = play(taken, ...Array(3).fill({ type: 'disc', c: 'blue' }));
+    expect(limit(after.players[0])).toBe(10);
+    expect(after.players[0].tok).toMatchObject({ red: 1, green: 1, white: 1, blue: 7 });
+    expect(after.cur).toBe(1);
   });
 
-  it('refuses a privilege token when at ten, and keeps the privilege', () => {
-    const state = withTokens(gameWithBoard({ 0: 'red' }), 10);
-    state.players[0].priv = 1;
-    const after = play(state, { type: 'priv' }, ...click(0));
-    expect(after.players[0].priv).toBe(1);
-    expect(after.board[0]).toBe('red');
-  });
-
-  it('refuses choosing gold to reserve when at ten', () => {
+  it('lets a player at ten choose gold to reserve, then return one token', () => {
     const state = withTokens(gameWithBoard({ 3: 'gold' }), 10);
-    const after = play(state, ...click(3));
-    expect(after.goldSel).toBeNull();
-    expect(after.toast).toBeTruthy();
+    const after = play(state, ...click(3), { type: 'card', src: 'pyr', l: 0, i: 0 }, { type: 'reserve' });
+    expect(after.players[0].res).toHaveLength(1);
+    expect(after.pending?.type).toBe('discard');
+  });
+});
+
+describe('a privilege that takes the player over ten', () => {
+  const atTen = () => {
+    const state = gameWithBoard({ 0: 'red' });
+    state.players[0].tok.blue = 10;
+    state.players[0].priv = 1;
+    return state;
+  };
+
+  it('can be undone until the main action, giving back the privilege and the token', () => {
+    const state = atTen();
+    const over = play(state, { type: 'priv' }, ...click(0));
+    expect(limit(over.players[0])).toBe(11);
+    expect(over.undo).toBeTruthy();
+    const back = play(over, { type: 'undo' });
+    expect(back.players[0].priv).toBe(1);
+    expect(back.board[0]).toBe('red');
+    expect(back.players[0].tok.red).toBe(0);
+    expect(back.undo).toBeNull();
+  });
+
+  it('is kept once a buy brings the player back to ten', () => {
+    const state = atTen();
+    state.pyr[0][0] = { id: 'red-test', kind: 'jewel', level: 1, cost: { red: 1 }, pts: 0, crowns: 0, ability: null, n: 1, bonus: 'green', color: null };
+    const after = play(state, { type: 'priv' }, ...click(0), { type: 'card', src: 'pyr', l: 0, i: 0 }, { type: 'buy' });
+    expect(after.players[0].cards.map((c) => c.id)).toContain('red-test');
+    expect(limit(after.players[0])).toBe(10);
+    expect(after.undo).toBeNull();
+    expect(after.cur).toBe(1);
+  });
+
+  it('is not kept when the privilege leaves the player at ten or fewer', () => {
+    const state = atTen();
+    state.players[0].tok.blue = 5;
+    expect(play(state, { type: 'priv' }, ...click(0)).undo).toBeNull();
+  });
+});
+
+describe('passing', () => {
+  const stuck = () => {
+    const state = gameWithBoard({});
+    state.bag = [];
+    return state;
+  };
+
+  it('is allowed when nothing can be taken, reserved or bought and the board cannot be replenished', () => {
+    const state = stuck();
+    expect(canPass(state)).toBe(true);
+    const after = play(state, { type: 'pass' });
+    expect(after.cur).toBe(1);
+  });
+
+  it('is not allowed while replenishing would give the player a move', () => {
+    const state = gameWithBoard({});
+    expect(canPass(state)).toBe(false);
+    expect(play(state, { type: 'pass' }).cur).toBe(0);
+  });
+
+  it('is not allowed while a card can be bought', () => {
+    const state = stuck();
+    state.players[0].tok.gold = 3;
+    state.pyr[0][0] = { id: 'cheap', kind: 'jewel', level: 1, cost: { red: 1 }, pts: 0, crowns: 0, ability: null, n: 1, bonus: 'green', color: null };
+    expect(canPass(state)).toBe(false);
   });
 });
 

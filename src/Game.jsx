@@ -12,7 +12,7 @@ import { cn } from '@/lib/utils';
 import { api } from './net/api.js';
 import { botActions } from './engine/bot.js';
 import { perkText } from './engine/data.js';
-import { createGame, reduce, cur, opp, plan, canReplenish, endOptions, validLine, selectedCard, resCap, roomLeft, kinds, limitCount } from './engine/engine.js';
+import { createGame, reduce, cur, opp, plan, canPass, canReplenish, endOptions, validLine, selectedCard, resCap, roomLeft, kinds, limitCount } from './engine/engine.js';
 import { JewelCard, CfCard, RoyalCard, CardBack } from './components/Cards.jsx';
 import Player from './components/Player.jsx';
 import Rules from './components/Rules.jsx';
@@ -85,7 +85,7 @@ function statusText(S) {
     switch (pd.type) {
       case 'pick': return pd.plus ? `${p.name}: take up to 2 ${pd.color} tokens, or any 1 other non-gold token, from the board (highlighted), or press Skip.` : `${p.name}: take 1 ${pd.color} token from the board (highlighted).`;
       case 'multi': return `${p.name}: click up to ${pd.max} non-gold token${pd.max > 1 ? 's' : ''}${pd.rule === 'same' ? ' of one colour' : ''} on the board, then press Confirm.`;
-      case 'steal': return `${p.name}: click one of ${opp(S).name}'s tokens to steal it. Any token except gold can be stolen.`;
+      case 'steal': return `${p.name}: click one of ${opp(S).name}'s glowing tokens to steal it. Any token except gold can be stolen.`;
       case 'royal': return `${p.name}: click a royal card to see what it does, then press Claim royal.`;
       case 'discard': return `${p.name}: you hold ${limitCount(p)} tokens but may keep only 10. Click your tokens to return ${limitCount(p) - 10} to the bag.`;
       case 'wild': return `${p.name}: click one of your glowing colours for your wild card to copy.`;
@@ -100,6 +100,8 @@ function statusText(S) {
   if (S.mode === 'priv2') return `${p.name}: counterfeiter bonus, click one more non-gold token.`;
   if (S.sel.length === 2 && !validLine(S, S.sel)) return `${p.name}: pick the token between these two to take 3 in a line, or choose different tokens.`;
   if (S.goldSel != null) return `${p.name}: gold token chosen. Click a card or a deck to reserve, then press Reserve card.`;
+  if (canPass(S)) return `${p.name}: there is nothing to take, reserve or buy, and the board cannot be replenished, so press Pass.`;
+  if (S.undo && !S.main) return `${p.name}: you hold ${limitCount(p)} tokens. Tokens over 10 are returned at the end of your turn, so follow with a buy, or press Undo privilege to take the privilege back.`;
   return null;
 }
 
@@ -264,10 +266,11 @@ function Board({ session, onExit, onRestart, init, onReplaced }) {
   // Against the computer: it plays seat 1 after a short pause. It first shows what it has picked
   // (tokens or a card highlighted), then confirms the move a moment later.
   const botWaiting = useRef(false);
+  const botMemory = useRef({}); // what the computer decided for this game, such as the hard player's goal
   useEffect(() => {
     if (!vsAi || S.over || S.awaitingFirst || S.cur !== 1 || botWaiting.current) return undefined;
     const t = setTimeout(() => {
-      const acts = botActions(Sref.current);
+      const acts = botActions(Sref.current, { difficulty: session.difficulty, memory: botMemory.current });
       if (!acts.length) return;
       let next = Sref.current;
       for (const a of acts.slice(0, -1)) next = reduce(next, a);
@@ -285,7 +288,8 @@ function Board({ session, onExit, onRestart, init, onReplaced }) {
       }, 1000);
     }, 700);
     return () => clearTimeout(t);
-  }, [S, vsAi]);
+  }, [S, vsAi, session.difficulty]);
+  const newGame = () => { botMemory.current = {}; adopt(freshGame(session), 0); };
 
   // Things that move between the board and a player's inventory fly there instead of jumping.
   const prevS = useRef(null);
@@ -327,11 +331,11 @@ function Board({ session, onExit, onRestart, init, onReplaced }) {
   const [skipped, setSkipped] = useState(false);
   useEffect(() => { setSkipped(false); }, [S.cur, S.over, S.awaitingFirst]);
   const p = cur(S), pd = S.pending;
-  const boardHasTokens = S.board.some((c) => c && c !== 'gold');
-  const canTakeTokens = boardHasTokens && roomLeft(p) >= 1;
-  const canReserveGold = S.board.includes('gold') && p.res.length < resCap(p) && roomLeft(p) >= 1;
+  // Going over ten tokens is allowed; the extra tokens are returned at the end of the turn.
+  const canTakeTokens = S.board.some((c) => c && c !== 'gold');
+  const canReserveGold = S.board.includes('gold') && p.res.length < resCap(p);
   const canPay = [...S.pyr.flat(), ...p.res, ...(S.exp ? S.crow : [])].some((c) => c && plan(S, p, c));
-  // A privilege only takes a gem or pearl token from the board, and only if there is room for it.
+  // A privilege only takes a gem or pearl token from the board.
   const canUsePriv = (p.priv > 0 || S.mode === 'priv2') && canTakeTokens;
   // Skipping the optional step is only allowed when the player has a main action left to do.
   const mainPossible = canTakeTokens || canReserveGold || canPay;
@@ -433,7 +437,7 @@ function Board({ session, onExit, onRestart, init, onReplaced }) {
   }, [S.over]);
 
   const openAsk = (a) => { setLastAsk(a); setAsk(a); };
-  const restart = () => openAsk({ title: 'Start over?', msg: 'The current game will be lost.', yes: 'Start over', onYes: () => adopt(freshGame(session), 0) });
+  const restart = () => openAsk({ title: 'Start over?', msg: 'The current game will be lost.', yes: 'Start over', onYes: newGame });
   const leave = () => openAsk({ title: 'Leave this game?', msg: online ? 'You can come back with the game code while it still exists.' : 'The game is saved. You can resume it from the home page.', yes: 'Leave', onYes: onExit });
   const resign = () => openAsk({ title: 'Resign?', msg: 'The other player wins.', yes: 'Resign', onYes: () => dispatch({ type: 'resign', player: seat ?? S.cur }) });
   const copyCode = () => {
@@ -467,6 +471,8 @@ function Board({ session, onExit, onRestart, init, onReplaced }) {
   const buttons = extras.length ? extras : action ? [
     ...(action !== 'priv' ? [{ label: { take: 'Take tokens', buy: 'Buy card', reserve: 'Reserve card', refill: 'Replenish' }[action], disabled: !canComplete, onClick: complete, go: true }] : []),
     { label: 'Cancel', disabled: !idle, onClick: cancel },
+  ] : canPass(S) ? [
+    { label: 'Pass', disabled: !idle, onClick: act({ type: 'pass' }), go: true },
   ] : past ? [
     { label: 'Take', disabled: !(idle && canTakeTokens), onClick: () => choose('take') },
     { label: 'Reserve', disabled: !(idle && canReserveGold), onClick: () => choose('reserve') },
@@ -476,6 +482,7 @@ function Board({ session, onExit, onRestart, init, onReplaced }) {
     { label: 'Replenish', disabled: !(idle && canReplenish(S)), onClick: () => choose('refill') },
     { label: 'Use privilege', disabled: !(idle && canUsePriv), onClick: () => choose('priv') },
     { label: 'Skip', disabled: !(idle && mainPossible), onClick: () => setSkipped(true) },
+    ...(S.undo ? [{ label: 'Undo privilege', disabled: !idle, onClick: act({ type: 'undo' }) }] : []),
   ];
   const slots = ['', 'one', 'two', 'three', ''][buttons.length];
 
@@ -683,7 +690,7 @@ function Board({ session, onExit, onRestart, init, onReplaced }) {
           </DialogHeader>
           <DialogFooter>
             <Button variant="outline" onClick={onExit}>Back to home</Button>
-            {!online && <Button onClick={() => adopt(freshGame(session), 0)}>Play again</Button>}
+            {!online && <Button onClick={newGame}>Play again</Button>}
           </DialogFooter>
         </DialogContent>
       </Dialog>

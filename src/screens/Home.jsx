@@ -4,7 +4,7 @@ import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Switch } from '@/components/ui/switch';
 import Rules from '@/components/Rules.jsx';
-import { api, rememberName, savedName } from '../net/api.js';
+import { api, rememberName, savedName, savedName2 } from '../net/api.js';
 import { Pic } from '@/components/Art.jsx';
 import { Field, GemRow, NameChoice, NameField, Segmented } from './parts.jsx';
 import { loadSave } from '../lib/saves.js';
@@ -12,14 +12,13 @@ import GameSettings from '@/components/GameSettings.jsx';
 import { cardsPref, expPref, useLook } from '../lib/look.js';
 
 const MODES = [
-  { key: 'device', pic: 'friends', title: 'Play on this device' },
+  { key: 'device', pic: 'friends', title: 'Local play' },
   { key: 'ai', pic: 'ai', title: 'Play the computer' },
-  { key: 'online', pic: 'online', title: 'Play with friends' },
-  { key: 'quick', pic: 'quick-play', title: 'Quick match' },
+  { key: 'online', pic: 'handshake', title: 'Play with friends' },
+  { key: 'quick', pic: 'online', title: 'Online play' },
 ];
 
 const DIFFICULTIES = [{ value: 'easy', label: 'Easy' }, { value: 'medium', label: 'Medium' }, { value: 'hard', label: 'Hard' }];
-const DEPTHS = [{ value: 'quick', label: 'Quick' }, { value: 'standard', label: 'Standard' }, { value: 'deep', label: 'Deep' }];
 
 /** The choices every new game has. */
 function CodeEntry({ onJoined }) {
@@ -73,26 +72,21 @@ function CodeEntry({ onJoined }) {
   );
 }
 
-function GameDialog({ mode, exp, resumable, onClose, onStart, onJoined, onResume, onQuick }) {
-  const [opts, setOpts] = useState({ source: 'random', difficulty: 'medium', depth: 'standard' });
+function GameDialog({ mode, exp, resumable, onClose, onStart, onJoined, onResume }) {
+  const [opts, setOpts] = useState({ source: 'random', difficulty: 'medium' });
   const [tab, setTab] = useState('create');
   const [busy, setBusy] = useState(false);
   const set = (patch) => setOpts((o) => ({ ...o, ...patch }));
   // With an unfinished game saved, the same dialog asks whether to resume it.
   const title = resumable ? 'Resume your game?' : MODES.find((m) => m.key === mode).title;
+  // Names are set in Settings. An online game needs one, so it is asked for here only when none is saved yet.
   const [name, setName] = useState(savedName);
-  // On one device both players are here, so the second one gets a name too.
-  const [name2, setName2] = useState(() => { try { return localStorage.getItem('sd:name2') || ''; } catch { return ''; } });
-  const asksSecond = mode === 'device';
-  const sameNames = asksSecond && name.trim() && name.trim().toLowerCase() === name2.trim().toLowerCase();
-  const rememberNames = () => {
-    rememberName(name.trim());
-    if (asksSecond) { try { localStorage.setItem('sd:name2', name2.trim()); } catch { /* storage may be blocked */ } }
-  };
+  const [needsName] = useState(() => mode === 'online' && !savedName().trim());
+  const name2 = mode === 'device' ? savedName2() : '';
   const go = async () => {
     setBusy(true);
-    rememberNames();
-    await onStart({ mode, exp, ...opts, name: name.trim(), ...(asksSecond && { name2: name2.trim() }) });
+    rememberName(name.trim());
+    await onStart({ mode, exp, ...opts, name: name.trim(), ...(name2 && { name2 }) });
   };
   const joining = mode === 'online' && tab === 'join';
   return (
@@ -106,34 +100,18 @@ function GameDialog({ mode, exp, resumable, onClose, onStart, onJoined, onResume
           {mode === 'online' && <Segmented value={tab} onChange={setTab} options={[{ value: 'create', label: 'Create a game' }, { value: 'join', label: 'Join with a code' }]} />}
           {joining ? <CodeEntry onJoined={onJoined} /> : (
             <>
-              <NameChoice autoFocus value={name} onChange={setName} onEnter={() => name.trim() && (mode === 'quick' ? onQuick() : go())} />
-              {asksSecond && (
-                <Field label="Player 2">
-                  <NameField value={name2} onChange={setName2} onEnter={() => !sameNames && go()} placeholder="Player 2" />
-                  {sameNames && <p className="text-sm text-amber-400">The two players need different names.</p>}
-                </Field>
-              )}
-              {mode === 'ai' && (
-                <>
-                  <Field label="Difficulty"><Segmented value={opts.difficulty} onChange={(v) => set({ difficulty: v })} options={DIFFICULTIES} /></Field>
-                  <Field label="Depth"><Segmented value={opts.depth} onChange={(v) => set({ depth: v })} options={DEPTHS} /></Field>
-                </>
-              )}
+              {needsName && <Field label="Your name"><NameField autoFocus value={name} onChange={setName} onEnter={() => name.trim() && go()} /></Field>}
+              {mode === 'ai' && <Field label="Difficulty"><Segmented value={opts.difficulty} onChange={(v) => set({ difficulty: v })} options={DIFFICULTIES} /></Field>}
               <DialogFooter>
                 {resumable ? (
                   <>
-                    <Button variant="outline" onClick={go} disabled={busy || sameNames}>New game</Button>
-                    <Button disabled={sameNames} onClick={() => { rememberNames(); onResume(mode, name.trim(), asksSecond ? name2.trim() : ''); }}>Resume game</Button>
-                  </>
-                ) : mode === 'quick' ? (
-                  <>
-                    <Button variant="outline" onClick={onClose}>Cancel</Button>
-                    <Button onClick={() => { rememberName(name.trim()); onQuick(); }} disabled={!name.trim()}>Find an opponent</Button>
+                    <Button variant="outline" onClick={go} disabled={busy}>New game</Button>
+                    <Button onClick={() => onResume(mode, name.trim(), name2)}>Resume game</Button>
                   </>
                 ) : (
                   <>
                     <Button variant="outline" onClick={onClose}>Cancel</Button>
-                    <Button onClick={go} disabled={busy || sameNames || (mode === 'online' && !name.trim())}>{busy && <Loader2 className="animate-spin" />}{mode === 'online' ? 'Create game' : 'Start game'}</Button>
+                    <Button onClick={go} disabled={busy || (mode === 'online' && !name.trim())}>{busy && <Loader2 className="animate-spin" />}{mode === 'online' ? 'Create game' : 'Start game'}</Button>
                   </>
                 )}
               </DialogFooter>
@@ -154,8 +132,13 @@ export default function Home({ onStart, onJoined, onQuick, onResume }) {
   // The printed look has no pictures for made-up cards or the extra royal, so those options are left out with it.
   const randomCards = false; // the random card option was removed
   const start = (o) => onStart({ ...o, randomCards, randomRoyals: randomCards });
-  // Every mode opens its setup dialog first; on this device and against the computer it also offers to resume.
-  const pick = (key) => setOpen(key);
+  // Names are saved in Settings, so local play starts at once (unless there is a game to resume) and online play
+  // goes straight to finding an opponent. The other modes open their setup dialog first.
+  const pick = (key) => {
+    if (key === 'quick') onQuick();
+    else if (key === 'device' && !loadSave('device')) start({ mode: 'device', exp, source: 'random', name: savedName(), name2: savedName2() });
+    else setOpen(key);
+  };
   return (
     <div className="fixed inset-0 overflow-y-auto overflow-x-hidden overscroll-contain">
       <div className="mx-auto flex min-h-full max-w-2xl flex-col items-center justify-center gap-8 px-6 py-10 [@media(max-height:520px)]:max-w-4xl [@media(max-height:520px)]:gap-3 [@media(max-height:520px)]:py-3">
@@ -181,7 +164,7 @@ export default function Home({ onStart, onJoined, onQuick, onResume }) {
         </div>
       </div>
 
-      {open && <GameDialog mode={open} exp={exp} resumable={(open === 'device' || open === 'ai') && !!loadSave(open)} onClose={() => setOpen(null)} onStart={start} onJoined={onJoined} onResume={onResume} onQuick={onQuick} />}
+      {open && <GameDialog mode={open} exp={exp} resumable={(open === 'device' || open === 'ai') && !!loadSave(open)} onClose={() => setOpen(null)} onStart={start} onJoined={onJoined} onResume={onResume} />}
       {showSettings && (
         <GameSettings onClose={() => setShowSettings(false)}>
           <Button variant="outline" className="gap-2" onClick={() => { setShowSettings(false); setShowRules(true); }}><Pic name="rules" size={20} /> Rules</Button>

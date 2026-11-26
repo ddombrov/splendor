@@ -15,10 +15,10 @@ describe('saved games', () => {
   it('brings back the same game that was saved and keeps it playable', () => {
     let S = createGame(true, 5, 0);
     S = reduce(S, { type: 'chooseFirst', player: 0 });
-    writeSave({ mode: 'ai', exp: true, difficulty: 'hard', depth: 'deep' }, S);
+    writeSave({ mode: 'ai', exp: true, difficulty: 'hard' }, S);
     const back = loadSave('ai');
     expect(back.S).toEqual(JSON.parse(JSON.stringify(S)));
-    expect(back).toMatchObject({ exp: true, difficulty: 'hard', depth: 'deep' });
+    expect(back).toMatchObject({ exp: true, difficulty: 'hard' });
     expect(() => reduce(back.S, { type: 'tok', i: 12 })).not.toThrow();
   });
 

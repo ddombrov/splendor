@@ -78,7 +78,7 @@ export function QuickMatch({ onMatched, onCancel, onPlayComputer }) {
     return (
       <Shell>
         <GemRow size={34} />
-        <h1 className="text-2xl font-bold">Quick match</h1>
+        <h1 className="text-2xl font-bold">Online play</h1>
         <div className="w-full space-y-4">
           <NameChoice autoFocus value={name} onChange={setName} onEnter={() => name.trim() && setReady(true)} />
           <div className="flex justify-center gap-2">

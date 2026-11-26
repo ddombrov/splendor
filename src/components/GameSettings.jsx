@@ -6,6 +6,47 @@ import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Switch } from '@/components/ui/switch';
 import { cardsPref, countersPref, expPref, setLook, useLook, useMaaikeGame } from '../lib/look.js';
+import { rememberName, rememberName2, savedName, savedName2 } from '../net/api.js';
+import { NameField } from '../screens/parts.jsx';
+
+/** One player's saved name: "Playing as X" with a Change link, or a text box while it is being changed. */
+function NameRow({ label, value, onSave, taken }) {
+  const [draft, setDraft] = useState(null);
+  const clash = draft != null && taken && draft.trim().toLowerCase() === taken.toLowerCase();
+  const save = () => {
+    if (clash) return;
+    if (draft.trim()) onSave(draft.trim());
+    setDraft(null);
+  };
+  return (
+    <div className="space-y-2">
+      <div className="flex items-center gap-2">
+        <span className="font-semibold">{label}:</span>
+        {draft == null ? (
+          <span className="flex items-center gap-2 text-sm text-muted-foreground">
+            {value ? <>Playing as <b className="text-foreground">{value}</b></> : 'No name yet'}
+            <button type="button" className="underline hover:text-foreground" onClick={() => setDraft(value)}>Change</button>
+          </span>
+        ) : (
+          <Button size="sm" variant="outline" className="ml-auto" disabled={clash} onClick={save}>Save</Button>
+        )}
+      </div>
+      {draft != null && <NameField autoFocus value={draft} onChange={setDraft} onEnter={save} placeholder={label} />}
+      {clash && <p className="text-sm text-amber-400">The two players need different names.</p>}
+    </div>
+  );
+}
+
+/** Player 1 is the name used in every mode; player 2 is only used for games on one device. */
+function PlayerNames() {
+  const [names, setNames] = useState(() => [savedName(), savedName2()]);
+  return (
+    <div className="space-y-3 border-b pb-4">
+      <NameRow label="Player 1" value={names[0]} taken={names[1]} onSave={(n) => { rememberName(n); setNames([n, names[1]]); }} />
+      <NameRow label="Player 2" value={names[1]} taken={names[0]} onSave={(n) => { rememberName2(n); setNames([names[0], n]); }} />
+    </div>
+  );
+}
 
 const PREF = { exp: expPref, randomCards: cardsPref };
 
@@ -65,6 +106,7 @@ export default function GameSettings({ onClose, inGame = false, current, locked 
         ) : (
           <>
             <div className="space-y-4">
+              {!inGame && <PlayerNames />}
               {rows.map((r) => (
                 <label key={r.key} className={`flex items-center justify-between gap-4 ${disabled(r) ? 'opacity-50' : 'cursor-pointer'}`}>
                   <span>

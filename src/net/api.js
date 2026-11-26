@@ -24,6 +24,9 @@ const NAME = 'sd:name';
 /** The name this browser last played under, so it does not have to be typed again. */
 export const savedName = () => { try { return localStorage.getItem(NAME) || ''; } catch { return ''; } };
 export const rememberName = (n) => { try { if (n) localStorage.setItem(NAME, n); } catch { /* ignore */ } };
+/** The second player's name for games on one device. It is kept even while other modes are played. */
+export const savedName2 = () => { try { return localStorage.getItem('sd:name2') || ''; } catch { return ''; } };
+export const rememberName2 = (n) => { try { if (n) localStorage.setItem('sd:name2', n); } catch { /* ignore */ } };
 
 export const api = {
   /** Start an online game and take the first seat. */

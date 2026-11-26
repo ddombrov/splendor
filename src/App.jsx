@@ -34,7 +34,7 @@ export default function App() {
       setView({ name: 'game', session: { ...opts, key: Date.now() } });
     }
   };
-  const resume = (mode, name, name2) => { const v = loadSave(mode); if (v) setView({ name: 'game', session: { mode, name, name2, exp: v.exp, source: v.source, difficulty: v.difficulty, depth: v.depth, randomCards: v.randomCards, randomRoyals: v.randomRoyals, resume: true, key: Date.now() } }); };
+  const resume = (mode, name, name2) => { const v = loadSave(mode); if (v) setView({ name: 'game', session: { mode, name, name2, exp: v.exp, source: v.source, difficulty: v.difficulty, randomCards: v.randomCards, randomRoyals: v.randomRoyals, resume: true, key: Date.now() } }); };
   const joined = ({ code, seat }) => api.getRoom(code).then((room) => setView({ name: 'game', session: { mode: 'online', code, seat, exp: room.exp } }));
   const matched = useCallback(({ code, seat }) => api.getRoom(code).then((room) => setView({ name: 'game', session: { mode: 'online', code, seat, exp: room.exp } })), [setView]);
 
@@ -48,7 +48,7 @@ export default function App() {
     );
   }
   if (view.name === 'quick') {
-    return <QuickMatch onMatched={matched} onCancel={home} onPlayComputer={() => start({ mode: 'ai', exp: false, source: 'random', difficulty: 'medium', depth: 'standard' })} />;
+    return <QuickMatch onMatched={matched} onCancel={home} onPlayComputer={() => start({ mode: 'ai', exp: false, source: 'random', difficulty: 'medium' })} />;
   }
   if (view.name === 'game') {
     return (

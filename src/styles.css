@@ -257,7 +257,7 @@ html[data-look=classic] .stage .board-wrap.one { background-image: url(/classic/
 /* board buttons stay put inside their slot: hovering and pressing only change the colour */
 .woodbtn:hover:not(:disabled), .woodbtn:active:not(:disabled) { transform: none; }
 
-/* the colours a wild card may copy glow in the open hand, and clicking one chooses it */
+/* the colours a wild card may copy, or the tokens that can be stolen, glow in the open hand, and clicking one chooses it */
 .wildpick { cursor: pointer; border-radius: 10px; outline: 3px solid rgb(var(--pick)); outline-offset: 4px; box-shadow: 0 0 16px 6px rgba(var(--pick), 0.6); }
 .wildpick:hover { background: rgba(var(--pick), 0.2); }
 

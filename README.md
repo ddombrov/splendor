@@ -10,7 +10,7 @@ A web version of the two-player board game Splendor Duel, with the Counterfeiter
 
 ## Features
 
-- **Four ways to play:** pass-and-play on one device, a computer opponent with three difficulty levels, private online games with a friend, and quick match against a stranger.
+- **Four ways to play:** local play on one device, a computer opponent with three difficulty levels, private online games with a friend, and online play against a stranger.
 - **Full rules:** tokens, privileges, royal cards, card abilities and the Counterfeiters expansion, all enforced by a deterministic rules engine.
 - **Server-checked online games:** the same engine runs in the browser and in a Cloudflare Worker, so every online move is validated on the server.
 - **Saved games:** online games are stored in Cloudflare D1 and can be resumed.

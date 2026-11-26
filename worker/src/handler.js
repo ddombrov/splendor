@@ -31,6 +31,7 @@ export function viewFor(S, seat) {
   V.rdeck = nulls(V.rdeck);
   V.players[1 - seat].res = V.players[1 - seat].res.map((c, i) => ({ id: `hidden-${i}`, level: c.level, hidden: true }));
   if (V.pending?.type === 'peek' && V.cur !== seat) V.pending.cards = nulls(V.pending.cards);
+  if (V.undo) V.undo = true; // the saved position holds hidden cards; the player only needs to know undo is possible
   return V;
 }
 
