@@ -50,16 +50,16 @@ export function validLine(S, sel) {
 }
 
 /**
- * Two picks with exactly one square between them in a line are kept: the player may still be
- * about to pick the token in the middle to make a line of three.
+ * For two picks with exactly one gem or pearl token between them in a line, the square in the middle,
+ * so the line of three can be completed; otherwise null.
  */
-export function gapPair(S, sel) {
-  if (sel.length !== 2) return false;
+export function gapMiddle(S, sel) {
+  if (sel.length !== 2) return null;
   const [a, b] = sel.map((i) => [Math.floor(i / 5), i % 5]);
   const dr = b[0] - a[0], dc = b[1] - a[1];
-  if (Math.max(Math.abs(dr), Math.abs(dc)) !== 2 || ![0, 2].includes(Math.abs(dr)) || ![0, 2].includes(Math.abs(dc))) return false;
+  if (Math.max(Math.abs(dr), Math.abs(dc)) !== 2 || ![0, 2].includes(Math.abs(dr)) || ![0, 2].includes(Math.abs(dc))) return null;
   const mid = (a[0] + dr / 2) * 5 + a[1] + dc / 2;
-  return S.board[mid] != null && S.board[mid] !== 'gold' && sel.every((i) => S.board[i] != null && S.board[i] !== 'gold');
+  return S.board[mid] != null && S.board[mid] !== 'gold' && sel.every((i) => S.board[i] != null && S.board[i] !== 'gold') ? mid : null;
 }
 
 /* Cheapest way for the current player to pay for a card, including counterfeiter discounts. */
@@ -121,6 +121,16 @@ export function plan(S, p, card) {
     if (!best || score < best.score) best = { pay, g, ids, score };
   }
   return best;
+}
+
+/** How a player has won, in words, or null if they have not: 20 points, 10 crowns, or 10 points of one colour. */
+export function winReason(p) {
+  const hasR = (ab) => p.royals.some((r) => r.ab === ab);
+  const color = COLORS.find((c) => colorPts(p, c) >= (hasR('w9c') ? 9 : 10));
+  if (pts(p) >= 20) return `${pts(p)} prestige points`;
+  if (crowns(p) >= (hasR('w9k') ? 9 : 10)) return `${crowns(p)} crowns`;
+  if (color) return `${colorPts(p, color)} points from ${color} cards`;
+  return null;
 }
 
 export function endOptions(S) {
@@ -279,14 +289,9 @@ function doStep(S, step) {
     case 'discard':
       if (limitCount(p) > 10) return wait({ type: 'discard' });
       return true;
-    case 'win': {
-      const hasR = (ab) => p.royals.some((r) => r.ab === ab);
-      if (pts(p) >= 20 || crowns(p) >= 10 || COLORS.some((c) => colorPts(p, c) >= 10) ||
-          (hasR('w9c') && COLORS.some((c) => colorPts(p, c) >= 9)) || (hasR('w9k') && crowns(p) >= 9)) {
-        S.over = p.name;
-      }
+    case 'win':
+      if (winReason(p)) S.over = p.name;
       return true;
-    }
     case 'switch':
       if (S.extra) S.extra = false; else S.cur = 1 - S.cur;
       S.main = false; S.pending = null; S.used = {}; S.goldSel = null; S.undo = null;
@@ -425,9 +430,11 @@ const handlers = {
     else {
       const next = [...S.sel, i];
       // If the new pick does not fit, let go of the oldest picks until what is left still can: an L shape keeps its last two.
-      const fits = (c) => validLine(S, c) || gapPair(S, c);
+      const fits = (c) => validLine(S, c) || gapMiddle(S, c) != null;
       while (next.length > 1 && !fits(next)) next.shift();
-      S.sel = next;
+      // Two picks with one token between them take the middle one too, making a line of three.
+      const mid = gapMiddle(S, next);
+      S.sel = mid == null ? next : [next[0], mid, next[1]];
     }
   },
   take(S) {

@@ -1,5 +1,5 @@
 import { describe, expect, it, vi } from 'vitest';
-import { canPass, createGame, cur, opp, plan, reduce, limitCount as limit, SPIRAL } from './engine.js';
+import { canPass, winReason, createGame, cur, opp, plan, reduce, limitCount as limit, SPIRAL } from './engine.js';
 
 const play = (state, ...actions) => actions.reduce((s, a) => reduce(s, a), state);
 const click = (...cells) => cells.map((i) => ({ type: 'tok', i }));
@@ -542,24 +542,22 @@ describe('picking tokens in a line', () => {
     return S;
   };
 
-  it('keeps a pick when the next one has one square between, so the middle one can be added', () => {
+  it('fills in the middle token when the second pick has one square between', () => {
     let S = setup();
     S = reduce(S, { type: 'tok', i: 0 });
     S = reduce(S, { type: 'tok', i: 2 });
-    expect(S.sel).toEqual([0, 2]);
-    S = reduce(S, { type: 'tok', i: 1 });
-    expect(S.sel).toEqual([0, 2, 1]);
+    expect(S.sel).toEqual([0, 1, 2]);
   });
 
-  it('also keeps diagonal and vertical gaps', () => {
+  it('also fills in diagonal and vertical gaps', () => {
     let S = setup();
     S = reduce(S, { type: 'tok', i: 0 });
     S = reduce(S, { type: 'tok', i: 12 });
-    expect(S.sel).toEqual([0, 12]);
+    expect(S.sel).toEqual([0, 6, 12]);
     S = setup();
     S = reduce(S, { type: 'tok', i: 0 });
     S = reduce(S, { type: 'tok', i: 10 });
-    expect(S.sel).toEqual([0, 10]);
+    expect(S.sel).toEqual([0, 5, 10]);
   });
 
   it('drops the oldest pick when a new one makes an L shape, keeping the last two that fit', () => {
@@ -591,12 +589,33 @@ describe('picking tokens in a line', () => {
     expect(S.sel).toEqual([2]);
   });
 
-  it('cannot take a pick with a gap in it', () => {
+  it('cannot take a pick with a gap in it, once the middle token is unpicked', () => {
     let S = setup();
     S = reduce(S, { type: 'tok', i: 0 });
     S = reduce(S, { type: 'tok', i: 2 });
+    S = reduce(S, { type: 'tok', i: 1 });
+    expect(S.sel).toEqual([0, 2]);
     const next = reduce(S, { type: 'take' });
     expect(next.players[0].tok.red + next.players[1].tok.red).toBe(0);
+  });
+});
+
+describe('saying how a player won', () => {
+  const card = (color, pts, crowns = 0) => ({ id: `${color}${pts}${crowns}`, kind: 'jewel', level: 1, cost: {}, pts, crowns, ability: null, n: 1, bonus: color, color });
+
+  it('names a colour win, which can happen with fewer than 20 points', () => {
+    const p = createGame(false, 1, 0).players[0];
+    p.cards = [card('black', 4), card('black', 3, 3), card('black', 3, 3), card('red', 9)];
+    expect(winReason(p)).toBe('10 points from black cards');
+  });
+
+  it('names a points or crowns win, and nothing before a win', () => {
+    const p = createGame(false, 1, 0).players[0];
+    expect(winReason(p)).toBeNull();
+    p.cards = [card('red', 9), card('blue', 9), card('green', 2)];
+    expect(winReason(p)).toBe('20 prestige points');
+    p.cards = [card('red', 0, 5), card('blue', 0, 5)];
+    expect(winReason(p)).toBe('10 crowns');
   });
 });
 

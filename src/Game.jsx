@@ -12,7 +12,7 @@ import { cn } from '@/lib/utils';
 import { api } from './net/api.js';
 import { botActions } from './engine/bot.js';
 import { perkText } from './engine/data.js';
-import { createGame, reduce, cur, opp, plan, canPass, canReplenish, endOptions, validLine, selectedCard, resCap, roomLeft, kinds, limitCount } from './engine/engine.js';
+import { createGame, reduce, cur, opp, plan, canPass, canReplenish, endOptions, validLine, selectedCard, resCap, roomLeft, kinds, limitCount, winReason } from './engine/engine.js';
 import { JewelCard, CfCard, RoyalCard, CardBack } from './components/Cards.jsx';
 import Player from './components/Player.jsx';
 import Rules from './components/Rules.jsx';
@@ -432,6 +432,11 @@ function Board({ session, onExit, onRestart, init, onReplaced }) {
     </div>
   );
 
+  // The game over message can be closed to look over the finished game, and opened again from the top bar.
+  const [overOpen, setOverOpen] = useState(true);
+  useEffect(() => { setOverOpen(true); }, [S.over]);
+  const winner = S.players.find((x) => x.name === S.over);
+  const winText = S.resigned == null && winner ? winReason(winner) : null;
   useEffect(() => {
     if (S.over) confetti({ particleCount: 160, spread: 85, origin: { y: 0.6 }, colors: ['#d9b15a', '#5b8bd6', '#4aa174', '#d8283a', '#ffffff'] });
   }, [S.over]);
@@ -506,6 +511,7 @@ function Board({ session, onExit, onRestart, init, onReplaced }) {
         <div>
           <div className="stage relative flex flex-col gap-2 p-2.5" onClick={(e) => { if (e.currentTarget.contains(e.target) && !e.target.closest('[data-card-id], [data-keep]')) setInspect(null); }} style={tall ? { width: w, minHeight: h, zoom: k, '--cell': `${cell}px` } : { width: w, height: h, transform: `scale(${k})`, transformOrigin: '0 0', '--cell': `${cell}px` }}>
             <div data-keep className={cn('z-30 flex items-center gap-1.5', tall ? 'justify-end' : 'absolute right-3 top-3')} > 
+              {S.over && !overOpen && <Button variant="ghost" className="h-10 px-3 text-sm text-white hover:bg-white/10 hover:text-white" onClick={() => setOverOpen(true)}>Game over</Button>}
               <Button variant="ghost" className="h-10 gap-2 px-3 text-sm text-white hover:bg-white/10 hover:text-white" onClick={() => setShowSettings(true)}><Pic name="settings" size={22} /> Settings</Button>
             </div>
             <div className={cn('grid gap-3', !tall && 'min-h-0 flex-1')} style={{ gridTemplateColumns: tall ? 'minmax(0,1fr)' : strip ? `${padX}px ${boardColW}px ${cardsW}px ${padX}px` : `${sideW}px minmax(0,1fr) ${cardsW}px`, gridTemplateRows: strip ? `minmax(0,1fr) ${stripH}px` : undefined }}>
@@ -696,11 +702,11 @@ function Board({ session, onExit, onRestart, init, onReplaced }) {
         </DialogContent>
       </Dialog>
 
-      <Dialog open={!!S.over} onOpenChange={() => {}}>
-        <DialogContent className="sm:max-w-sm" showCloseButton={false}>
+      <Dialog open={!!S.over && overOpen} onOpenChange={setOverOpen}>
+        <DialogContent className="sm:max-w-sm">
           <DialogHeader>
             <DialogTitle>Game over</DialogTitle>
-            <DialogDescription>{S.resigned != null ? `${S.players[S.resigned].name} resigned. ` : ''}{S.over} wins!</DialogDescription>
+            <DialogDescription>{S.resigned != null ? `${S.players[S.resigned].name} resigned. ` : ''}{S.over} wins{winText ? ` with ${winText}` : ''}!</DialogDescription>
           </DialogHeader>
           <DialogFooter>
             <Button variant="outline" onClick={onExit}>Back to home</Button>
