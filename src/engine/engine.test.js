@@ -287,6 +287,26 @@ describe('the ten token limit when taking', () => {
     expect(after.cur).toBe(1);
   });
 
+  it('lets a player who went over ten undo the take at the discard step and choose another move', () => {
+    const state = withTokens(gameWithBoard({ 0: 'red', 1: 'green', 2: 'white' }), 10);
+    const taken = play(state, ...click(0, 1, 2), { type: 'take' });
+    expect(taken.undo).toBeTruthy();
+    const partly = play(taken, { type: 'disc', c: 'blue' });
+    const back = play(partly, { type: 'undo' });
+    expect(back.board.slice(0, 3)).toEqual(['red', 'green', 'white']);
+    expect(back.players[0].tok.blue).toBe(10);
+    expect(back.pending).toBeNull();
+    expect(back.main).toBe(false);
+    expect(back.cur).toBe(0);
+  });
+
+  it('does not offer the undo once a card from a deck has been shown', () => {
+    const state = withTokens(gameWithBoard({ 3: 'gold' }), 10);
+    const after = play(state, ...click(3), { type: 'card', src: 'pyr', l: 0, i: 0 }, { type: 'reserve' });
+    expect(after.pending?.type).toBe('discard');
+    expect(after.undo).toBeNull();
+  });
+
   it('lets a player at ten choose gold to reserve, then return one token', () => {
     const state = withTokens(gameWithBoard({ 3: 'gold' }), 10);
     const after = play(state, ...click(3), { type: 'card', src: 'pyr', l: 0, i: 0 }, { type: 'reserve' });

@@ -87,7 +87,7 @@ function statusText(S) {
       case 'multi': return `${p.name}: click up to ${pd.max} non-gold token${pd.max > 1 ? 's' : ''}${pd.rule === 'same' ? ' of one colour' : ''} on the board, then press Confirm.`;
       case 'steal': return `${p.name}: click one of ${opp(S).name}'s glowing tokens to steal it. Any token except gold can be stolen.`;
       case 'royal': return `${p.name}: click a royal card to see what it does, then press Claim royal.`;
-      case 'discard': return `${p.name}: you hold ${limitCount(p)} tokens but may keep only 10. Click your tokens to return ${limitCount(p) - 10} to the bag.`;
+      case 'discard': return `${p.name}: you hold ${limitCount(p)} tokens but may keep only 10. Click your tokens to return ${limitCount(p) - 10} to the bag${S.undo ? ', or press Undo move to choose a different move' : ''}.`;
       case 'wild': return `${p.name}: click one of your glowing colours for your wild card to copy.`;
       case 'freeReserve': return `${p.name}: reserve a card for free by clicking a card or a deck, or press Skip. No gold token comes with it.`;
       case 'freeCf': return `${p.name}: click a counterfeiter card or its deck to take it for free, or press Skip.`;
@@ -467,6 +467,7 @@ function Board({ session, onExit, onRestart, init, onReplaced }) {
     pd?.type === 'multi' && { label: `Confirm ${pd.sel.length} token${pd.sel.length === 1 ? '' : 's'}`, onClick: act({ type: 'confirmMulti' }), go: true },
     (['freeReserve', 'freeCf'].includes(pd?.type) || (pd?.type === 'pick' && pd.plus)) && { label: 'Skip', onClick: act({ type: 'skip' }) },
     pd?.type === 'royal' && myTurn && { label: 'Claim royal', disabled: royalPick == null, onClick: act({ type: 'royal', i: royalPick }), go: true },
+    pd?.type === 'discard' && S.undo && myTurn && { label: 'Undo move', onClick: act({ type: 'undo' }) },
   ].filter(Boolean);
   const buttons = extras.length ? extras : action ? [
     ...(action !== 'priv' ? [{ label: { take: 'Take tokens', buy: 'Buy card', reserve: 'Reserve card', refill: 'Replenish' }[action], disabled: !canComplete, onClick: complete, go: true }] : []),

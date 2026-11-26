@@ -289,7 +289,7 @@ function doStep(S, step) {
     }
     case 'switch':
       if (S.extra) S.extra = false; else S.cur = 1 - S.cur;
-      S.main = false; S.pending = null; S.used = {}; S.goldSel = null;
+      S.main = false; S.pending = null; S.used = {}; S.goldSel = null; S.undo = null;
       return true;
     default: return true;
   }
@@ -595,13 +595,20 @@ const handlers = {
   },
 };
 
+const MAIN_ACTIONS = ['take', 'reserve', 'buy', 'wild'];
+
 export function reduce(state, a) {
   if (a.type === 'new') return createGame(a.exp, a.seed, a.first);
   const S = structuredClone(state);
   S.toast = null;
   if (S.over) return state;
   if (S.awaitingFirst && a.type !== 'chooseFirst' && a.type !== 'resign') return state;
-  if (a.type === 'undo') return S.undo && !S.main && !S.pending ? S.undo : state;
+  if (a.type === 'undo') return S.undo && (!S.pending || S.pending.type === 'discard') ? S.undo : state;
+  const before = !S.main && MAIN_ACTIONS.includes(a.type) ? state : null;
   handlers[a.type]?.(S, a);
+  // A main action that leaves the player over ten can be taken back at the discard step, unless it showed
+  // something hidden (a card dealt from a deck, a draw from the bag), which would let the player choose again knowing it.
+  if (before && S.pending?.type === 'discard' && S.rng === before.rng && S.cdeck.length === before.cdeck.length &&
+      S.decks.every((d, l) => d.length === before.decks[l].length)) S.undo = before;
   return S;
 }
