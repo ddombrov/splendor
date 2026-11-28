@@ -27,7 +27,9 @@ export function TokenArt({ kind, size = 52, look: forced }) {
   const current = useLook();
   const look = forced ?? current;
   if (look === 'maaike' && MAAIKE_TOKENS.has(kind)) {
-    return <img className="tokart" src={`/maaike/tokens/${kind}.jpg`} width={size} height={size} alt="" draggable={false} style={{ width: size, height: size, borderRadius: '50%', objectFit: 'cover', boxSizing: 'border-box', border: `${Math.max(2, Math.round(size * 0.07))}px solid ${RIM[kind]}` }} />;
+    // The black token's rim is grey in the modern look, where its dark disc carries the colour; the photo has no disc, so it gets a dark border.
+    const border = kind === 'black' ? DISC.black : RIM[kind];
+    return <img className="tokart" src={`/maaike/tokens/${kind}.jpg`} width={size} height={size} alt="" draggable={false} style={{ width: size, height: size, borderRadius: '50%', objectFit: 'cover', boxSizing: 'border-box', border: `${Math.max(2, Math.round(size * 0.07))}px solid ${border}` }} />;
   }
   if (look === 'classic' && CLASSIC_TOKEN[kind]) {
     return <img className="tokart classic" src={`/classic/tokens/${CLASSIC_TOKEN[kind]}`} width={size} height={size} alt="" draggable={false} style={{ width: size, height: size, objectFit: 'contain' }} />;

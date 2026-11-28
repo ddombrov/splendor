@@ -8,14 +8,15 @@ import { JewelCard, CfCard, RoyalCard, CardBack } from './Cards.jsx';
 import { TokenArt, Gem, Scroll, Crown, PAL } from './Art.jsx';
 import { bonuses, colorPts, crowns, kinds, limitCount, plan, pts, resCap, roomLeft } from '../engine/engine.js';
 
-// The opened hand shows the stats large; everywhere else they stretch across the panel (see .stats in styles.css).
+// The opened hand shows the stats large, shrinking on narrow screens; everywhere else they stretch across the panel
+// (see .stats and .bigstats in styles.css).
 const Stat = ({ title, big, children }) => (
-  <div title={title} className={cn('stat flex shrink-0 items-center gap-1 font-extrabold leading-none', big && 'h-14 gap-2 px-4 text-5xl')}>{children}</div>
+  <div title={title} className={cn('stat flex shrink-0 items-center gap-1 font-extrabold leading-none', big && 'h-[1.17em] gap-[0.17em] px-[0.33em]')}>{children}</div>
 );
 const Stats = ({ p, big }) => (
-  <div className={big ? undefined : 'stats'}>
+  <div className={big ? 'bigstats' : 'stats'}>
     <div className={cn('flex items-stretch divide-x divide-white/30 rounded-lg border border-white/30 bg-black/25', big ? 'w-fit' : 'w-full')}>
-      <Stat big={big} title="Prestige points"><span>{pts(p)}</span><span className={cn('unit font-bold text-muted-foreground', big && 'text-2xl')}>pts</span></Stat>
+      <Stat big={big} title="Prestige points"><span>{pts(p)}</span><span className={cn('unit font-bold text-muted-foreground', big && 'text-[0.5em]')}>pts</span></Stat>
       <Stat big={big} title="Crowns"><span>{crowns(p)}</span><Crown size={big ? 46 : 16} /></Stat>
       <Stat big={big} title="Scrolls"><span>{p.priv}</span><Scroll size={big ? 50 : 18} /></Stat>
       <TokenStat p={p} big={big} />

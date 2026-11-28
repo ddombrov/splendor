@@ -269,3 +269,5 @@ html[data-look=classic] .stage .board-wrap.one { background-image: url(/classic/
 .stats .stat { flex: 1 1 0; justify-content: center; height: 2em; padding: 0 0.3em; font-size: clamp(11px, 6.2cqw, 24px); }
 .stats .stat img, .stats .stat svg { width: 1.05em !important; height: 1.05em !important; }
 .stats .stat .unit { font-size: 0.55em; }
+.bigstats { font-size: clamp(18px, 7.5vw, 48px); }
+.bigstats .stat img, .bigstats .stat svg { width: 0.98em !important; height: 0.98em !important; }

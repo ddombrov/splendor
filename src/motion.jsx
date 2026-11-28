@@ -83,8 +83,17 @@ export function diffFlights(prev, next, snap) {
 
 const NATURAL_W = 124; // a card is drawn 124 pixels wide before any zoom
 
-function Flight({ f, onLanded }) {
+function Flight({ f, onLanded, scroller }) {
   const ref = useRef(null);
+  // Flights are drawn over the page, so when the page scrolls under them they move with it.
+  useEffect(() => {
+    if (!scroller) return undefined;
+    const start = scroller.scrollTop;
+    const follow = () => { if (ref.current) ref.current.style.top = `${f.from.top - (scroller.scrollTop - start)}px`; };
+    scroller.addEventListener('scroll', follow, { passive: true });
+    return () => scroller.removeEventListener('scroll', follow);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
   useEffect(() => {
     const el = ref.current;
     const target = document.querySelector(f.to);
@@ -129,6 +138,6 @@ function Flight({ f, onLanded }) {
   );
 }
 
-export function Flights({ flights, onLanded }) {
-  return flights.map((f) => <Flight key={f.id} f={f} onLanded={onLanded} />);
+export function Flights({ flights, onLanded, scroller }) {
+  return flights.map((f) => <Flight key={f.id} f={f} onLanded={onLanded} scroller={scroller} />);
 }

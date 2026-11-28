@@ -78,7 +78,8 @@ export default function CardMapping({ right: RIGHT = 'modern', onClose }) {
         <h1 className="text-2xl font-bold">Card mapping</h1>
         {onClose && <button type="button" onClick={onClose} className="rounded-md border border-white/30 px-3 py-1.5 text-sm font-semibold hover:bg-white/10">Close</button>}
       </div>
-      <div className="sticky top-0 z-10 -mx-2 space-y-2 bg-[#0e1520]/90 px-2 py-2 backdrop-blur">
+      {/* The filters stay pinned to the very top while the page scrolls: the page's own padding is cancelled so nothing shows above or beside them. */}
+      <div className="sticky -top-6 z-10 -mx-6 space-y-2 bg-[#0e1520] px-6 py-3 shadow-lg">
         <div className="flex flex-wrap gap-2">
           {FILTERS.map(([k, label]) => <button key={k} type="button" onClick={() => setFilter(k)} className={chip(filter === k)}>{label}</button>)}
         </div>

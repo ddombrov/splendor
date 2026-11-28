@@ -263,12 +263,41 @@ function Board({ session, onExit, onRestart, init, onReplaced }) {
     if (S.over) clearSave(session.mode); else writeSave(session, S);
   }, [S, online, session]);
 
-  // Against the computer: it plays seat 1 after a short pause. It first shows what it has picked
-  // (tokens or a card highlighted), then confirms the move a moment later.
   const botWaiting = useRef(false);
   const botMemory = useRef({}); // what the computer decided for this game, such as the hard player's goal
+  const newGame = () => { botMemory.current = {}; adopt(freshGame(session), 0); };
+
+  // Things that move between the board and a player's inventory fly there instead of jumping.
+  const prevS = useRef(null);
+  const snapshot = useRef({ cells: {}, cards: {} });
+  const nextFlight = useRef(1);
+  const [flights, setFlights] = useState([]);
+  const [dealt, setDealt] = useState([]);
+  useLayoutEffect(() => {
+    const before = prevS.current;
+    // Positions were measured at the last change; if the page has scrolled since, the flights start that much higher or lower.
+    const scrolled = (scrollRef.current?.scrollTop ?? 0) - (snapshot.current.scrollTop ?? 0);
+    if (before && before !== S && S.log.length >= before.log.length) {
+      const found = diffFlights(before, S, snapshot.current).map((f) => ({ ...f, from: { ...f.from, top: f.from.top - scrolled } }));
+      if (found.length) setFlights((list) => [...list, ...found.map((f) => ({ ...f, id: nextFlight.current++ }))]);
+    }
+    if (before && before !== S && S.log.length >= before.log.length) {
+      const old = new Set([...before.pyr.flat(), ...before.crow].map((c) => c?.id));
+      setDealt([...S.pyr.flat(), ...S.crow].filter((c) => c && !old.has(c.id)).map((c) => c.id));
+    }
+    prevS.current = S;
+    snapshot.current = { ...takeSnapshot(), scrollTop: scrollRef.current?.scrollTop ?? 0 };
+  }, [S]);
+  const hiding = flights.filter((f) => f.type === 'refill').map((f) => f.cell);
+  const landed = useCallback((id) => setFlights((list) => list.filter((f) => f.id !== id)), []);
+
+  // Against the computer: it plays seat 1 after a short pause, once everything on screen has finished moving
+  // (a replenished board fills one token at a time). It first shows what it has picked (tokens or a card
+  // highlighted), then confirms the move a moment later.
+  const animating = flights.length > 0;
   useEffect(() => {
     if (!vsAi || S.over || S.awaitingFirst || S.cur !== 1 || botWaiting.current) return undefined;
+    // An animation held back (say, in a background tab) delays the computer by a few seconds at most.
     const t = setTimeout(() => {
       const acts = botActions(Sref.current, { difficulty: session.difficulty, memory: botMemory.current });
       if (!acts.length) return;
@@ -286,32 +315,9 @@ function Board({ session, onExit, onRestart, init, onReplaced }) {
         Sref.current = done;
         setS(done);
       }, 1000);
-    }, 700);
+    }, animating ? 6000 : 700);
     return () => clearTimeout(t);
-  }, [S, vsAi, session.difficulty]);
-  const newGame = () => { botMemory.current = {}; adopt(freshGame(session), 0); };
-
-  // Things that move between the board and a player's inventory fly there instead of jumping.
-  const prevS = useRef(null);
-  const snapshot = useRef({ cells: {}, cards: {} });
-  const nextFlight = useRef(1);
-  const [flights, setFlights] = useState([]);
-  const [dealt, setDealt] = useState([]);
-  useLayoutEffect(() => {
-    const before = prevS.current;
-    if (before && before !== S && S.log.length >= before.log.length) {
-      const found = diffFlights(before, S, snapshot.current);
-      if (found.length) setFlights((list) => [...list, ...found.map((f) => ({ ...f, id: nextFlight.current++ }))]);
-    }
-    if (before && before !== S && S.log.length >= before.log.length) {
-      const old = new Set([...before.pyr.flat(), ...before.crow].map((c) => c?.id));
-      setDealt([...S.pyr.flat(), ...S.crow].filter((c) => c && !old.has(c.id)).map((c) => c.id));
-    }
-    prevS.current = S;
-    snapshot.current = takeSnapshot();
-  }, [S]);
-  const hiding = flights.filter((f) => f.type === 'refill').map((f) => f.cell);
-  const landed = useCallback((id) => setFlights((list) => list.filter((f) => f.id !== id)), []);
+  }, [S, vsAi, session.difficulty, animating]);
 
   const myTurn = seat == null || (S.awaitingFirst ? seat === 0 : S.cur === seat);
   const [showRules, setShowRules] = useState(false);
@@ -407,22 +413,23 @@ function Board({ session, onExit, onRestart, init, onReplaced }) {
   const shownHand = pd?.type === 'steal' && myTurn ? 1 - S.cur : pd?.type === 'wild' && myTurn ? S.cur : hovered;
   const playersColumn = (
     <div className={cn('relative min-h-0', tall ? (stacked ? 'order-2 flex flex-col gap-3' : 'order-2 grid grid-cols-2 gap-3') : strip ? 'grid grid-cols-2 gap-3' : 'flex flex-col gap-3')} style={strip ? { gridColumn: '1 / -1', gridRow: 2, height: stripH } : undefined} onMouseLeave={() => setHovered(null)}>
-      {[0, 1].map((i) => (
+      {/* On a phone the opened hand takes the place of both small hands below the board, so the board stays in view and the page just grows. */}
+      {!(tall && shownHand != null) && [0, 1].map((i) => (
         <div key={i} className="flex min-h-0 flex-1 flex-col" style={stacked ? { height: 150, flex: 'none' } : undefined} onMouseOver={(e) => setHovered(e.target.closest('[data-zone="res"]') ? null : i)}>
           <Player S={S} idx={i} dispatch={pdispatch} onInspect={setInspect} colW={colW} viewer={seat} buying={buying} summary horizontal={strip || stacked} compact={stacked} />
         </div>
       ))}
       {shownHand != null && (
         <div
-          className="handboard absolute z-30 p-4"
+          className={tall ? 'handboard col-span-2 p-4' : 'handboard absolute z-30 p-4'}
           style={tall
-            ? { left: -10, right: -10, bottom: -10, height: `calc(100% + ${Math.round(cell * 6.692) + 96}px)`, backgroundColor: '#17403a' }
+            ? { backgroundColor: '#17403a' }
             : strip
               ? { left: -10, bottom: -10, height: h, width: padX + boardColW + 22, backgroundColor: '#17403a' }
               : { left: -10, top: -10, height: 'calc(100% + 20px)', width: sideW + 12 + boardColW + 20, backgroundColor: '#17403a' }}
         >
           <div className="flex h-full flex-col" style={{ width: tall ? '100%' : strip ? padX + boardColW : sideW + 12 + boardColW - 12 }}>
-            <Player S={S} idx={shownHand} dispatch={pdispatch} onInspect={setInspect} colW={Math.floor(((tall ? w - 20 : strip ? padX + boardColW + 12 : sideW + 12 + boardColW) - 36 - (kinds(S).length) * 12) / (kinds(S).length + 1))} viewer={seat} buying={buying} zoomed wide />
+            <Player S={S} idx={shownHand} dispatch={pdispatch} onInspect={setInspect} colW={Math.floor(((tall ? w - 40 : strip ? padX + boardColW + 12 : sideW + 12 + boardColW) - 36 - (kinds(S).length) * 12) / (kinds(S).length + 1))} viewer={seat} buying={buying} zoomed wide />
             {(pd?.type === 'steal' || pd?.type === 'wild') && myTurn && prompt && (
               <div className="hintbox mt-3 flex min-h-[90px] shrink-0 items-center px-8 py-5 font-bold leading-snug text-white" style={{ fontSize: cell * 0.155 }}>{prompt}</div>
             )}
@@ -480,7 +487,21 @@ function Board({ session, onExit, onRestart, init, onReplaced }) {
     return next.pending?.type === 'discard' ? limitCount(cur(next)) - 10 : 0;
   };
   const over = (action === 'take' || action === 'reserve') && canComplete ? overAfter([{ type: action }]) : 0;
-  const completeLabel = over ? `${action === 'take' ? 'Take' : 'Reserve'} and discard ${over}` : { take: 'Take tokens', buy: 'Buy card', reserve: 'Reserve card', refill: 'Replenish' }[action];
+  const completeLabel = over ? `${action === 'take' ? 'Take' : 'Reserve'} and discard ${over}` : { take: S.sel.length === 1 ? 'Take token' : 'Take tokens', buy: 'Buy card', reserve: 'Reserve card', refill: 'Replenish' }[action];
+  // Chosen tokens can also be taken with privileges instead, one each (a counterfeiter bonus may make one free),
+  // which keeps the main action for later in the turn.
+  const privTake = (() => {
+    if (action !== 'take' || !idle || !S.sel.length || p.priv < 1) return null;
+    let T = { ...S, sel: [] };
+    const acts = [];
+    const step = (a) => { acts.push(a); T = reduce(T, a); };
+    for (const i of S.sel) {
+      if (T.mode !== 'priv2') step({ type: 'priv' });
+      step({ type: 'tok', i });
+    }
+    if (S.sel.some((i) => T.board[i] != null)) return null; // not enough privileges for all of them
+    return { acts, spent: p.priv - cur(T).priv };
+  })();
   // A chosen card that could also be reserved offers both: reserving takes a gold token from the board for it.
   const gold = S.board.indexOf('gold');
   const alsoReserve = action === 'buy' && idle && reservableSel && gold >= 0;
@@ -489,6 +510,7 @@ function Board({ session, onExit, onRestart, init, onReplaced }) {
   const buttons = extras.length ? extras : action ? [
     ...(action !== 'priv' ? [{ label: completeLabel, disabled: !canComplete, onClick: complete, go: true }] : []),
     ...(alsoReserve ? [{ label: reserveOver ? `Reserve and discard ${reserveOver}` : 'Reserve card', onClick: () => { setPicked(null); reserveActs.forEach(dispatch); }, go: true }] : []),
+    ...(privTake ? [{ label: privTake.spent === 1 ? 'Use privilege' : `Use ${privTake.spent} privileges`, onClick: () => { setPicked(null); dispatch({ type: 'cancelAction' }); privTake.acts.forEach(dispatch); } }] : []),
     { label: 'Cancel', disabled: !idle, onClick: cancel },
   ] : canPass(S) ? [
     { label: 'Pass', disabled: !idle, onClick: act({ type: 'pass' }), go: true },
@@ -598,7 +620,7 @@ function Board({ session, onExit, onRestart, init, onReplaced }) {
         </div>
       </div>
 
-      {createPortal(<Flights flights={flights} onLanded={landed} />, document.body)}
+      {createPortal(<Flights flights={flights} onLanded={landed} scroller={scrollRef.current} />, document.body)}
       {previewCard && createPortal(
         <div className="pointer-events-none fixed right-3 z-[70]" style={{ top: 64 }}>
           <Magnified key={previewCard.id} id={previewCard.id}>
